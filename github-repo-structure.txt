@@ -1,0 +1,80 @@
+# Sock Business Financial Planner
+
+A comprehensive web application for modeling costs, pricing, and income statements for a sock manufacturing business with B2B, B2B2C, and B2C sales channels.
+
+## Project Structure
+
+```
+sock-business-financial-planner/
+├── README.md                     # Project documentation
+├── package.json                  # Project dependencies
+├── .gitignore                    # Git ignore file
+├── public/                       # Public assets
+│   ├── index.html                # Main HTML file
+│   ├── favicon.ico               # Site favicon
+│   └── assets/                   # Static assets
+├── src/                          # Source code
+│   ├── App.js                    # Main React component
+│   ├── index.js                  # Application entry point
+│   ├── components/               # UI components
+│   │   ├── B2BForm.js            # B2B input form
+│   │   ├── B2B2CForm.js          # B2B2C input form
+│   │   ├── B2CForm.js            # B2C input form
+│   │   ├── FinancialSummary.js   # Financial summary display
+│   │   └── ui/                   # Reusable UI components
+│   │       ├── card.js           # Card component
+│   │       ├── tabs.js           # Tabs component
+│   │       └── ...               # Other UI components
+│   ├── utils/                    # Utility functions
+│   │   ├── calculations.js       # Business calculations
+│   │   ├── formatters.js         # Formatting utilities
+│   │   └── storage.js            # Local storage utilities
+│   └── assets/                   # Application assets
+│       └── styles/               # CSS styles
+└── LICENSE                       # Project license
+```
+
+## Setup Instructions
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/yourusername/sock-business-financial-planner.git
+   cd sock-business-financial-planner
+   ```
+
+2. Install dependencies:
+   ```
+   npm install
+   ```
+
+3. Start the development server:
+   ```
+   npm start
+   ```
+
+4. Build for production:
+   ```
+   npm run build
+   ```
+
+## Features
+
+- **B2B Costing Model**: Calculate costs and pricing for OEM sock manufacturing with minimum order of 180 pairs
+- **B2B2C Customization Model**: Pricing for customization services (printing, embroidery, woven labels) in package sizes
+- **B2C Retail Model**: Calculate retail pricing and margins for packaged consumer products
+- **Financial Summary**: Complete income statement with breakeven analysis
+- **Visual Reports**: Charts for revenue and profit distribution across business lines
+- **Data Export**: Export financial data to CSV format
+- **Configuration Management**: Save and load different financial scenarios
+
+## Dependencies
+
+- React.js: UI framework
+- Recharts: Charting library for visualizations
+- Lucide React: Icon library
+- Tailwind CSS: Utility-first CSS framework
+- shadcn/ui: UI component library
+
+## License
+
+MIT

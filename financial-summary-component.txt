@@ -1,0 +1,213 @@
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { formatCurrency, formatPercent } from '../utils/formatters';
+
+const FinancialSummary = ({ incomeStatement, fixedCostsData, setFixedCostsData, b2bResults, b2b2cResults, b2cResults, b2bVolume }) => {
+  // Chart colors
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly Income Statement</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-medium text-lg">Revenue</h3>
+                <div className="ml-4 space-y-1">
+                  <div className="flex justify-between">
+                    <span>B2B OEM Revenue</span>
+                    <span>{formatCurrency(incomeStatement.b2bRevenue)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>B2B2C Custom Revenue</span>
+                    <span>{formatCurrency(incomeStatement.b2b2cRevenue)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>B2C Retail Revenue</span>
+                    <span>{formatCurrency(incomeStatement.b2cRevenue)}</span>
+                  </div>
+                  <div className="flex justify-between font-medium">
+                    <span>Total Revenue</span>
+                    <span>{formatCurrency(incomeStatement.totalRevenue)}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="font-medium text-lg">Cost of Goods Sold</h3>
+                <div className="ml-4 space-y-1">
+                  <div className="flex justify-between font-medium">
+                    <span>Total COGS</span>
+                    <span>{formatCurrency(incomeStatement.totalCogs)}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-between font-medium text-lg">
+                <span>Gross Profit</span>
+                <span>{formatCurrency(incomeStatement.grossProfit)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Gross Margin</span>
+                <span>{formatPercent(incomeStatement.grossMargin)}</span>
+              </div>
+              
+              <div>
+                <h3 className="font-medium text-lg">Fixed Expenses</h3>
+                <div className="ml-4 space-y-1">
+                  {Object.entries(fixedCostsData).map(([key, value]) => (
+                    <div key={key} className="flex justify-between">
+                      <span>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                      <span>{formatCurrency(value)}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between font-medium">
+                    <span>Total Fixed Expenses</span>
+                    <span>{formatCurrency(incomeStatement.totalFixedCosts)}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-between font-medium text-lg">
+                <span>Operating Profit</span>
+                <span>{formatCurrency(incomeStatement.operatingProfit)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Net Margin</span>
+                <span>{formatPercent(incomeStatement.netMargin)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Revenue Distribution</CardTitle>
+            </CardHeader>
+            <CardContent className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={incomeStatement.revenueDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({name, percent}) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                  >
+                    {incomeStatement.revenueDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatCurrency(value)} />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Profit Distribution</CardTitle>
+            </CardHeader>
+            <CardContent className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={incomeStatement.profitDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({name, percent}) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                  >
+                    {incomeStatement.profitDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatCurrency(value)} />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      
+      {/* Fixed Cost Inputs */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Fixed Costs</CardTitle>
+          <CardDescription>Adjust monthly fixed expenses</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.entries(fixedCostsData).map(([key, value]) => (
+              <div key={key}>
+                <label className="block text-sm font-medium mb-1">
+                  {key.charAt(0).toUpperCase() + key.slice(1)} ($)
+                </label>
+                <input
+                  type="number"
+                  step="100"
+                  value={value}
+                  onChange={(e) => {
+                    setFixedCostsData({
+                      ...fixedCostsData, 
+                      [key]: parseFloat(e.target.value) || 0
+                    });
+                  }}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Breakeven Analysis */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Breakeven Analysis</CardTitle>
+          <CardDescription>Units needed to sell to cover fixed costs</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex flex-col items-center p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-gray-500">B2B Breakeven (Orders)</p>
+              <p className="text-xl font-bold text-blue-600">
+                {Math.ceil(incomeStatement.totalFixedCosts / (b2bResults.profit * b2bVolume / b2bVolume))}
+              </p>
+            </div>
+            <div className="flex flex-col items-center p-4 bg-green-50 rounded-lg">
+              <p className="text-sm text-gray-500">B2B2C Breakeven (Packages)</p>
+              <p className="text-xl font-bold text-green-600">
+                {Math.ceil(incomeStatement.totalFixedCosts / (b2b2cResults.totalMonthlyProfit / 
+                  b2b2cResults.packages.reduce((total, pkg) => total + pkg.monthlySales, 0)))}
+              </p>
+            </div>
+            <div className="flex flex-col items-center p-4 bg-purple-50 rounded-lg">
+              <p className="text-sm text-gray-500">B2C Breakeven (Packages)</p>
+              <p className="text-xl font-bold text-purple-600">
+                {Math.ceil(incomeStatement.totalFixedCosts / (b2cResults.totalMonthlyProfit / 
+                  b2cResults.packages.reduce((total, pkg) => total + pkg.volume, 0)))}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  );
+};
+
+export default FinancialSummary;

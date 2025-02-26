@@ -1,0 +1,151 @@
+import React, { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
+import B2BForm from './components/B2BForm';
+import B2B2CForm from './components/B2B2CForm';
+import B2CForm from './components/B2CForm';
+import FinancialSummary from './components/FinancialSummary';
+import { calculateB2B, calculateB2B2C, calculateB2C, generateIncomeStatement } from './utils/calculations';
+import { saveConfiguration as saveConfig, loadConfiguration as loadConfig, exportToCsv } from './utils/storage';
+import { defaultB2B, defaultB2B2C, defaultB2C, defaultFixedCosts } from './data/defaultData';
+
+const App = () => {
+  // GitHub repo URL for code pushing
+  const githubRepoUrl = "https://github.com/yourusername/sock-business-financial-planner";
+  
+  const [activeTab, setActiveTab] = useState('b2b');
+  const [b2bData, setB2bData] = useState(defaultB2B);
+  const [b2b2cData, setB2b2cData] = useState(defaultB2B2C);
+  const [b2cData, setB2cData] = useState(defaultB2C);
+  const [fixedCostsData, setFixedCostsData] = useState(defaultFixedCosts);
+  const [b2bVolume, setB2bVolume] = useState(5); // Number of B2B orders per month
+  
+  // Calculate all the results based on current state
+  const b2bResults = calculateB2B(b2bData, b2bVolume);
+  const b2b2cResults = calculateB2B2C(b2b2cData);
+  const b2cResults = calculateB2C(b2cData);
+  const incomeStatement = generateIncomeStatement(b2bResults, b2b2cResults, b2cResults, fixedCostsData);
+  
+  // Save configuration to local storage
+  const saveConfiguration = () => {
+    const configuration = {
+      b2bData,
+      b2b2cData,
+      b2cData,
+      fixedCostsData,
+      b2bVolume
+    };
+    
+    const saved = saveConfig(configuration);
+    if (saved) {
+      alert('Configuration saved successfully!');
+    } else {
+      alert('Error saving configuration.');
+    }
+  };
+  
+  // Load configuration from local storage
+  const loadConfiguration = () => {
+    const savedConfig = loadConfig();
+    if (savedConfig) {
+      setB2bData(savedConfig.b2bData);
+      setB2b2cData(savedConfig.b2b2cData);
+      setB2cData(savedConfig.b2cData);
+      setFixedCostsData(savedConfig.fixedCostsData);
+      setB2bVolume(savedConfig.b2bVolume);
+      alert('Configuration loaded successfully!');
+    } else {
+      alert('No saved configuration found or error loading.');
+    }
+  };
+  
+  // Export income statement to CSV
+  const handleExportToCsv = () => {
+    exportToCsv(incomeStatement, fixedCostsData);
+  };
+
+  return (
+    <div className="flex flex-col p-4 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Sock Business Financial Planner</h1>
+        <div className="flex space-x-2">
+          <button 
+            onClick={saveConfiguration}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Save Config
+          </button>
+          <button 
+            onClick={loadConfiguration}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            Load Config
+          </button>
+          <button 
+            onClick={handleExportToCsv}
+            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            Export CSV
+          </button>
+        </div>
+      </div>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-4 mb-6">
+          <TabsTrigger value="b2b">B2B OEM</TabsTrigger>
+          <TabsTrigger value="b2b2c">B2B2C Custom</TabsTrigger>
+          <TabsTrigger value="b2c">B2C Retail</TabsTrigger>
+          <TabsTrigger value="summary">Financial Summary</TabsTrigger>
+        </TabsList>
+        
+        {/* B2B Tab Content */}
+        <TabsContent value="b2b" className="space-y-4">
+          <B2BForm 
+            b2bData={b2bData} 
+            setB2bData={setB2bData} 
+            b2bVolume={b2bVolume} 
+            setB2bVolume={setB2bVolume} 
+            b2bResults={b2bResults} 
+          />
+        </TabsContent>
+        
+        {/* B2B2C Tab Content */}
+        <TabsContent value="b2b2c" className="space-y-4">
+          <B2B2CForm 
+            b2b2cData={b2b2cData} 
+            setB2b2cData={setB2b2cData} 
+            b2b2cResults={b2b2cResults} 
+          />
+        </TabsContent>
+        
+        {/* B2C Tab Content */}
+        <TabsContent value="b2c" className="space-y-4">
+          <B2CForm 
+            b2cData={b2cData} 
+            setB2cData={setB2cData} 
+            b2cResults={b2cResults} 
+          />
+        </TabsContent>
+        
+        {/* Financial Summary Tab */}
+        <TabsContent value="summary" className="space-y-4">
+          <FinancialSummary 
+            incomeStatement={incomeStatement} 
+            fixedCostsData={fixedCostsData} 
+            setFixedCostsData={setFixedCostsData}
+            b2bResults={b2bResults}
+            b2b2cResults={b2b2cResults}
+            b2cResults={b2cResults}
+            b2bVolume={b2bVolume}
+          />
+        </TabsContent>
+      </Tabs>
+      
+      <footer className="mt-8 pt-4 border-t text-center text-gray-500">
+        <p>Sock Business Financial Planner © {new Date().getFullYear()}</p>
+        <p className="text-sm">View the <a href={githubRepoUrl} className="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">GitHub Repository</a></p>
+      </footer>
+    </div>
+  );
+};
+
+export default App;
