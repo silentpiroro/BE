@@ -1,0 +1,507 @@
+<title>North Star War Room</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: command post. Alerts first, then the scoreboard vs $100k, the three gates, the action board,
+   and the two daily logs (Meta, email sends) the team fills in. Dark-first: it lives on a wall screen. */
+:root {
+  --bg: #0d1210; --surface: #151c19; --raise: #1b2420; --ink: #e6eee9; --muted: #93a39a; --line: #27322d;
+  --accent: #7fd1a8; --accent-ink: #0d1210; --accent-soft: #1b2f25;
+  --good: #6fd29b; --good-soft: #163021; --warn: #f0b85e; --warn-soft: #33270f; --bad: #ff8a7a; --bad-soft: #3b1b17;
+  --plan: #5d6f66; --actual: #7fd1a8; --live: #f0b85e;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #f3f6f4; --surface: #ffffff; --raise: #f7faf8; --ink: #15201b; --muted: #58685f; --line: #dbe3de;
+  --accent: #23704c; --accent-ink: #ffffff; --accent-soft: #e2f0e8;
+  --good: #1d7a49; --good-soft: #def2e6; --warn: #8f5a00; --warn-soft: #fbefd6; --bad: #b3352a; --bad-soft: #f9e1dd;
+  --plan: #b9c6bf; --actual: #23704c; --live: #c98a1b; color-scheme: light; } }
+:root[data-theme="light"] {
+  --bg: #f3f6f4; --surface: #ffffff; --raise: #f7faf8; --ink: #15201b; --muted: #58685f; --line: #dbe3de;
+  --accent: #23704c; --accent-ink: #ffffff; --accent-soft: #e2f0e8;
+  --good: #1d7a49; --good-soft: #def2e6; --warn: #8f5a00; --warn-soft: #fbefd6; --bad: #b3352a; --bad-soft: #f9e1dd;
+  --plan: #b9c6bf; --actual: #23704c; --live: #c98a1b; color-scheme: light; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.45; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 18px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: 1.1rem; font-weight: 600; }
+h3 { font-size: .95rem; font-weight: 600; }
+p { margin: 0; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-size: .7rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.muted { color: var(--muted); } .small { font-size: .82rem; }
+header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: .76rem; font-weight: 600;
+  border: 1px solid var(--line); background: var(--surface); white-space: nowrap; }
+.chip.ok { color: var(--good); background: var(--good-soft); border-color: transparent; }
+.chip.warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+.chip.bad { color: var(--bad); background: var(--bad-soft); border-color: transparent; }
+.chip.acc { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
+.guard { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 9px 14px; border-radius: 10px; background: var(--raise); border: 1px solid var(--line); font-size: .82rem; }
+.guard b { color: var(--warn); }
+.alerts { display: grid; gap: 6px; }
+.alert { display: flex; gap: 10px; align-items: baseline; padding: 9px 12px; border-radius: 10px; font-size: .9rem; border: 1px solid var(--line); background: var(--surface); }
+.alert .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; transform: translateY(-1px); }
+.alert.bad .dot { background: var(--bad); } .alert.warn .dot { background: var(--warn); } .alert.ok .dot { background: var(--good); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.panel > * { min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+.grid3 > * { min-width: 0; }
+.score { display: grid; gap: 6px; }
+.score .big { font-family: var(--font-mono); font-size: 2rem; font-weight: 600; line-height: 1.1; }
+.bar { position: relative; height: 12px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.bar > i { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 999px; }
+.bar > b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); opacity: .7; }
+.kv { display: flex; justify-content: space-between; gap: 10px; font-size: .86rem; }
+.gate { border-radius: 12px; padding: 14px; display: grid; gap: 6px; background: var(--raise); border: 1px solid var(--line); }
+.gate .state { font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.state.ok { color: var(--good); } .state.warn { color: var(--warn); } .state.bad { color: var(--bad); } .state.unk { color: var(--muted); }
+.gate .v { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 600; }
+.tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; flex-wrap: wrap; }
+.tabs button { font: inherit; font-size: .84rem; font-weight: 600; padding: 6px 12px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.tabs button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.acts { display: grid; gap: 8px; }
+.act { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px 12px; align-items: start; padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--raise); }
+.act.done { opacity: .55; }
+.act.overdue { border-color: var(--bad); }
+.act .due { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); white-space: nowrap; padding-top: 2px; }
+.act.overdue .due { color: var(--bad); font-weight: 600; }
+.act .t { font-weight: 600; }
+.act .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; font-size: .78rem; color: var(--muted); align-items: center; }
+.act .ctl { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+select, input { font: inherit; font-size: .86rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-width: 0; }
+.btn { font: inherit; font-size: .82rem; font-weight: 700; border-radius: 8px; padding: 6px 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.btn.sy { color: var(--warn); border-color: var(--warn); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+form.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+form.row label { display: grid; gap: 3px; font-size: .74rem; color: var(--muted); font-weight: 600; }
+form.row input[type=number] { width: 7.5em; }
+table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+th { text-align: left; font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.r, th.r { text-align: right; }
+.scroll { overflow-x: auto; }
+.verdict { padding: 10px 12px; border-radius: 10px; font-weight: 700; }
+.verdict.ok { background: var(--good-soft); color: var(--good); } .verdict.warn { background: var(--warn-soft); color: var(--warn); }
+.verdict.bad { background: var(--bad-soft); color: var(--bad); } .verdict.unk { background: var(--raise); color: var(--muted); }
+svg text { fill: var(--muted); font-family: var(--font-mono); font-size: 10px; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .78rem; color: var(--muted); }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.empty { padding: 14px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: .88rem; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg);
+  padding: 8px 14px; border-radius: 999px; font-size: .85rem; font-weight: 600; z-index: 20; }
+footer { font-size: .8rem; color: var(--muted); display: grid; gap: 4px; }
+a { color: var(--accent); }
+@media (max-width: 560px) { .act { grid-template-columns: minmax(0, 1fr); } .act .ctl { justify-content: flex-start; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div style="display:grid;gap:3px"><span class="eyebrow">Comfort Fresh · $100k / month north star</span><h1>North Star War Room</h1></div>
+    <div class="chips" id="chips"><span class="chip acc">Shop lock · Comfort Fresh</span></div>
+  </header>
+
+  <div class="guard" role="note">
+    <span><b>No send</b>, <b>no Shopify change</b>, no budget step above $8k/mo without Sy's OK</span>
+    <span>≤3 marketing emails / 30 days · never Omnisend + Gmail marketing in the same week</span>
+    <span>Wool Wave C: <b>HOLD</b> until CF22032 &gt; 0</span>
+  </div>
+
+  <section class="alerts" id="alerts" aria-label="Alerts"><div class="empty">Loading the board…</div></section>
+
+  <section class="grid3" aria-label="Scoreboard">
+    <div class="panel score" id="sc-month"><span class="eyebrow">This month</span><div class="empty">Waiting for the scoreboard.</div></div>
+    <div class="panel score" id="sc-run"><span class="eyebrow">Run-rate vs $100k</span><div class="empty">Waiting for the scoreboard.</div></div>
+    <div class="panel score" id="sc-next"><span class="eyebrow">Plan</span><div class="empty">Waiting for the scoreboard.</div></div>
+  </section>
+
+  <section class="panel" aria-labelledby="g-h">
+    <div class="panel-head"><h2 id="g-h">The three gates</h2><span class="small muted">All three must hold for the plan to reach $100k</span></div>
+    <div class="grid3" id="gates"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="a-h">
+    <div class="panel-head"><h2 id="a-h">Action board</h2>
+      <div class="tabs" id="a-tabs" role="group" aria-label="Filter actions">
+        <button type="button" data-f="week" aria-pressed="true">Next 7 days</button><button type="button" data-f="open" aria-pressed="false">All open</button><button type="button" data-f="sy" aria-pressed="false">Waiting on Sy</button><button type="button" data-f="done" aria-pressed="false">Done</button>
+      </div></div>
+    <div class="acts" id="acts"><div class="empty">Loading actions…</div></div>
+    <form class="row" id="a-form" hidden>
+      <label style="flex:1 1 240px">New action<input id="a-title" required maxlength="160" placeholder="What has to happen"></label>
+      <label>Owner<select id="a-owner"><option>CF Retention</option><option>CF Meta Ads</option><option>CoS</option><option>CF CS</option><option>Sy</option></select></label>
+      <label>Due<input id="a-due" type="date" required></label>
+      <label style="flex-direction:row;display:flex;gap:6px;align-items:center;padding-bottom:6px"><input id="a-sy" type="checkbox"> Needs Sy OK</label>
+      <button class="btn primary" type="submit">Add</button>
+    </form>
+  </section>
+
+  <div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
+    <section class="panel" aria-labelledby="m-h">
+      <div class="panel-head"><h2 id="m-h">Meta daily log</h2><span class="small muted">Until Meta is connected: log yesterday every morning</span></div>
+      <div id="m-verdict" class="verdict unk">No Meta numbers yet.</div>
+      <form class="row" id="m-form" hidden>
+        <label>Day<input id="m-date" type="date" required></label>
+        <label>Spend $<input id="m-spend" type="number" min="0" step="0.01" required></label>
+        <label>Purchases<input id="m-purch" type="number" min="0" step="1" required></label>
+        <label>Purchase value $<input id="m-val" type="number" min="0" step="0.01" required></label>
+        <button class="btn primary" type="submit">Save day</button>
+      </form>
+      <div class="scroll"><table id="m-table"></table></div>
+    </section>
+
+    <section class="panel" aria-labelledby="s-h">
+      <div class="panel-head"><h2 id="s-h">Email sends log</h2><span class="small muted">Checks the 3-per-30-days cap before you send</span></div>
+      <form class="row" id="s-form" hidden>
+        <label style="flex:1 1 180px">Who<select id="s-seg"></select></label>
+        <label>Date<input id="s-date" type="date" required></label>
+        <label>Channel<select id="s-ch"><option>Omnisend</option><option>Gmail 1:1</option></select></label>
+        <label style="flex:1 1 160px">Email<input id="s-name" required maxlength="120" placeholder="e.g. BFCM ends Monday"></label>
+        <label style="flex-direction:row;display:flex;gap:6px;align-items:center;padding-bottom:6px"><input id="s-ok" type="checkbox" required> Sy approved</label>
+        <button class="btn primary" type="submit">Check + log</button>
+      </form>
+      <div id="s-check" class="small"></div>
+      <div class="scroll"><table id="s-table"></table></div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="p-h">
+    <div class="panel-head"><h2 id="p-h">Plan vs actual</h2>
+      <div class="legend"><span><i class="sw" style="background:var(--actual)"></i>Actual (Shopify)</span><span><i class="sw" style="background:var(--live)"></i>Live this month</span><span><i class="sw" style="background:var(--plan)"></i>Plan</span></div></div>
+    <div id="chart"><div class="empty">Waiting for the scoreboard.</div></div>
+  </section>
+
+  <section class="panel" aria-labelledby="r-h">
+    <div class="panel-head"><h2 id="r-h">Who to work this week</h2><span class="small muted">Emails: the customer workbook (local file). Only SUBSCRIBED contacts get marketing.</span></div>
+    <div class="scroll"><table id="segs"></table></div>
+  </section>
+
+  <footer>
+    <span id="foot-src">Scoreboard numbers come from the latest Shopify export Claude loaded. Month-to-date turns live when the viewer's Shopify connector is signed in to Comfort Fresh.</span>
+    <span>Deep dives: <a href="https://claude.ai/artifact/SuPExRRxTgGGe1bZ5rTMLt" target="_blank" rel="noopener">Money Magnet</a> · <a href="https://claude.ai/artifact/XSzd6oV1ofcsvXUrJknVc2" target="_blank" rel="noopener">Revenue &amp; Profit</a></span>
+  </footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const SHOP = "md-diab.myshopify.com";
+const S = { sb: null, actions: [], meta: [], sends: [], live: null, liveState: "pending", filter: "week",
+            db: null, user: null, me: null, canWrite: null, canEdit: false, names: {} };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const usd = (n, d = 0) => (n < 0 ? "−" : "") + "$" + Math.abs(+n || 0).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (n, d = 0) => ((+n || 0) * 100).toFixed(d) + "%";
+const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
+const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const daysBetween = (a, b) => Math.round((new Date(b + "T12:00:00Z") - new Date(a + "T12:00:00Z")) / 86400000);
+const monLabel = (m) => new Date(m + "-15T12:00:00Z").toLocaleString("en-US", { month: "short", year: "2-digit", timeZone: "UTC" });
+const daysInMonth = (m) => { const [y, mo] = m.split("-").map(Number); return new Date(Date.UTC(y, mo, 0)).getUTCDate(); };
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => (t.hidden = true), 2600); }
+
+// ---------------------------------------------------------------- derived numbers
+function monthNow() {
+  const t = today(), m = t.slice(0, 7), day = +t.slice(8, 10);
+  if (S.live && S.live.month === m) return { m, sales: S.live.sales, orders: S.live.orders, day, src: "live", storedAt: S.live.storedAt };
+  if (S.sb && S.sb.mtd.month === m) return { m, sales: S.sb.mtd.sales_usd, orders: S.sb.mtd.orders, day: S.sb.mtd.days, src: "export" };
+  return { m, sales: null, orders: null, day, src: "none" };
+}
+function planFor(m) { return S.sb ? S.sb.plan_months.find((p) => p.month === m) : null; }
+function metaWindow(days) {
+  const end = addDays(today(), -1), start = addDays(end, -(days - 1));
+  const rows = S.meta.filter((r) => r.date >= start && r.date <= end);
+  const spend = rows.reduce((a, r) => a + (+r.spend || 0), 0), purch = rows.reduce((a, r) => a + (+r.purchases || 0), 0),
+        val = rows.reduce((a, r) => a + (+r.value || 0), 0);
+  return { rows: rows.length, spend, purch, val, cpr: purch ? spend / purch : null, roas: spend ? val / spend : null };
+}
+function metaVerdict() {
+  const g = S.sb ? S.sb.gates : { target_cpr_usd: 25, cut_cpr_usd: 35, roas_floor: 3.5, media_band_max_usd: 8000 };
+  const w7 = metaWindow(7), w14 = metaWindow(14);
+  if (!w7.rows) return { cls: "unk", text: "No Meta numbers for the last 7 days. Log yesterday below.", w7 };
+  const monthly = (w7.spend / w7.rows) * 30.44;
+  if (w14.rows >= 10 && w14.cpr != null && w14.cpr > g.cut_cpr_usd) return { cls: "bad", text: `CUT one budget step: 14-day CPR ${usd(w14.cpr, 2)} is above $${g.cut_cpr_usd}.`, w7 };
+  if (w7.cpr != null && w7.cpr <= g.target_cpr_usd && w7.roas >= g.roas_floor) {
+    const over = monthly * 1.3 > g.media_band_max_usd;
+    return { cls: "ok", text: `SCALE +30%: 7-day CPR ${usd(w7.cpr, 2)}, ROAS ${w7.roas.toFixed(2)}×.` + (over ? ` That takes spend past the $${g.media_band_max_usd / 1000}k/mo band, so it needs Sy's OK.` : ""), w7 };
+  }
+  if (w7.cpr != null && w7.cpr <= g.cut_cpr_usd) return { cls: "warn", text: `HOLD budget: 7-day CPR ${usd(w7.cpr, 2)}, ROAS ${w7.roas != null ? w7.roas.toFixed(2) + "×" : "–"}. Fix the offer/creative before scaling.`, w7 };
+  return { cls: "bad", text: `CUT one budget step: 7-day CPR ${w7.cpr != null ? usd(w7.cpr, 2) : "no purchases"}.`, w7 };
+}
+function capCheck(seg, date, channel) {
+  // Rolling 30-day windows that contain `date`; BFCM-style "all" sends count for every segment.
+  const hits = S.sends.filter((s) => s.segment === seg || s.segment === "all" || seg === "all");
+  const marketing = hits; // Gmail 1:1 marketing notes count toward the cap too
+  let worst = 0;
+  for (let k = 0; k < 30; k++) {
+    const ws = addDays(date, -k), we = addDays(ws, 29);
+    worst = Math.max(worst, marketing.filter((s) => s.date >= ws && s.date <= we).length + 1);
+  }
+  const week = (d) => { const x = new Date(d + "T12:00:00Z"); const day = (x.getUTCDay() + 6) % 7; return addDays(d, -day); };
+  const otherCh = hits.find((s) => s.channel !== channel && week(s.date) === week(date));
+  return { worst, ok: worst <= 3 && !otherCh, otherCh };
+}
+
+// ---------------------------------------------------------------- render
+function render() {
+  renderChips(); renderAlerts(); renderScore(); renderGates(); renderActions(); renderMeta(); renderSends(); renderChart(); renderSegs();
+}
+function renderChips() {
+  const c = [`<span class="chip acc">Shop lock · Comfort Fresh</span>`];
+  if (S.sb) {
+    const age = daysBetween(S.sb.as_of, today());
+    c.push(`<span class="chip ${age > 3 ? "warn" : ""}">Scoreboard · ${esc(S.sb.as_of)}${age > 0 ? ` (${age}d old)` : ""}</span>`);
+  }
+  c.push(S.liveState === "live" ? `<span class="chip ok">Shopify live</span>` : `<span class="chip">Shopify live: ${esc(S.liveState === "pending" ? "connecting…" : "off")}</span>`);
+  if (S.db === false) c.push(`<span class="chip warn">Read-only view</span>`);
+  $("chips").innerHTML = c.join("");
+}
+function renderAlerts() {
+  const out = [], t = today();
+  if (!S.sb) { $("alerts").innerHTML = `<div class="empty">${S.db === false ? "Open this page signed in to claude.ai to see the board." : "Loading the board…"}</div>`; return; }
+  const age = daysBetween(S.sb.as_of, t);
+  if (age > 3 && S.liveState !== "live") out.push(["warn", `Scoreboard is ${age} days old. Send Claude a fresh Shopify export, or sign the Shopify connector in to Comfort Fresh.`]);
+  const overdue = S.actions.filter((a) => a.status !== "done" && a.due < t);
+  if (overdue.length) out.push(["bad", `${overdue.length} action${overdue.length > 1 ? "s" : ""} overdue: ${overdue.slice(0, 3).map((a) => esc(a.title)).join(" · ")}${overdue.length > 3 ? " …" : ""}`]);
+  const sy = S.actions.filter((a) => a.needs_sy && !a.sy_ok && a.status !== "done" && a.due <= addDays(t, 7));
+  if (sy.length) out.push(["warn", `${sy.length} waiting on Sy's OK this week: ${sy.slice(0, 3).map((a) => esc(a.title)).join(" · ")}`]);
+  const y = addDays(t, -1);
+  if (!S.meta.some((r) => r.date === y)) out.push(["warn", `Meta numbers for ${y} not logged yet.`]);
+  const v = metaVerdict(); if (v.cls === "bad") out.push(["bad", esc(v.text)]);
+  const caps = {}; S.sends.forEach((s) => { const c = capCheck(s.segment, s.date, s.channel); if (c.worst - 1 > 3) caps[s.segment] = 1; });
+  Object.keys(caps).forEach((k) => out.push(["bad", `Email cap broken for "${esc(segLabel(k))}": more than 3 marketing emails inside 30 days.`]));
+  const mn = monthNow(), plan = planFor(mn.m);
+  if (mn.sales != null && plan) {
+    const pace = mn.sales / Math.max(mn.day, 1) * daysInMonth(mn.m);
+    if (pace < plan.revenue_usd * 0.9) out.push(["bad", `Month pacing ${usd(pace)} vs plan ${usd(plan.revenue_usd)}. Need ${usd((plan.revenue_usd - mn.sales) / Math.max(daysInMonth(mn.m) - mn.day, 1))}/day for the rest of the month.`]);
+  }
+  if (!out.length) out.push(["ok", "Nothing on fire. Work the board."]);
+  $("alerts").innerHTML = out.map(([c, t]) => `<div class="alert ${c}"><span class="dot"></span><span>${t}</span></div>`).join("");
+}
+function renderScore() {
+  if (!S.sb) return;
+  const mn = monthNow(), dim = daysInMonth(mn.m), plan = planFor(mn.m), ns = S.sb.north_star_usd;
+  const head = (t) => `<span class="eyebrow">${t}</span>`;
+  if (mn.sales != null) {
+    const pace = mn.sales / Math.max(mn.day, 1) * dim, target = plan ? plan.revenue_usd : ns;
+    const src = mn.src === "live" ? `live from Shopify` : `export to ${esc(S.sb.as_of)}`;
+    $("sc-month").innerHTML = head(`${monLabel(mn.m)} · ${src}`) +
+      `<div class="big">${usd(mn.sales)}</div><div class="bar" aria-hidden="true"><i style="width:${Math.min(100, mn.sales / target * 100).toFixed(1)}%"></i><b style="left:${Math.min(100, mn.day / dim * 100).toFixed(1)}%"></b></div>` +
+      `<div class="kv"><span>Pacing to</span><span class="num">${usd(pace)}</span></div>` +
+      `<div class="kv"><span>${plan ? "Plan this month" : "North star"}</span><span class="num">${usd(target)}</span></div>` +
+      `<div class="kv"><span>Needed per day from here</span><span class="num">${usd(Math.max(target - mn.sales, 0) / Math.max(dim - mn.day, 1))}</span></div>`;
+  } else {
+    $("sc-month").innerHTML = head(monLabel(mn.m)) + `<div class="empty">No ${monLabel(mn.m)} sales yet. They appear here once Shopify is live or a new export is loaded.</div>`;
+  }
+  const l = S.sb.last30, run = l.revenue_usd / 30 * 30.44;
+  $("sc-run").innerHTML = head("30-day run-rate vs $100k") + `<div class="big">${usd(run)}</div>` +
+    `<div class="bar" aria-hidden="true"><i style="width:${Math.min(100, run / ns * 100).toFixed(1)}%"></i></div>` +
+    `<div class="kv"><span>Gap</span><span class="num" style="color:var(--bad)">${usd(Math.max(ns - run, 0))}/mo</span></div>` +
+    `<div class="kv"><span>New customers / 30d</span><span class="num">${l.new_customers}</span></div>` +
+    `<div class="kv"><span>Repeat orders / 30d</span><span class="num">${l.repeat_orders}</span></div>`;
+  const hit = S.sb.plan_months.find((p) => p.month === S.sb.hits_target);
+  const next = S.sb.plan_months.find((p) => p.month > mn.m) || S.sb.plan_months[0];
+  $("sc-next").innerHTML = head("Plan") + `<div class="big">${hit ? monLabel(hit.month) : "–"}</div><p class="small muted">Modeled month the business reaches $100k, if all three gates hold.</p>` +
+    (next ? `<div class="kv"><span>${monLabel(next.month)} target</span><span class="num">${usd(next.revenue_usd)}</span></div><div class="kv"><span>New customers needed</span><span class="num">${next.new_customers}</span></div><div class="kv"><span>Meta at $${S.sb.gates.target_cpr_usd} CPR</span><span class="num">${usd(next.media_usd)}</span></div>` : "");
+}
+function renderGates() {
+  if (!S.sb) { $("gates").innerHTML = ""; return; }
+  const g = S.sb.gates, v = metaVerdict(), w = v.w7;
+  const g1 = w.rows ? (w.cpr != null && w.cpr <= g.target_cpr_usd ? "ok" : w.cpr != null && w.cpr <= g.cut_cpr_usd ? "warn" : "bad") : "unk";
+  const aovLive = S.live && S.live.aov ? S.live.aov : null;
+  const g2v = g.first_aov_now_usd, g2 = g2v >= g.target_first_aov_usd ? "ok" : g2v >= g.target_first_aov_usd * 0.85 ? "warn" : "bad";
+  const g3 = g.second_order_month1_now >= g.second_order_month1_goal ? "ok" : "warn";
+  const label = { ok: "Holding", warn: "At risk", bad: "Failing", unk: "Not measured" };
+  $("gates").innerHTML = [
+    [g1, `Meta CPR ≤ $${g.target_cpr_usd}`, w.rows ? usd(w.cpr, 2) : "–", w.rows ? `7-day: ${usd(w.spend)} spend, ${w.purch} purchases, ROAS ${w.roas != null ? w.roas.toFixed(2) + "×" : "–"}. Floor ${g.roas_floor}×.` : "Log Meta daily below (or connect Meta)."],
+    [g2, `First-order AOV ≥ $${g.target_first_aov_usd}`, usd(g2v, 2), `New customers, last 30 days of the export.${aovLive ? ` Live AOV this month (all orders): ${usd(aovLive, 2)}.` : ""} Keep 18/24-pair bundles as the default offer.`],
+    [g3, `Month-1 reorder ≥ ${pct(g.second_order_month1_goal)}`, pct(g.second_order_month1_now, 1), "Share of new customers who order again within 30 days. The day 7–30 post-purchase flow moves this."],
+  ].map(([c, h, val, t]) => `<div class="gate"><span class="state ${c}">${label[c]}</span><h3>${esc(h)}</h3><span class="v">${val}</span><p class="small muted">${esc(t)}</p></div>`).join("");
+}
+function who(id) { return id ? (S.names[id] || "Someone") : ""; }
+function renderActions() {
+  const t = today(), f = S.filter;
+  document.querySelectorAll("#a-tabs button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.f === f)));
+  let xs = S.actions.slice().sort((a, b) => (a.due || "").localeCompare(b.due || "") || (a.order || 0) - (b.order || 0));
+  if (f === "week") xs = xs.filter((a) => a.status !== "done" && a.due <= addDays(t, 7));
+  if (f === "open") xs = xs.filter((a) => a.status !== "done");
+  if (f === "sy") xs = xs.filter((a) => a.needs_sy && !a.sy_ok && a.status !== "done");
+  if (f === "done") xs = xs.filter((a) => a.status === "done");
+  if (!S.actions.length) { $("acts").innerHTML = `<div class="empty">No actions yet. Claude seeds the starter list; anyone at Contributor or above can add more below.</div>`; return; }
+  if (!xs.length) { $("acts").innerHTML = `<div class="empty">${f === "week" ? "Nothing due in the next 7 days." : "Nothing here."}</div>`; return; }
+  const writable = S.canWrite !== false && !!S.db;
+  $("acts").innerHTML = xs.map((a) => {
+    const over = a.status !== "done" && a.due < t;
+    const syChip = a.needs_sy ? (a.sy_ok ? `<span class="chip ok">Sy OK${a.sy_ok_by ? " · " + esc(who(a.sy_ok_by)) : ""}</span>` : `<span class="chip warn">Needs Sy OK</span>`) : "";
+    const blockDone = a.needs_sy && !a.sy_ok;
+    return `<div class="act ${a.status === "done" ? "done" : ""} ${over ? "overdue" : ""}">
+      <span class="due">${esc((a.due || "").slice(5))}</span>
+      <div><div class="t">${esc(a.title)}</div><div class="meta"><span>${esc(a.owner)}</span>${syChip}${a.impact_usd ? `<span class="num">≈${usd(a.impact_usd)}</span>` : ""}${a.status === "blocked" ? `<span class="chip bad">Blocked</span>` : ""}${a.updated_by ? `<span>· ${esc(who(a.updated_by))}</span>` : ""}</div>${a.note ? `<div class="small muted" style="margin-top:3px">${esc(a.note)}</div>` : ""}</div>
+      <div class="ctl">${writable ? `<select data-st="${esc(a.id)}" aria-label="Status for ${esc(a.title)}">${["todo", "doing", "blocked", "done"].map((s) => `<option value="${s}" ${a.status === s ? "selected" : ""} ${s === "done" && blockDone ? "disabled" : ""}>${{ todo: "To do", doing: "Doing", blocked: "Blocked", done: blockDone ? "Done (needs Sy OK)" : "Done" }[s]}</option>`).join("")}</select>` : `<span class="chip">${esc(a.status)}</span>`}
+        ${a.needs_sy && !a.sy_ok && S.canEdit ? `<button type="button" class="btn sy" data-sy="${esc(a.id)}">Sy OK</button>` : ""}</div></div>`;
+  }).join("");
+}
+function renderMeta() {
+  const v = metaVerdict();
+  $("m-verdict").className = "verdict " + v.cls; $("m-verdict").textContent = v.text;
+  const rows = S.meta.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 14);
+  $("m-table").innerHTML = rows.length ? `<thead><tr><th>Day</th><th class="r">Spend</th><th class="r">Purch.</th><th class="r">CPR</th><th class="r">ROAS</th></tr></thead><tbody>` +
+    rows.map((r) => `<tr><td class="num">${esc(r.date.slice(5))}</td><td class="r num">${usd(r.spend)}</td><td class="r num">${r.purchases}</td><td class="r num">${r.purchases ? usd(r.spend / r.purchases, 2) : "–"}</td><td class="r num">${r.spend ? (r.value / r.spend).toFixed(2) + "×" : "–"}</td></tr>`).join("") + `</tbody>` : "";
+}
+function segLabel(k) { if (k === "all") return "Everyone subscribed (BFCM / holiday)"; const s = S.sb && S.sb.segments.find((x) => x.key === k); return s ? s.label : k; }
+function renderSends() {
+  if (S.sb && !$("s-seg").options.length) {
+    $("s-seg").innerHTML = `<option value="all">${esc(segLabel("all"))}</option>` + S.sb.segments.map((s) => `<option value="${esc(s.key)}">${esc(s.label)}</option>`).join("");
+  }
+  const rows = S.sends.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 20);
+  $("s-table").innerHTML = rows.length ? `<thead><tr><th>Date</th><th>Who</th><th>Email</th><th>Channel</th><th>By</th></tr></thead><tbody>` +
+    rows.map((s) => `<tr><td class="num">${esc(s.date.slice(5))}</td><td>${esc(segLabel(s.segment))}</td><td>${esc(s.name)}</td><td>${esc(s.channel)}</td><td class="small">${esc(who(s.by))}</td></tr>`).join("") + `</tbody>` : `<tr><td class="muted">No sends logged yet.</td></tr>`;
+}
+function renderChart() {
+  if (!S.sb) return;
+  const mn = monthNow();
+  const months = [...new Set([...S.sb.actual_months.map((m) => m.month), ...S.sb.plan_months.map((m) => m.month)])].sort();
+  const act = Object.fromEntries(S.sb.actual_months.map((m) => [m.month, m.sales_usd]));
+  if (mn.src === "live") act[mn.m] = mn.sales;
+  const plan = Object.fromEntries(S.sb.plan_months.map((m) => [m.month, m.revenue_usd]));
+  const W = 760, H = 230, pl = 40, pr = 8, pt = 14, pb = 26, max = 110000;
+  const step = (W - pl - pr) / months.length, bw = step * 0.62, y = (v) => pt + (H - pt - pb) * (1 - Math.min(v, max) / max);
+  let s = [0, 25000, 50000, 75000].map((t) => `<line x1="${pl}" x2="${W - pr}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)" stroke-dasharray="2 4"/><text x="${pl - 5}" y="${y(t) + 3}" text-anchor="end">${t / 1000}k</text>`).join("");
+  s += `<line x1="${pl}" x2="${W - pr}" y1="${y(100000)}" y2="${y(100000)}" stroke="var(--accent)" stroke-width="1.5"/><text x="${pl - 5}" y="${y(100000) + 3}" text-anchor="end" style="fill:var(--accent);font-weight:600">100k</text>`;
+  months.forEach((m, i) => {
+    const x = pl + i * step + (step - bw) / 2;
+    if (plan[m] != null) s += `<rect x="${x}" y="${y(plan[m])}" width="${bw}" height="${y(0) - y(plan[m])}" fill="none" stroke="var(--plan)" stroke-width="1.5" rx="2"><title>${monLabel(m)} plan ${usd(plan[m])}</title></rect>`;
+    if (act[m] != null) s += `<rect x="${x + bw * 0.18}" y="${y(act[m])}" width="${bw * 0.64}" height="${y(0) - y(act[m])}" fill="${m === mn.m ? "var(--live)" : "var(--actual)"}" rx="2"><title>${monLabel(m)} actual ${usd(act[m])}</title></rect>`;
+    if (i % 2 === 0 || months.length < 14) s += `<text x="${x + bw / 2}" y="${H - pb + 14}" text-anchor="middle">${monLabel(m).replace(" ", "’")}</text>`;
+  });
+  $("chart").innerHTML = `<div class="scroll"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:560px" role="img" aria-label="Monthly sales, actual vs plan, with the $100k line">${s}</svg></div>`;
+}
+function renderSegs() {
+  if (!S.sb) return;
+  $("segs").innerHTML = `<thead><tr><th>Who</th><th class="r">Buyers</th><th class="r">90-day reorder</th><th>When</th><th>Offer</th></tr></thead><tbody>` +
+    S.sb.segments.map((s) => `<tr><td><b>${esc(s.label)}</b></td><td class="r num">${s.customers}</td><td class="r num">${s.reorder_90d == null ? "–" : pct(s.reorder_90d, 1)}</td><td class="small">${esc(s.when)}</td><td class="small">${esc(s.offer)}</td></tr>`).join("") + `</tbody>`;
+}
+
+// ---------------------------------------------------------------- wiring
+$("a-tabs").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; S.filter = b.dataset.f; try { localStorage.setItem("wr-filter", S.filter); } catch (_) {} renderActions(); });
+try { S.filter = localStorage.getItem("wr-filter") || "week"; } catch (_) {}
+$("acts").addEventListener("change", async (e) => {
+  const sel = e.target.closest("select[data-st]"); if (!sel || !S.db) return;
+  const id = sel.dataset.st; sel.disabled = true;
+  try { await S.db.doc("actions/" + id).update({ status: sel.value, updated_by: S.me, updated_at: new Date().toISOString() }); toast("Saved"); }
+  catch (err) { onWriteError(err); } finally { sel.disabled = false; }
+});
+$("acts").addEventListener("click", async (e) => {
+  const b = e.target.closest("button[data-sy]"); if (!b || !S.db) return;
+  b.disabled = true;
+  try { await S.db.doc("actions/" + b.dataset.sy).update({ sy_ok: true, sy_ok_by: S.me, sy_ok_at: new Date().toISOString() }); toast("Approved"); }
+  catch (err) { onWriteError(err); b.disabled = false; }
+});
+$("a-form").addEventListener("submit", async (e) => {
+  e.preventDefault(); if (!S.db) return;
+  const title = $("a-title").value.trim(); if (!title) return;
+  try {
+    await S.db.collection("actions").add({ title, owner: $("a-owner").value, due: $("a-due").value, lane: "custom", needs_sy: $("a-sy").checked,
+      sy_ok: false, status: "todo", note: "", impact_usd: null, order: 100, updated_by: S.me, updated_at: new Date().toISOString() });
+    e.target.reset(); toast("Action added");
+  } catch (err) { onWriteError(err); }
+});
+$("m-form").addEventListener("submit", async (e) => {
+  e.preventDefault(); if (!S.db) return;
+  const d = $("m-date").value;
+  try {
+    await S.db.doc("meta_daily/" + d).set({ date: d, spend: +$("m-spend").value, purchases: +$("m-purch").value, value: +$("m-val").value, by: S.me, at: new Date().toISOString() });
+    toast("Meta day saved"); $("m-spend").value = $("m-purch").value = $("m-val").value = "";
+  } catch (err) { onWriteError(err); }
+});
+$("s-form").addEventListener("submit", async (e) => {
+  e.preventDefault(); if (!S.db) return;
+  const seg = $("s-seg").value, date = $("s-date").value, ch = $("s-ch").value;
+  const c = capCheck(seg, date, ch);
+  if (!c.ok) {
+    $("s-check").innerHTML = `<span class="chip bad">Blocked</span> ${c.worst > 3 ? `This would be email #${c.worst} inside 30 days for "${esc(segLabel(seg))}". Move it out or drop another send.` : ""} ${c.otherCh ? `"${esc(c.otherCh.name)}" already went by ${esc(c.otherCh.channel)} the same week.` : ""}`;
+    return;
+  }
+  try {
+    await S.db.collection("sends").add({ segment: seg, date, channel: ch, name: $("s-name").value.trim(), sy_ok: true, by: S.me, at: new Date().toISOString() });
+    $("s-check").innerHTML = `<span class="chip ok">Within the cap</span> Logged.`; $("s-name").value = ""; $("s-ok").checked = false;
+  } catch (err) { onWriteError(err); }
+});
+function onWriteError(err) {
+  if (err && err.code === "invalid_argument") { S.canWrite = false; showForms(); render(); toast("You can view the board but not change it."); }
+  else if (err && err.code === "quota_exceeded") toast("The board's storage is full. Tell Claude to prune old logs.");
+  else toast("Couldn't save. Try again in a moment.");
+}
+function showForms() {
+  const w = !!S.db && S.canWrite !== false;
+  ["a-form", "m-form", "s-form"].forEach((id) => ($(id).hidden = !w));
+}
+async function resolveNames() {
+  if (!S.user) return;
+  const ids = [...new Set([...S.actions.flatMap((a) => [a.updated_by, a.sy_ok_by]), ...S.sends.map((s) => s.by)].filter(Boolean))].filter((id) => !(id in S.names));
+  if (!ids.length) return;
+  try { const ps = await S.user.profiles(ids); ids.forEach((id) => (S.names[id] = (ps[id] && ps[id].name) || "Someone")); renderActions(); renderSends(); } catch (_) {}
+}
+
+// ---------------------------------------------------------------- boot
+render();
+$("m-date").value = addDays(today(), -1); $("s-date").value = today(); $("a-due").value = addDays(today(), 3);
+(async () => {
+  const [db, user] = await Promise.all([window.claude?.use?.("db") ?? null, window.claude?.use?.("user") ?? null]);
+  S.user = user;
+  if (!db) { S.db = false; render(); return; }
+  S.db = db;
+  if (user) {
+    try { S.me = await user.id(); } catch (_) {}
+    try { S.canEdit = await user.canEdit(); } catch (_) {}
+    try { S.canWrite = await user.can("data.write"); } catch (_) {}
+  }
+  showForms();
+  const fail = (what) => (e) => { if (e && e.code === "revoked") { S.db = false; showForms(); } render(); };
+  db.doc("board/scoreboard").onSnapshot((snap) => { S.sb = snap.exists ? snap.data() : null; render(); }, fail("scoreboard"));
+  db.collection("actions").onSnapshot((q) => { S.actions = q.docs.map((d) => ({ id: d.id, ...d.data() })); render(); resolveNames(); }, fail("actions"));
+  db.collection("meta_daily").onSnapshot((q) => { S.meta = q.docs.map((d) => d.data()); render(); }, fail("meta"));
+  db.collection("sends").onSnapshot((q) => { S.sends = q.docs.map((d) => d.data()); render(); resolveNames(); }, fail("sends"));
+})();
+
+(async () => {
+  const mcp = await (window.claude?.use?.("mcp") ?? null);
+  if (!mcp) { S.liveState = "off"; renderChips(); return; }
+  const t = today(), month = t.slice(0, 7);
+  const query = `FROM sales SHOW orders, gross_sales TIMESERIES day SINCE ${month}-01 UNTIL today`;
+  mcp.watchTool("Shopify", "run-analytics-query", { query }, (ev) => {
+    if (ev.type === "error") {
+      const code = ev.error && ev.error.code;
+      if (["needs_reauth", "server_not_connected", "not_in_manifest", "blocked_by_policy", "approval_required", "selection_required"].includes(code)) S.live = null;
+      S.liveState = "off";
+      $("foot-src").textContent = code === "needs_reauth" ? "Shopify live is off: reconnect Shopify in claude.ai Settings → Connectors." :
+        code === "server_not_connected" ? "Shopify live is off: add the Shopify connector in claude.ai Settings → Connectors and sign in to Comfort Fresh." :
+        code === "not_in_manifest" ? "Shopify live is off for this page (not allowed). Numbers come from the latest export." :
+        "Shopify live is unavailable right now. Numbers come from the latest export.";
+      render(); return;
+    }
+    const p = ev.result && ev.result.payload;
+    if (!p || p.shopDomain !== SHOP) {
+      S.live = null; S.liveState = "off";
+      $("foot-src").textContent = `Shopify live is off: the connector is signed in to ${p && p.shopDomain ? p.shopDomain : "another store"}, not Comfort Fresh (${SHOP}). Switch stores in the Shopify connector.`;
+      render(); return;
+    }
+    const cols = (p.columns || []).map((c) => c.name), io = cols.indexOf("orders"), ig = cols.indexOf("gross_sales");
+    let orders = 0, sales = 0; (p.rows || []).forEach((r) => { orders += +r[io] || 0; sales += +r[ig] || 0; });
+    S.live = { month, sales, orders, aov: orders ? sales / orders : null, storedAt: ev.result.cache ? ev.result.cache.storedAt : Date.now() };
+    S.liveState = "live";
+    $("foot-src").textContent = `Month-to-date is live from Shopify (${SHOP}), updated ${new Date(S.live.storedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}. Other scoreboard numbers come from the latest export Claude loaded.`;
+    render();
+  }, { cache: { staleTime: 10 * 60 * 1000, gcTime: 60 * 60 * 1000 }, refetchInterval: 15 * 60 * 1000 });
+})();
+</script>

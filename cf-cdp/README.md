@@ -49,6 +49,15 @@ Swap in actuals with no credentials needed: export orders from Shopify Admin, th
 `python3 cdp_cli.py build-revenue --shopify-csv orders_export.csv` and
 `python3 cdp_cli.py feed --revenue warehouse/revenue/revenue_daily.json`.
 
+## Operator pages (Claude artifacts)
+| Page | What it's for | Data |
+|---|---|---|
+| North Star War Room | Daily command page: alerts, month pacing, the 3 gates, action board with Sy approvals, Meta daily log, email-cap checker | Artifact db (`board/scoreboard` written by Claude via `cdp_cli.py warroom-seed`; `actions`, `meta_daily`, `sends` written by the team) + live Shopify MTD through the viewer's Shopify connector, accepted only for `md-diab.myshopify.com` |
+| Money Magnet | Ranked moves, win-back playbook, path to $100k | `cdp_cli.py magnet` feed |
+| Revenue & Profit | Actuals + modeled P&L | `cdp_cli.py feed` |
+
+Refresh after a new Shopify export: `build-revenue` → `feed`/`render`, `magnet` → render, `warroom-seed` → write `board/scoreboard` into the War Room db.
+
 ## Build phases
 | Phase | Status | Next step |
 |---|---|---|

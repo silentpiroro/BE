@@ -288,12 +288,12 @@ def opportunities(metrics: dict, sim: dict, ss: dict) -> list[dict]:
         {
             "rank": 1, "name": "BFCM to the subscribed list", "owner": "CF Retention → Sy OK",
             "impact": f"≈${bfcm['revenue_usd']:,} one-time (Nov 27–30)", "impact_usd": bfcm["revenue_usd"],
-            "confidence": "Medium", "when": "Draft by Nov 13, Sy OK by Nov 20, send Nov 27 + Nov 30",
+            "confidence": "Medium", "when": "Draft by Nov 13, Sy OK by Nov 20, send Nov 27",
             "why": (f"{ASSUMPTIONS['bfcm_sub_list']:,} subscribed profiles; the biggest cash event left in 2026. "
                     f"Modeled at {ASSUMPTIONS['bfcm_conv']:.0%} conversion × ${ASSUMPTIONS['bfcm_aov_usd']:.0f}."),
             "steps": [
                 "Offer = bundle-first: 18-pair and 24-pair packs as the hero, 6@$49 as the entry. No stacking with COMEBACK15.",
-                "Two sends only (Black Friday, Cyber Monday) to stay under 3 marketing emails / 30 days.",
+                "One send on Nov 27 that says 'ends Monday' (no separate Cyber Monday email): with Nov 14 and Dec 10 that keeps everyone at 3 marketing emails / 30 days.",
                 "Exclude anyone emailed from Gmail that week and anyone who ordered in the last 14 days.",
                 "Omnisend draft → Sy preview/OK → schedule. CoS confirms stock on hero SKUs by Nov 20.",
             ],
@@ -353,9 +353,9 @@ def opportunities(metrics: dict, sim: dict, ss: dict) -> list[dict]:
         {
             "rank": 6, "name": "C90 win-back with COMEBACK15", "owner": "CF Retention → Sy OK",
             "impact": f"≈${wb['revenue_usd']:,} one-time", "impact_usd": wb["revenue_usd"], "confidence": "Medium-low",
-            "when": "One send before Nov 26 (code expiry); not to Wave A",
+            "when": "One send on Nov 10 (code ends ~Nov 26); not to Wave A",
             "why": f"997 SUB-eligible C90 members; {ripe.get('1 order · d90+', {}).get('customers', 0)} one-order buyers in this export went quiet 90+ days ago.",
-            "steps": ["Single send, 15% once, ends ~Nov 26.", "Same week as BFCM? No: send by Nov 19 to keep the 3/30 cap."],
+            "steps": ["Single send, 15% once, ends ~Nov 26.", "Nov 10 keeps it inside the 3-emails-per-30-days cap with Nov 14 and Nov 27."],
         },
         {
             "rank": 7, "name": "Replenish club for bundle buyers", "owner": "CF Retention + Product",

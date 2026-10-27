@@ -285,6 +285,14 @@ def cmd_export_emails(a):
     print(f"wrote {out}: {len(actions)} customers, {len(big)} large-feet (size 13-15)")
 
 
+def cmd_warroom_seed(a):
+    from cdp import warroom
+    sb = warroom.scoreboard(a.orders, date.fromisoformat(a.as_of))
+    out = Path(a.out_dir)
+    _write_json(out / "warroom_scoreboard.json", sb)
+    _write_json(out / "warroom_actions.json", warroom.actions(sb))
+
+
 def cmd_build_audiences(a):
     profiles = _read_csv(a.profiles)
     rows = waves.build_membership(profiles, a.as_of)
@@ -359,6 +367,12 @@ def main(argv=None):
     s.add_argument("--as-of", default=today)
     s.add_argument("--out", default=str(WH / "exports" / f"customer_email_lists_{today}.xlsx"))
     s.set_defaults(fn=cmd_export_emails)
+
+    s = sub.add_parser("warroom-seed", help="scoreboard + starter actions for the War Room db")
+    s.add_argument("--orders", required=True)
+    s.add_argument("--as-of", default=today)
+    s.add_argument("--out-dir", default=str(WH / "feeds"))
+    s.set_defaults(fn=cmd_warroom_seed)
 
     s = sub.add_parser("build-audiences")
     s.add_argument("--profiles", default=str(SAMPLE / "profiles.sample.csv"))

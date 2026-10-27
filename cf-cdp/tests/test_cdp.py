@@ -173,6 +173,17 @@ class PlaybookTest(unittest.TestCase):
         self.assertEqual(a(lifetime_orders=1, days_since=3), "recent")
 
 
+class WarRoomTest(unittest.TestCase):
+    def test_every_send_action_needs_sy(self):
+        from cdp import warroom
+        sb = {"plan_months": [{"month": "2027-02", "pairs": 4000}], "segments": []}
+        acts = warroom.actions(sb)
+        self.assertEqual(len({a["id"] for a in acts}), len(acts))
+        for a in acts:
+            if a["title"].lower().startswith("send") or "send to" in a["title"].lower():
+                self.assertTrue(a["needs_sy"], a["title"])
+
+
 class MagnetTest(unittest.TestCase):
     def metrics(self):
         return {"repeat_hazard_by_month": [0.10, 0.025, 0.02] + [0.01] * 9,
