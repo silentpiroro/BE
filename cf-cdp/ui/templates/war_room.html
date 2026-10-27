@@ -116,6 +116,7 @@ a { color: var(--accent); }
 
   <div class="guard" role="note">
     <span><b>No send</b>, <b>no Shopify change</b>, no budget step above $8k/mo without Sy's OK</span>
+    <span>CAC planned at <b>$70</b>: first order ≈ break-even, profit from repeat orders</span>
     <span>≤3 marketing emails / 30 days · never Omnisend + Gmail marketing in the same week</span>
     <span>Wool Wave C: <b>HOLD</b> until CF22032 &gt; 0</span>
   </div>
@@ -150,13 +151,14 @@ a { color: var(--accent); }
 
   <div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">
     <section class="panel" aria-labelledby="m-h">
-      <div class="panel-head"><h2 id="m-h">Meta daily log</h2><span class="small muted">Until Meta is connected: log yesterday every morning</span></div>
+      <div class="panel-head"><h2 id="m-h">Meta daily log</h2><span class="small muted">CAC = spend ÷ new customers in Shopify. Log yesterday every morning</span></div>
       <div id="m-verdict" class="verdict unk">No Meta numbers yet.</div>
       <form class="row" id="m-form" hidden>
         <label>Day<input id="m-date" type="date" required></label>
         <label>Spend $<input id="m-spend" type="number" min="0" step="0.01" required></label>
         <label>Purchases<input id="m-purch" type="number" min="0" step="1" required></label>
         <label>Purchase value $<input id="m-val" type="number" min="0" step="0.01" required></label>
+        <label>New customers (Shopify)<input id="m-new" type="number" min="0" step="1"></label>
         <button class="btn primary" type="submit">Save day</button>
       </form>
       <div class="scroll"><table id="m-table"></table></div>
@@ -221,24 +223,27 @@ function planFor(m) { return S.sb ? S.sb.plan_months.find((p) => p.month === m) 
 function metaWindow(days) {
   const end = addDays(today(), -1), start = addDays(end, -(days - 1));
   const rows = S.meta.filter((r) => r.date >= start && r.date <= end);
-  const days = rows.reduce((a, r) => a + (+r.days || 1), 0);
+  const covered = rows.reduce((a, r) => a + (+r.days || 1), 0);
   const spend = rows.reduce((a, r) => a + (+r.spend || 0), 0), purch = rows.reduce((a, r) => a + (+r.purchases || 0), 0),
         val = rows.reduce((a, r) => a + (+r.value || 0), 0);
-  return { rows: rows.length, days, spend, purch, val, cpr: purch ? spend / purch : null, roas: spend ? val / spend : null };
+  // CAC uses Shopify new customers when logged; otherwise Meta-reported purchases stand in.
+  const newc = rows.reduce((a, r) => a + (r.new_customers != null ? +r.new_customers : +r.purchases || 0), 0);
+  return { rows: rows.length, days: covered, spend, purch, val, newc, cac: newc ? spend / newc : null, cpr: purch ? spend / purch : null, roas: spend ? val / spend : null };
 }
 function metaVerdict() {
-  const g = S.sb ? S.sb.gates : { target_cpr_usd: 25, cut_cpr_usd: 35, roas_floor: 3.5, media_band_max_usd: 8000 };
+  const g = S.sb && S.sb.gates.cac_usd ? S.sb.gates : { cac_usd: 70, cac_cut_usd: 85, media_band_max_usd: 8000 };
   const w7 = metaWindow(7), w14 = metaWindow(14);
   if (!w7.rows) return { cls: "unk", text: "No Meta numbers for the last 7 days. Log yesterday below.", w7 };
   const monthly = (w7.spend / Math.max(w7.days, 1)) * 30.44;
   const pace = monthly > g.media_band_max_usd ? ` Spend is pacing ${usd(monthly)}/mo, above the $${g.media_band_max_usd / 1000}k band.` : "";
-  if (w14.days >= 10 && w14.cpr != null && w14.cpr > g.cut_cpr_usd) return { cls: "bad", text: `CUT one budget step: 14-day CPR ${usd(w14.cpr, 2)} is above $${g.cut_cpr_usd}.`, w7 };
-  if (w7.cpr != null && w7.cpr <= g.target_cpr_usd && w7.roas >= g.roas_floor) {
+  const cacTxt = (w) => w.cac != null ? usd(w.cac, 2) : "no new customers";
+  if (w14.days >= 10 && (w14.cac == null || w14.cac > g.cac_cut_usd)) return { cls: "bad", text: `CUT one budget step: 14-day CAC ${cacTxt(w14)} is above $${g.cac_cut_usd}.` + pace, w7 };
+  if (w7.cac != null && w7.cac <= g.cac_usd) {
     const over = monthly * 1.3 > g.media_band_max_usd;
-    return { cls: "ok", text: `SCALE +30%: 7-day CPR ${usd(w7.cpr, 2)}, ROAS ${w7.roas.toFixed(2)}×.` + (over ? ` That takes spend past the $${g.media_band_max_usd / 1000}k/mo band, so it needs Sy's OK.` : ""), w7 };
+    return { cls: "ok", text: `SCALE +30%: 7-day CAC ${cacTxt(w7)} on ${usd(w7.spend)} spend.` + (over ? ` That takes spend past the $${g.media_band_max_usd / 1000}k/mo band, so it needs Sy's OK.` : ""), w7 };
   }
-  if (w7.cpr != null && w7.cpr <= g.cut_cpr_usd) return { cls: "warn", text: `HOLD budget: 7-day CPR ${usd(w7.cpr, 2)}, ROAS ${w7.roas != null ? w7.roas.toFixed(2) + "×" : "–"}. Fix the offer/creative before scaling.`, w7 };
-  return { cls: "bad", text: `CUT one budget step: 7-day CPR ${w7.cpr != null ? usd(w7.cpr, 2) : "no purchases"} on ${usd(w7.spend)} spend.` + pace, w7 };
+  if (w7.cac != null && w7.cac <= g.cac_cut_usd) return { cls: "warn", text: `HOLD budget: 7-day CAC ${cacTxt(w7)} (target $${g.cac_usd}). Fix the offer or creative before scaling.` + pace, w7 };
+  return { cls: "bad", text: `CUT one budget step: 7-day CAC ${cacTxt(w7)} on ${usd(w7.spend)} spend (target $${g.cac_usd}).` + pace, w7 };
 }
 function capCheck(seg, date, channel) {
   // Rolling 30-day windows that contain `date`; BFCM-style "all" sends count for every segment.
@@ -313,21 +318,26 @@ function renderScore() {
     `<div class="kv"><span>Repeat orders / 30d</span><span class="num">${l.repeat_orders}</span></div>`;
   const hit = S.sb.plan_months.find((p) => p.month === S.sb.hits_target);
   const next = S.sb.plan_months.find((p) => p.month > mn.m) || S.sb.plan_months[0];
-  $("sc-next").innerHTML = head("Plan") + `<div class="big">${hit ? monLabel(hit.month) : "–"}</div><p class="small muted">Modeled month the business reaches $100k, if all three gates hold.</p>` +
-    (next ? `<div class="kv"><span>${monLabel(next.month)} target</span><span class="num">${usd(next.revenue_usd)}</span></div><div class="kv"><span>New customers needed</span><span class="num">${next.new_customers}</span></div><div class="kv"><span>Meta at $${S.sb.gates.target_cpr_usd} CPR</span><span class="num">${usd(next.media_usd)}</span></div>` : "");
+  const E = S.sb.economics;
+  const engine = E ? `<div class="kv"><span>Repeat orders / 30d now</span><span class="num">${l.repeat_orders}</span></div>` +
+    `<div class="kv"><span>Needed at $100k for 15% net</span><span class="num">${hit ? hit.repeat_orders_needed_15pct : "–"}</span></div>` +
+    `<div class="kv"><span>Profit per repeat order</span><span class="num">${usd(E.repeat_profit_per_order_usd)}</span></div>` +
+    `<div class="kv"><span>First order after $${E.cac_usd} CAC</span><span class="num">${usd(E.first_order_profit_usd)}</span></div>` : "";
+  $("sc-next").innerHTML = head("Plan + profit engine") + `<div class="big">${hit ? monLabel(hit.month) : "–"}</div><p class="small muted">Modeled month the business reaches $100k, if all three gates hold.</p>` +
+    (next ? `<div class="kv"><span>${monLabel(next.month)} target</span><span class="num">${usd(next.revenue_usd)}</span></div><div class="kv"><span>New customers needed</span><span class="num">${next.new_customers}</span></div><div class="kv"><span>Meta at $${S.sb.gates.cac_usd} CAC</span><span class="num">${usd(next.media_usd)}</span></div>` : "") + engine;
 }
 function renderGates() {
   if (!S.sb) { $("gates").innerHTML = ""; return; }
   const g = S.sb.gates, v = metaVerdict(), w = v.w7;
-  const g1 = w.rows ? (w.cpr != null && w.cpr <= g.target_cpr_usd ? "ok" : w.cpr != null && w.cpr <= g.cut_cpr_usd ? "warn" : "bad") : "unk";
+  const g1 = w.rows ? (w.cac != null && w.cac <= g.cac_usd ? "ok" : w.cac != null && w.cac <= g.cac_cut_usd ? "warn" : "bad") : "unk";
   const aovLive = S.live && S.live.aov ? S.live.aov : null;
   const g2v = g.first_aov_now_usd, g2 = g2v >= g.target_first_aov_usd ? "ok" : g2v >= g.target_first_aov_usd * 0.85 ? "warn" : "bad";
   const g3 = g.second_order_month1_now >= g.second_order_month1_goal ? "ok" : "warn";
   const label = { ok: "Holding", warn: "At risk", bad: "Failing", unk: "Not measured" };
   $("gates").innerHTML = [
-    [g1, `Meta CPR ≤ $${g.target_cpr_usd}`, w.rows ? usd(w.cpr, 2) : "–", w.rows ? `Last 7 days logged (${w.days} day${w.days > 1 ? "s" : ""}): ${usd(w.spend)} spend, ${w.purch} purchases, ROAS ${w.roas != null ? w.roas.toFixed(2) + "×" : "–"}. Floor ${g.roas_floor}×.` : "Log Meta daily below (or connect Meta)."],
+    [g1, `CAC ≤ $${g.cac_usd}`, w.rows ? (w.cac != null ? usd(w.cac, 2) : "no new customers") : "–", w.rows ? `Last 7 days logged (${w.days} day${w.days > 1 ? "s" : ""}): ${usd(w.spend)} spend ÷ ${w.newc} new customers. At $${g.cac_usd} the first order just breaks even; above $${g.cac_cut_usd} it loses money.` : "Log Meta spend and Shopify new customers daily below."],
     [g2, `First-order AOV ≥ $${g.target_first_aov_usd}`, usd(g2v, 2), `New customers, last 30 days of the export.${aovLive ? ` Live AOV this month (all orders): ${usd(aovLive, 2)}.` : ""} Keep 18/24-pair bundles as the default offer.`],
-    [g3, `Month-1 reorder ≥ ${pct(g.second_order_month1_goal)}`, pct(g.second_order_month1_now, 1), "Share of new customers who order again within 30 days. The day 7–30 post-purchase flow moves this."],
+    [g3, `Month-1 reorder ≥ ${pct(g.second_order_month1_goal)}`, pct(g.second_order_month1_now, 1), "Repeat orders are the profit. Share of new customers who order again within 30 days; the day 7–30 post-purchase flow moves this."],
   ].map(([c, h, val, t]) => `<div class="gate"><span class="state ${c}">${label[c]}</span><h3>${esc(h)}</h3><span class="v">${val}</span><p class="small muted">${esc(t)}</p></div>`).join("");
 }
 function who(id) { return id ? (S.names[id] || "Someone") : ""; }
@@ -357,8 +367,8 @@ function renderMeta() {
   const v = metaVerdict();
   $("m-verdict").className = "verdict " + v.cls; $("m-verdict").textContent = v.text;
   const rows = S.meta.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 14);
-  $("m-table").innerHTML = rows.length ? `<thead><tr><th>Day</th><th class="r">Spend</th><th class="r">Purch.</th><th class="r">CPR</th><th class="r">ROAS</th></tr></thead><tbody>` +
-    rows.map((r) => `<tr><td class="num">${r.days > 1 && r.start ? esc(r.start.slice(5)) + "→" : ""}${esc(r.date.slice(5))}</td><td class="r num">${usd(r.spend)}</td><td class="r num">${r.purchases}</td><td class="r num">${r.purchases ? usd(r.spend / r.purchases, 2) : "–"}</td><td class="r num">${r.spend ? (r.value / r.spend).toFixed(2) + "×" : "–"}</td></tr>`).join("") + `</tbody>` : "";
+  $("m-table").innerHTML = rows.length ? `<thead><tr><th>Day</th><th class="r">Spend</th><th class="r">New cust.</th><th class="r">CAC</th><th class="r">Meta purch.</th><th class="r">ROAS</th></tr></thead><tbody>` +
+    rows.map((r) => `<tr><td class="num">${r.days > 1 && r.start ? esc(r.start.slice(5)) + "→" : ""}${esc(r.date.slice(5))}</td><td class="r num">${usd(r.spend)}</td><td class="r num">${r.new_customers != null ? r.new_customers : "–"}</td><td class="r num">${r.new_customers ? usd(r.spend / r.new_customers, 2) : "–"}</td><td class="r num">${r.purchases}</td><td class="r num">${r.spend ? (r.value / r.spend).toFixed(2) + "×" : "–"}</td></tr>`).join("") + `</tbody>` : "";
 }
 function segLabel(k) { if (k === "all") return "Everyone subscribed (BFCM / holiday)"; const s = S.sb && S.sb.segments.find((x) => x.key === k); return s ? s.label : k; }
 function renderSends() {
@@ -422,8 +432,9 @@ $("m-form").addEventListener("submit", async (e) => {
   e.preventDefault(); if (!S.db) return;
   const d = $("m-date").value;
   try {
-    await S.db.doc("meta_daily/" + d).set({ date: d, spend: +$("m-spend").value, purchases: +$("m-purch").value, value: +$("m-val").value, by: S.me, at: new Date().toISOString() });
-    toast("Meta day saved"); $("m-spend").value = $("m-purch").value = $("m-val").value = "";
+    const nc = $("m-new").value === "" ? null : +$("m-new").value;
+    await S.db.doc("meta_daily/" + d).set({ date: d, spend: +$("m-spend").value, purchases: +$("m-purch").value, value: +$("m-val").value, new_customers: nc, by: S.me, at: new Date().toISOString() });
+    toast("Meta day saved"); $("m-spend").value = $("m-purch").value = $("m-val").value = $("m-new").value = "";
   } catch (err) { onWriteError(err); }
 });
 $("s-form").addEventListener("submit", async (e) => {

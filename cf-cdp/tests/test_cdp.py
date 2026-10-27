@@ -33,6 +33,9 @@ class PnlTest(unittest.TestCase):
     def test_live_media_replaces_scenario(self):
         actual = pnl.sum_period([row("2026-10-01")], date(2026, 10, 1), date(2026, 10, 1))
         m = pnl.model_pnl(actual, None, "live", live_media_usd=123.0)
+        c = pnl.model_pnl(actual, None, "CAC", cac_usd=70.0)
+        self.assertEqual(next(ln for ln in c["lines"] if ln["key"] == "media")["usd"], -8 * 70.0)
+        self.assertIn("profit_split", c)
         media = next(ln for ln in m["lines"] if ln["key"] == "media")
         self.assertEqual(media["usd"], -123.0)
         self.assertTrue(media["basis"].startswith("ACTUAL"))
@@ -184,6 +187,23 @@ class PlaybookTest(unittest.TestCase):
         self.assertEqual(a(lifetime_orders=1, days_since=3), "recent")
 
 
+class PageScriptTest(unittest.TestCase):
+    def test_page_scripts_parse(self):
+        import shutil
+        import subprocess
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("node not installed")
+        root = Path(__file__).resolve().parents[1] / "ui" / "templates"
+        for page in root.glob("*.html"):
+            html = page.read_text()
+            js = html[html.rindex("<script>") + 8: html.rindex("</script>")].replace("/*__CDP_FEED__*/null", "null")
+            with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as fh:
+                fh.write(js)
+            r = subprocess.run([node, "--check", fh.name], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, f"{page.name}: {r.stderr[:300]}")
+
+
 class WarRoomTest(unittest.TestCase):
     def test_every_send_action_needs_sy(self):
         from cdp import warroom
@@ -215,10 +235,24 @@ class MagnetTest(unittest.TestCase):
         self.assertTrue(any(r["over_band"] for r in rows))
         self.assertEqual(rows[3]["po_month"], rows[0]["month"])  # 3-month lead time
 
-    def test_target_cpr_passes_roas_floor(self):
+    def test_cac_media_and_profit_split(self):
         from cdp import magnet
+        sim = magnet.simulate(self.metrics())
+        r = sim["months"][0]
+        self.assertAlmostEqual(r["media_usd"], r["new_customers"] * C.CAC_USD, delta=C.CAC_USD)
+        # first order roughly breaks even at $70 CAC; repeat orders carry the profit
+        self.assertLess(abs(sim["first_order_profit_per_customer_usd"]), 15)
+        self.assertGreater(r["repeat_profit_usd"], r["first_order_profit_usd"])
+
+    def test_steady_state_repeat_needed(self):
+        from cdp import magnet
+        ss = magnet.steady_state(self.metrics())
+        k = ss["repeat_orders_per_customer_needed_15pct"]
         a = magnet.ASSUMPTIONS
-        self.assertGreaterEqual(a["first_aov_usd"] / a["target_cpr_usd"], C.META_MIN_PURCHASE_ROAS[0])
+        c = 10 * C.COGS_PER_PAIR_USD + C.SHIPPING_PER_ORDER_USD
+        n = 100_000 / (a["first_aov_usd"] + k * a["repeat_aov_usd"])
+        net = n * ((a["first_aov_usd"] - c - a["cac_usd"]) + k * (a["repeat_aov_usd"] - c)) - C.FIXED_SALARIES_USD_MONTH
+        self.assertAlmostEqual(net / 100_000, 0.15, places=2)
 
 
 if __name__ == "__main__":

@@ -216,7 +216,7 @@ def cmd_magnet(a):
         name = seg.replace(" · ", "_").replace(" ", "_").replace("+", "plus").replace("(", "").replace(")", "")
         _write_csv(out / f"{name}_{a.as_of}.csv", [{"email": e} for e in emails], ["email"])
     p = feed["path"]
-    print(f"$100k/mo modeled in {p['hits_target']}; first-order ROAS at target CPR {p['first_order_roas_at_target_cpr']}x")
+    print(f"$100k/mo modeled in {p['hits_target']}; first order nets ${p['first_order_profit_per_customer_usd']} after $70 CAC")
 
 
 def cmd_export_emails(a):

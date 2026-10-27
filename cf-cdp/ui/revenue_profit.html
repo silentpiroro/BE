@@ -151,6 +151,7 @@ code { font-family: var(--font-mono); font-size: .85em; }
       <div class="panel-head"><h2 id="pnl-h">Modeled P&amp;L</h2><span class="small muted" id="pnl-range"></span></div>
       <div class="scroll"><table id="pnl"></table></div>
       <div class="verdict" id="verdict"></div>
+      <div class="scroll"><table id="split"></table></div>
       <div class="scroll"><table id="scen"></table></div>
     </section>
 
@@ -200,6 +201,7 @@ const FEED = {
       "mid": 6500,
       "high": 8000
     },
+    "cac_usd": 70.0,
     "target_net_margin": 0.15
   },
   "periods": {
@@ -222,7 +224,86 @@ const FEED = {
         "pairs_per_order": 6.71
       },
       "pnl": {
+        "cac70": {
+          "profit_split": {
+            "first_orders": 149,
+            "first_order_profit_usd": -4644.82,
+            "repeat_orders": 32,
+            "repeat_profit_usd": 1242.46
+          },
+          "lines": [
+            {
+              "key": "gross_sales",
+              "label": "Gross sales",
+              "usd": 9891.0,
+              "basis": "ACTUAL"
+            },
+            {
+              "key": "discounts_refunds",
+              "label": "Discounts + refunds",
+              "usd": -473.11,
+              "basis": "ACTUAL"
+            },
+            {
+              "key": "net_sales",
+              "label": "Net sales",
+              "usd": 9417.89,
+              "basis": "ACTUAL",
+              "subtotal": true
+            },
+            {
+              "key": "cogs",
+              "label": "COGS (1,215 pairs \u00d7 $0.85)",
+              "usd": -1032.75,
+              "basis": "MODELED"
+            },
+            {
+              "key": "shipping",
+              "label": "Shipping (181 orders \u00d7 $7.50)",
+              "usd": -1357.5,
+              "basis": "MODELED"
+            },
+            {
+              "key": "contribution",
+              "label": "Contribution after product + ship",
+              "usd": 7027.64,
+              "basis": "MODELED",
+              "subtotal": true
+            },
+            {
+              "key": "media",
+              "label": "Meta media",
+              "usd": -10430.0,
+              "basis": "MODELED (CAC $70 \u00d7 149 new customers)"
+            },
+            {
+              "key": "salaries",
+              "label": "Fixed salaries (2 staff)",
+              "usd": -1478.44,
+              "basis": "MODELED"
+            },
+            {
+              "key": "net",
+              "label": "Modeled net",
+              "usd": -4880.8,
+              "basis": "MODELED",
+              "subtotal": true,
+              "total": true
+            }
+          ],
+          "net_usd": -4880.8,
+          "net_margin": -0.4935,
+          "contribution_pct": 0.7105,
+          "meets_target": false,
+          "monthly_sales_for_15pct_net": 23951.0
+        },
         "low": {
+          "profit_split": {
+            "first_orders": 149,
+            "first_order_profit_usd": 1349.87,
+            "repeat_orders": 32,
+            "repeat_profit_usd": 1242.46
+          },
           "lines": [
             {
               "key": "gross_sales",
@@ -290,6 +371,12 @@ const FEED = {
           "monthly_sales_for_15pct_net": 11894.0
         },
         "mid": {
+          "profit_split": {
+            "first_orders": 149,
+            "first_order_profit_usd": 19.27,
+            "repeat_orders": 32,
+            "repeat_profit_usd": 1242.46
+          },
           "lines": [
             {
               "key": "gross_sales",
@@ -357,6 +444,12 @@ const FEED = {
           "monthly_sales_for_15pct_net": 14570.0
         },
         "high": {
+          "profit_split": {
+            "first_orders": 149,
+            "first_order_profit_usd": -1311.32,
+            "repeat_orders": 32,
+            "repeat_profit_usd": 1242.46
+          },
           "lines": [
             {
               "key": "gross_sales",
@@ -444,7 +537,86 @@ const FEED = {
         "pairs_per_order": 6.68
       },
       "pnl": {
+        "cac70": {
+          "profit_split": {
+            "first_orders": 164,
+            "first_order_profit_usd": -5145.62,
+            "repeat_orders": 34,
+            "repeat_profit_usd": 1313.22
+          },
+          "lines": [
+            {
+              "key": "gross_sales",
+              "label": "Gross sales",
+              "usd": 10764.0,
+              "basis": "ACTUAL"
+            },
+            {
+              "key": "discounts_refunds",
+              "label": "Discounts + refunds",
+              "usd": -506.85,
+              "basis": "ACTUAL"
+            },
+            {
+              "key": "net_sales",
+              "label": "Net sales",
+              "usd": 10257.15,
+              "basis": "ACTUAL",
+              "subtotal": true
+            },
+            {
+              "key": "cogs",
+              "label": "COGS (1,323 pairs \u00d7 $0.85)",
+              "usd": -1124.55,
+              "basis": "MODELED"
+            },
+            {
+              "key": "shipping",
+              "label": "Shipping (198 orders \u00d7 $7.50)",
+              "usd": -1485.0,
+              "basis": "MODELED"
+            },
+            {
+              "key": "contribution",
+              "label": "Contribution after product + ship",
+              "usd": 7647.6,
+              "basis": "MODELED",
+              "subtotal": true
+            },
+            {
+              "key": "media",
+              "label": "Meta media",
+              "usd": -11480.0,
+              "basis": "MODELED (CAC $70 \u00d7 164 new customers)"
+            },
+            {
+              "key": "salaries",
+              "label": "Fixed salaries (2 staff)",
+              "usd": -1642.71,
+              "basis": "MODELED"
+            },
+            {
+              "key": "net",
+              "label": "Modeled net",
+              "usd": -5475.11,
+              "basis": "MODELED",
+              "subtotal": true,
+              "total": true
+            }
+          ],
+          "net_usd": -5475.11,
+          "net_margin": -0.5087,
+          "contribution_pct": 0.7105,
+          "meets_target": false,
+          "monthly_sales_for_15pct_net": 23755.0
+        },
         "low": {
+          "profit_split": {
+            "first_orders": 164,
+            "first_order_profit_usd": 1406.24,
+            "repeat_orders": 34,
+            "repeat_profit_usd": 1313.22
+          },
           "lines": [
             {
               "key": "gross_sales",
@@ -512,6 +684,12 @@ const FEED = {
           "monthly_sales_for_15pct_net": 11895.0
         },
         "mid": {
+          "profit_split": {
+            "first_orders": 164,
+            "first_order_profit_usd": -72.2,
+            "repeat_orders": 34,
+            "repeat_profit_usd": 1313.22
+          },
           "lines": [
             {
               "key": "gross_sales",
@@ -579,6 +757,12 @@ const FEED = {
           "monthly_sales_for_15pct_net": 14571.0
         },
         "high": {
+          "profit_split": {
+            "first_orders": 164,
+            "first_order_profit_usd": -1550.63,
+            "repeat_orders": 34,
+            "repeat_profit_usd": 1313.22
+          },
           "lines": [
             {
               "key": "gross_sales",
@@ -666,7 +850,86 @@ const FEED = {
         "pairs_per_order": 6.47
       },
       "pnl": {
+        "cac70": {
+          "profit_split": {
+            "first_orders": 442,
+            "first_order_profit_usd": -14324.18,
+            "repeat_orders": 127,
+            "repeat_profit_usd": 4774.23
+          },
+          "lines": [
+            {
+              "key": "gross_sales",
+              "label": "Gross sales",
+              "usd": 30165.0,
+              "basis": "ACTUAL"
+            },
+            {
+              "key": "discounts_refunds",
+              "label": "Discounts + refunds",
+              "usd": -1378.6,
+              "basis": "ACTUAL"
+            },
+            {
+              "key": "net_sales",
+              "label": "Net sales",
+              "usd": 28786.4,
+              "basis": "ACTUAL",
+              "subtotal": true
+            },
+            {
+              "key": "cogs",
+              "label": "COGS (3,681 pairs \u00d7 $0.85)",
+              "usd": -3128.85,
+              "basis": "MODELED"
+            },
+            {
+              "key": "shipping",
+              "label": "Shipping (569 orders \u00d7 $7.50)",
+              "usd": -4267.5,
+              "basis": "MODELED"
+            },
+            {
+              "key": "contribution",
+              "label": "Contribution after product + ship",
+              "usd": 21390.05,
+              "basis": "MODELED",
+              "subtotal": true
+            },
+            {
+              "key": "media",
+              "label": "Meta media",
+              "usd": -30940.0,
+              "basis": "MODELED (CAC $70 \u00d7 442 new customers)"
+            },
+            {
+              "key": "salaries",
+              "label": "Fixed salaries (2 staff)",
+              "usd": -4928.14,
+              "basis": "MODELED"
+            },
+            {
+              "key": "net",
+              "label": "Modeled net",
+              "usd": -14478.09,
+              "basis": "MODELED",
+              "subtotal": true,
+              "total": true
+            }
+          ],
+          "net_usd": -14478.09,
+          "net_margin": -0.48,
+          "contribution_pct": 0.7091,
+          "meets_target": false,
+          "monthly_sales_for_15pct_net": 21696.0
+        },
         "low": {
+          "profit_split": {
+            "first_orders": 442,
+            "first_order_profit_usd": 1831.43,
+            "repeat_orders": 127,
+            "repeat_profit_usd": 4774.23
+          },
           "lines": [
             {
               "key": "gross_sales",
@@ -734,6 +997,12 @@ const FEED = {
           "monthly_sales_for_15pct_net": 11924.0
         },
         "mid": {
+          "profit_split": {
+            "first_orders": 442,
+            "first_order_profit_usd": -2603.89,
+            "repeat_orders": 127,
+            "repeat_profit_usd": 4774.23
+          },
           "lines": [
             {
               "key": "gross_sales",
@@ -801,6 +1070,12 @@ const FEED = {
           "monthly_sales_for_15pct_net": 14607.0
         },
         "high": {
+          "profit_split": {
+            "first_orders": 442,
+            "first_order_profit_usd": -7039.21,
+            "repeat_orders": 127,
+            "repeat_profit_usd": 4774.23
+          },
           "lines": [
             {
               "key": "gross_sales",
@@ -994,11 +1269,11 @@ const pct = (n, d = 1) => (n * 100).toFixed(d) + "%";
 const int = (n) => Number(n).toLocaleString("en-US");
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-const state = { period: "30d", scenario: FEED && FEED.meta_status === "live" ? "live" : "low" };
+const state = { period: "30d", scenario: FEED && FEED.meta_status === "live" ? "live" : "cac70" };
 try { const s = JSON.parse(localStorage.getItem("cf-rp") || "{}"); if (s.period) state.period = s.period; if (s.scenario) state.scenario = s.scenario; } catch (e) {}
 const save = () => { try { localStorage.setItem("cf-rp", JSON.stringify(state)); } catch (e) {} };
 
-const SCEN_LABEL = { low: "$5k/mo", mid: "$6.5k/mo", high: "$8k/mo", live: "Live Meta" };
+const SCEN_LABEL = { cac70: "$70 CAC", low: "$5k/mo", mid: "$6.5k/mo", high: "$8k/mo", live: "Live Meta" };
 
 function seg(el, items, current, onPick) {
   el.innerHTML = items.map(([k, label, disabled]) =>
@@ -1009,7 +1284,8 @@ function seg(el, items, current, onPick) {
 function render() {
   if (!FEED) { document.querySelector(".wrap").insertAdjacentHTML("beforeend", "<p>No feed loaded. Run <code>python3 cdp_cli.py feed && python3 cdp_cli.py render</code>.</p>"); return; }
   const live = FEED.meta_status === "live";
-  if (state.scenario === "live" && !live) state.scenario = "low";
+  if (state.scenario === "live" && !live) state.scenario = "cac70";
+  if (!FEED.periods[state.period] || !FEED.periods[state.period].pnl[state.scenario]) state.scenario = "cac70";
   if (!FEED.periods[state.period]) state.period = "30d";
   const placeholder = FEED.source === "PLACEHOLDER";
 
@@ -1022,7 +1298,7 @@ function render() {
   $("guard-meta").innerHTML = live ? "Meta: <b>live</b> from meta_daily" : "Meta: <b>not connected</b>, media lines are estimates";
 
   seg($("period-seg"), Object.entries(FEED.periods).map(([k, p]) => [k, p.label.replace(/\s*\(.*\)/, "")]), state.period, (k) => { state.period = k; save(); render(); });
-  seg($("scenario-seg"), [["low", "$5k"], ["mid", "$6.5k"], ["high", "$8k"], ["live", "Live", !live]], state.scenario, (k) => { state.scenario = k; save(); render(); });
+  seg($("scenario-seg"), [["cac70", "$70 CAC"], ["low", "$5k"], ["mid", "$6.5k"], ["high", "$8k"], ["live", "Live", !live]], state.scenario, (k) => { state.scenario = k; save(); render(); });
 
   const P = FEED.periods[state.period];
   const A = P.actual;
@@ -1052,9 +1328,13 @@ function render() {
     `<span>Contribution ${pct(M.contribution_pct)} of sales.</span>` +
     `<span>${be ? `At this media level, 15% net needs about <b class="num">${usd(be)}</b>/mo in sales.` : "Contribution is under 15%, so no sales level reaches 15% net here."}</span>`;
 
+  const sp = M.profit_split;
+  $("split").innerHTML = sp ? `<thead><tr><th>Where profit comes from</th><th class="r">Orders</th><th class="r">Profit</th></tr></thead><tbody>` +
+    `<tr><td>First orders, after product, shipping and media</td><td class="r num">${int(sp.first_orders)}</td><td class="r num ${sp.first_order_profit_usd < 0 ? "neg" : "pos"}">${usd(sp.first_order_profit_usd)}</td></tr>` +
+    `<tr><td>Repeat orders (2nd+), after product and shipping</td><td class="r num">${int(sp.repeat_orders)}</td><td class="r num pos">${usd(sp.repeat_profit_usd)}</td></tr></tbody>` : "";
   const scen = Object.keys(P.pnl);
   $("scen").innerHTML = `<thead><tr><th>Media scenario</th><th class="r">Modeled net</th><th class="r">Margin</th><th class="r">Sales for 15% / mo</th></tr></thead><tbody>` +
-    scen.map((k) => { const s = P.pnl[k]; return `<tr${k === state.scenario ? ' style="background:var(--accent-soft)"' : ""}><td>${SCEN_LABEL[k]} ${k === "live" ? '<span class="basis ACTUAL">ACTUAL</span>' : '<span class="basis ESTIMATE">ESTIMATE</span>'}</td>` +
+    scen.map((k) => { const s = P.pnl[k]; return `<tr${k === state.scenario ? ' style="background:var(--accent-soft)"' : ""}><td>${SCEN_LABEL[k]} ${k === "live" ? '<span class="basis ACTUAL">ACTUAL</span>' : k === "cac70" ? '<span class="basis MODELED">MODELED</span>' : '<span class="basis ESTIMATE">ESTIMATE</span>'}</td>` +
       `<td class="r num ${s.net_usd < 0 ? "neg" : "pos"}">${usd(s.net_usd)}</td><td class="r num">${pct(s.net_margin)}</td><td class="r num">${s.monthly_sales_for_15pct_net ? usd(s.monthly_sales_for_15pct_net) : "–"}</td></tr>`; }).join("") + `</tbody>`;
 
   const N = FEED.north_star;

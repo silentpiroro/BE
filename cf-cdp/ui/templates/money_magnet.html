@@ -118,7 +118,7 @@ code { font-family: var(--font-mono); font-size: .85em; }
     <span><b>No send</b> and <b>no Shopify change</b> without Sy's OK</span>
     <span>≤3 marketing emails / 30 days · no Omnisend + Gmail marketing same week</span>
     <span>Wool Wave C: <b>HOLD</b></span>
-    <span>Meta: <b>not connected</b>, CPR below is a target, not a measurement</span>
+    <span>CAC planned at <b>$70</b> per new customer: first order ≈ break-even, profit from repeat orders</span>
   </div>
 
   <section class="panel verdict" aria-labelledby="v-h">
@@ -189,19 +189,20 @@ function render() {
     `<span class="chip good">Shopify order export · ${int(M.orders)} orders</span>`, `<span class="chip est">Forward months are MODELED</span>`].join("");
 
   $("v-big").innerHTML = hit
-    ? `Modeled: <em>$100k/mo in ${mon(hit.month)}</em>, up from ${k(L.revenue_usd)} today. Growth comes from new customers on a bundle-first offer, at a cost per purchase that still passes the ROAS floor.`
+    ? `Modeled: <em>$100k/mo in ${mon(hit.month)}</em>, up from ${k(L.revenue_usd)} today. Growth comes from new customers bought at $70 each on a bundle-first offer; profit comes from their second and later orders.`
     : `The modeled path doesn't reach $100k/mo inside the plan window.`;
   $("need").innerHTML = [
     ["New customers / month", `${int(L.new_customers)} <span class="arrow">→</span> ${int(hit ? hit.new_customers : 0)}`],
     ["Repeat orders / month", `${int(L.repeat_orders)} <span class="arrow">→</span> ${int(hit ? hit.repeat_orders : 0)}`],
     ["First-order AOV", `${usd(L.new_first_aov_usd)} <span class="arrow">→ hold</span> ${usd(A.first_aov_usd)}`],
-    ["Meta media / month", `${usd(hit ? hit.media_usd : 0)} <span class="arrow">at $${A.target_cpr_usd} CPR</span>`],
+    ["Meta media / month", `${usd(hit ? hit.media_usd : 0)} <span class="arrow">at $${A.cac_usd} CAC</span>`],
+    ["Profit engine", `${int(L.repeat_orders)} <span class="arrow">→ need</span> ${int(hit ? hit.repeat_orders_needed_15pct : 0)} <span class="arrow">repeat orders/mo for 15% net</span>`],
     ["Stock / month", `${int(hit ? hit.pairs : 0)} pairs`],
   ].map(([l, v]) => `<div><span class="eyebrow">${l}</span><span class="v">${v}</span></div>`).join("");
   $("gates").innerHTML = [
-    ["unk", "Gate 1 · Meta CPR ≤ $" + A.target_cpr_usd, `$${A.first_aov_usd} first order ÷ $${A.target_cpr_usd} = ${P.first_order_roas_at_target_cpr}× ROAS (floor 3.5×). Unmeasured until Adspirer is connected. At $35 CPR the same plan needs ${usd(hit ? hit.media_sensitivity_usd.cpr_35 : 0)}/mo and fails the floor.`],
+    ["unk", "Gate 1 · CAC ≤ $" + A.cac_usd, `Ad spend ÷ new customers. At $${A.cac_usd} a $${A.first_aov_usd} first order nets ${usd(P.first_order_profit_per_customer_usd)} after ~$${P.cost_per_order_usd.toFixed(0)} product+ship, so it only breaks even. Oct 22–23 measured ~$266. At $85 CAC the plan needs ${usd(hit ? hit.media_sensitivity_usd.cac_85 : 0)}/mo and every first order loses money.`],
     ["ok", "Gate 2 · Bundle-first AOV ≥ $" + A.first_aov_usd, `New customers' first orders averaged ${usd(L.new_first_aov_usd)} in the last 30 days. Keep 18/24-pair packs as the default offer.`],
-    ["unk", "Gate 3 · 30-day 2nd order 10% → 15%", `Today ${pct(M.repeat_hazard_by_month[0])} reorder in month 1. The day 7–30 flow is the lever. Worth ~${int(S.today.new_customers_per_month - S.with_retention.new_customers_per_month)} fewer new customers needed each month at $100k.`],
+    ["unk", "Gate 3 · Repeat is the profit", `Each repeat order earns ${usd(S.repeat_profit_per_order_usd)}. 15% net at $100k needs ${S.repeat_orders_per_customer_needed_15pct} repeat orders per customer in year 1; today it's ${S.today.repeat_orders_per_customer_yr1}. Month-1 reorder ${pct(M.repeat_hazard_by_month[0])} → 15% via the day 7–30 flow gets to ${S.with_retention.repeat_orders_per_customer_yr1}.`],
   ].map(([s, h, t]) => `<div class="gate"><span class="s ${s}">${s === "ok" ? "Passing today" : "Not proven yet"}</span><h3>${esc(h)}</h3><p class="small muted">${esc(t)}</p></div>`).join("");
 
   $("moves").innerHTML = FEED.opportunities.map((o) => `
@@ -217,14 +218,14 @@ function render() {
   const weeks = [
     ["Oct 28 – Nov 1", [
       ["CoS", "Stock check on hero SKUs; place the PO that lands in February (~" + int(P.months[3].pairs) + " pairs/mo then)."],
-      ["Meta Ads", "Point every ad set at the 18/24-pair bundle page. Set the scale rule: +30%/week only at CPR ≤ $" + A.target_cpr_usd + " and ROAS ≥ 3.5×."],
+      ["Meta Ads", "Point every ad set at the 18/24-pair bundle page. Scale rule: +30%/week only while CAC ≤ $" + A.cac_usd + "; hold at $70–85; cut a step above $85."],
       ["Retention", "Build the day 3 / 10 / 21 post-purchase flow and a Wave A0 draft (1 order, day 7–27: " + ripe("1 order · d7-27") + " people)."],
       ["Sy", "Preview the held Wave A draft (26 SUB).", true],
     ]],
     ["Nov 2 – 8", [
       ["Sy", "OK Wave A + A0 sends, and the C90 win-back for Nov 10.", true],
       ["Retention", "Send Wave A (6@$49 ankle alone) and A0 after OK."],
-      ["CoS / Meta", "Connect Adspirer so CPR on this page is real."],
+      ["CoS / Meta", "Connect Meta (Adspirer or Supermetrics) so CAC is measured daily."],
     ]],
     ["Nov 9 – 15", [
       ["Retention", "Send C90 win-back (COMEBACK15 once) on Nov 10 after Sy OK. Draft the World Diabetes Day (Nov 14) and BFCM emails, bundle-first."],
@@ -236,20 +237,20 @@ function render() {
     ]],
     ["Nov 23 – Dec 1", [
       ["Retention", "BFCM single send Nov 27 ('ends Monday'). Post-purchase flow goes live Dec 1."],
-      ["Meta Ads", "Step to $6.5k/mo only if 7-day CPR held ≤ $" + A.target_cpr_usd + ".", false],
-      ["Sy", "Review November: BFCM result, CPR, 30-day 2nd-order rate.", true],
+      ["Meta Ads", "Next budget step only if 7-day CAC held ≤ $" + A.cac_usd + ".", false],
+      ["Sy", "Review November: BFCM result, CAC, 30-day 2nd-order rate.", true],
     ]],
   ];
   $("cal").innerHTML = weeks.map(([w, items]) => `<div class="wk"><span class="eyebrow">${w}</span><ul>${items.map(([o, t, sy]) => `<li class="${sy ? "sy" : ""}"><b>${esc(o)}</b>${esc(t)}</li>`).join("")}</ul></div>`).join("");
 
   drawPlaybook(FEED.playbook);
   drawChart(P.months);
-  $("path").innerHTML = `<thead><tr><th>Month</th><th class="r">Revenue</th><th class="r">New cust.</th><th class="r">Repeat</th><th class="r">Media @$${A.target_cpr_usd}</th><th class="r">@$35</th><th class="r">Pairs</th><th>PO by</th><th class="r">Net*</th></tr></thead><tbody>` +
+  $("path").innerHTML = `<thead><tr><th>Month</th><th class="r">Revenue</th><th class="r">New cust.</th><th class="r">Repeat</th><th class="r">Media @$${A.cac_usd} CAC</th><th class="r">@$85</th><th class="r">Repeat needed</th><th class="r">Pairs</th><th>PO by</th><th class="r">Net*</th></tr></thead><tbody>` +
     P.months.map((r) => `<tr class="${r.month === P.hits_target ? "hit" : ""}"><td>${mon(r.month)}${r.over_band ? ' <span class="band">above $8k band</span>' : ""}</td>
       <td class="r num">${usd(r.revenue_usd)}</td><td class="r num">${int(r.new_customers)}</td><td class="r num">${int(r.repeat_orders)}</td>
-      <td class="r num">${usd(r.media_usd)}</td><td class="r num muted">${usd(r.media_sensitivity_usd.cpr_35)}</td><td class="r num">${int(r.pairs)}</td><td>${esc(r.po_month)}</td>
+      <td class="r num">${usd(r.media_usd)}</td><td class="r num muted">${usd(r.media_sensitivity_usd.cac_85)}</td><td class="r num ${r.repeat_orders >= r.repeat_orders_needed_15pct ? "" : "muted"}">${int(r.repeat_orders_needed_15pct)}</td><td class="r num">${int(r.pairs)}</td><td>${esc(r.po_month)}</td>
       <td class="r num">${pct(r.modeled_net_margin)}</td></tr>`).join("") + `</tbody>`;
-  $("path-note").textContent = `New customers grow at most ${pct(A.new_growth_per_month)}/month (ad learning and stock). Repeat orders use the measured reorder curve, lifted ×${A.retention_uplift} from Dec by the day 7–30 flow. ${firstOver ? "Media goes above the $8k band in " + mon(firstOver.month) + "; each step up needs Sy's OK with 14 days of real CPR/ROAS." : ""} *Net uses the locked unit economics only ($0.85/pair, $7.50 ship, ~$1.7k salaries); payment fees, packaging, 3PL and returns aren't in it, so true margin is lower.`;
+  $("path-note").textContent = `New customers grow at most ${pct(A.new_growth_per_month)}/month (ad learning and stock). Repeat orders use the measured reorder curve, lifted ×${A.retention_uplift} from Dec by the day 7–30 flow. ${firstOver ? "Media goes above the $8k band in " + mon(firstOver.month) + "; each step up needs Sy's OK with 14 days of real CAC." : ""} Repeat needed = repeat orders that month for 15% net, given first orders only break even. *Net uses the locked unit economics only ($0.85/pair, $7.50 ship, ~$1.7k salaries); payment fees, packaging, 3PL and returns aren't in it, so true margin is lower.`;
 
   const g = M.gap_to_2nd_days, src = M.repeat_by_source, mix = M.month_mix, size = M.repeat_by_first_order_size;
   $("f-src").textContent = `${int(M.customers)} buyers · ${int(M.orders)} paid orders`;

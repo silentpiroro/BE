@@ -43,7 +43,7 @@ def sum_period(rows: list[dict], start: date, end: date) -> dict:
 
 
 def model_pnl(actual: dict, media_month_usd: float | None, media_label: str,
-              live_media_usd: float | None = None) -> dict:
+              live_media_usd: float | None = None, cac_usd: float | None = None) -> dict:
     """Modeled P&L for one period.
 
     live_media_usd: real Meta spend summed from meta_daily for the period.
@@ -58,6 +58,9 @@ def model_pnl(actual: dict, media_month_usd: float | None, media_label: str,
     contribution = net_sales - cogs - ship
     if live_media_usd is not None:
         media, media_basis = live_media_usd, "ACTUAL (meta_daily)"
+    elif cac_usd is not None:
+        media = actual["new_customer_orders"] * cac_usd
+        media_basis = f"MODELED (CAC ${cac_usd:.0f} × {actual['new_customer_orders']} new customers)"
     else:
         media, media_basis = (media_month_usd or 0) * month_frac, f"ESTIMATE ({media_label})"
     salaries = C.FIXED_SALARIES_USD_MONTH * month_frac
@@ -69,7 +72,17 @@ def model_pnl(actual: dict, media_month_usd: float | None, media_label: str,
     headroom = contribution_pct - C.TARGET_NET_MARGIN
     breakeven_15 = round(fixed_month / headroom, 0) if headroom > 0 else None
     r = lambda x: round(x, 2)
+    orders = actual["orders_paid"] or 1
+    per_order_cost = (cogs + ship) / orders
+    aov_net = net_sales / orders
+    split = {
+        "first_orders": actual["new_customer_orders"],
+        "first_order_profit_usd": r(actual["new_customer_orders"] * (aov_net - per_order_cost) - media),
+        "repeat_orders": actual["repeat_customer_orders"],
+        "repeat_profit_usd": r(actual["repeat_customer_orders"] * (aov_net - per_order_cost)),
+    }
     return {
+        "profit_split": split,
         "lines": [
             {"key": "gross_sales", "label": "Gross sales", "usd": r(gross), "basis": "ACTUAL"},
             {"key": "discounts_refunds", "label": "Discounts + refunds", "usd": r(-disc_ref), "basis": "ACTUAL"},
@@ -150,10 +163,11 @@ def build_feed(revenue_daily: list[dict], meta_daily: list[dict], waves: dict,
         if meta_live:
             live = round(sum(float(m["spend_usd"]) for m in meta_daily
                              if start <= _d(m["date"]) <= end), 2)
-        scenarios = {
+        scenarios = {"cac70": model_pnl(actual, None, "CAC", cac_usd=C.CAC_USD)}
+        scenarios.update({
             name: model_pnl(actual, usd, f"${usd/1000:g}k/mo scenario")
             for name, usd in C.MEDIA_SCENARIOS_USD_MONTH.items()
-        }
+        })
         if meta_live:
             scenarios["live"] = model_pnl(actual, None, "live", live_media_usd=live)
         periods[key] = {"label": label, "start": start.isoformat(), "end": end.isoformat(),
@@ -169,6 +183,7 @@ def build_feed(revenue_daily: list[dict], meta_daily: list[dict], waves: dict,
             "shipping_per_order_usd": C.SHIPPING_PER_ORDER_USD,
             "fixed_salaries_usd_month": C.FIXED_SALARIES_USD_MONTH,
             "media_scenarios_usd_month": C.MEDIA_SCENARIOS_USD_MONTH,
+            "cac_usd": C.CAC_USD,
             "target_net_margin": C.TARGET_NET_MARGIN,
         },
         "periods": periods,

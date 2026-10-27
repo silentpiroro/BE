@@ -1,8 +1,9 @@
 """Money Magnet: findings, ripe audiences, ranked opportunities and a month-by-month
 path to the $100k/mo north star, computed from the one-row-per-order Shopify export.
 
-Everything forward-looking is MODELED from the assumptions in ASSUMPTIONS. Meta CPR is
-a gate we must hit, not a measured number, until live Meta data is connected.
+Everything forward-looking is MODELED from the assumptions in ASSUMPTIONS. Acquisition
+cost is planned at CAC $70 per new customer: the first order roughly breaks even and
+profit comes from second and later orders.
 """
 
 from __future__ import annotations
@@ -16,12 +17,11 @@ from . import config as C
 from .sources import pairs_per_unit_from_sku
 
 ASSUMPTIONS = {
-    "target_cpr_usd": 25.0,          # gate: $90 AOV / $25 CPR = 3.6x first-order ROAS (floor 3.5x)
-    "cpr_sensitivity_usd": [25.0, 30.0, 35.0],
+    "cac_usd": C.CAC_USD,            # ad spend per new customer (blended)
+    "cac_sensitivity_usd": [60.0, 70.0, 85.0],
     "first_aov_usd": 90.0,           # bundle-first hold (new customers last 30d: ~$88)
     "repeat_aov_usd": 70.0,          # between 10-mo average and last-30d repeat AOV
     "new_growth_per_month": 0.35,    # max month-on-month growth in new customers (Meta learning + stock)
-    "organic_share_of_new": 0.35,    # new customers not from Meta (from order tags, last 30d)
     "retention_uplift": 1.5,         # day 7-30 second-order flow + replenish clock, live from Dec
     "retention_uplift_from": "2026-12",
     "media_band_max_usd": 8000.0,    # staged band; above this needs Sy OK on proven gates
@@ -218,15 +218,16 @@ def simulate(metrics: dict, a: dict = ASSUMPTIONS) -> dict:
         need_new = need_rev / (a["first_aov_usd"] + hazard[0] * uplift * a["repeat_aov_usd"])
         new = min(new_prev * (1 + a["new_growth_per_month"]), need_new) if hit is None else need_new
         new = max(new, new_prev if hit is None else 0)
-        meta_new = new * (1 - a["organic_share_of_new"])
-        media = {f"cpr_{int(c)}": round(meta_new * c) for c in a["cpr_sensitivity_usd"]}
-        media_base = meta_new * a["target_cpr_usd"]
+        media = {f"cac_{int(c)}": round(new * c) for c in a["cac_sensitivity_usd"]}
+        media_base = new * a["cac_usd"]
         revenue = new * a["first_aov_usd"] + repeat_rev + ev_rev
-        orders = new + repeat + sum(e["orders"] for e in events)
-        contribution = revenue - orders * cost_per_order
-        net = contribution - media_base - C.FIXED_SALARIES_USD_MONTH
+        ev_orders = sum(e["orders"] for e in events)
+        orders = new + repeat + ev_orders
+        first_profit = new * (a["first_aov_usd"] - cost_per_order - a["cac_usd"])
+        repeat_profit = repeat_rev + ev_rev - (repeat + ev_orders) * cost_per_order
+        net = first_profit + repeat_profit - C.FIXED_SALARIES_USD_MONTH
         rows.append({
-            "month": m, "new_customers": round(new), "meta_new_customers": round(meta_new),
+            "month": m, "new_customers": round(new),
             "repeat_orders": round(repeat), "event_orders": sum(e["orders"] for e in events),
             "revenue_new_usd": round(new * a["first_aov_usd"]), "revenue_repeat_usd": round(repeat_rev),
             "revenue_events_usd": round(ev_rev), "revenue_usd": round(revenue), "orders": round(orders),
@@ -241,6 +242,11 @@ def simulate(metrics: dict, a: dict = ASSUMPTIONS) -> dict:
         rows[-1]["orders"] = round(orders + repeat_own)
         rows[-1]["pairs"] = round((orders + repeat_own) * pairs_po)
         net = net + repeat_own * (a["repeat_aov_usd"] - cost_per_order)
+        repeat_profit += repeat_own * (a["repeat_aov_usd"] - cost_per_order)
+        rows[-1]["first_order_profit_usd"] = round(first_profit)
+        rows[-1]["repeat_profit_usd"] = round(repeat_profit)
+        need = (C.TARGET_NET_MARGIN * rows[-1]["revenue_usd"] + C.FIXED_SALARIES_USD_MONTH - first_profit) / (a["repeat_aov_usd"] - cost_per_order)
+        rows[-1]["repeat_orders_needed_15pct"] = max(round(need), 0)
         rows[-1]["modeled_net_usd"] = round(net)
         rows[-1]["modeled_net_margin"] = round(net / rows[-1]["revenue_usd"], 3)
         if hit is None and rows[-1]["revenue_usd"] >= C.NORTH_STAR_MONTHLY_SALES_USD * 0.995:
@@ -251,22 +257,31 @@ def simulate(metrics: dict, a: dict = ASSUMPTIONS) -> dict:
     for i, r in enumerate(rows):
         r["po_month"] = months[i - a["lead_time_months"]] if i >= a["lead_time_months"] else "now (late)"
     return {"months": rows, "hits_target": hit, "assumptions": a, "base_repeat_orders": round(base_repeat, 1),
-            "first_order_roas_at_target_cpr": round(a["first_aov_usd"] / a["target_cpr_usd"], 2),
+            "first_order_profit_per_customer_usd": round(a["first_aov_usd"] - cost_per_order - a["cac_usd"], 2),
+            "repeat_profit_per_order_usd": round(a["repeat_aov_usd"] - cost_per_order, 2),
             "cost_per_order_usd": round(cost_per_order, 2)}
 
 
 def steady_state(metrics: dict, a: dict = ASSUMPTIONS) -> dict:
-    """New customers / month needed for $100k, with and without the retention program."""
+    """At $100k/mo: new customers and media needed, net margin today vs with the retention
+    program, and the year-1 repeat orders per customer needed for 15% net at CAC $70."""
     h = metrics["repeat_hazard_by_month"]
+    c = metrics["pairs_per_order_recent"] * C.COGS_PER_PAIR_USD + C.SHIPPING_PER_ORDER_USD
+    a1, ar, cac, ns, fixed = a["first_aov_usd"], a["repeat_aov_usd"], a["cac_usd"], C.NORTH_STAR_MONTHLY_SALES_USD, C.FIXED_SALARIES_USD_MONTH
     out = {}
     for label, up in (("today", 1.0), ("with_retention", a["retention_uplift"])):
-        repeats_per_customer = sum(h[1:12]) * up + h[0] * up  # first-year repeat orders per new customer
-        per_new = a["first_aov_usd"] + repeats_per_customer * a["repeat_aov_usd"]
-        n = C.NORTH_STAR_MONTHLY_SALES_USD / per_new
-        out[label] = {"repeat_orders_per_customer_yr1": round(repeats_per_customer, 3),
-                      "revenue_per_new_customer_usd": round(per_new, 2),
+        k = sum(h[:12]) * up                       # year-1 repeat orders per new customer
+        n = ns / (a1 + k * ar)
+        net = n * ((a1 - c - cac) + k * (ar - c)) - fixed
+        out[label] = {"repeat_orders_per_customer_yr1": round(k, 3),
+                      "revenue_per_new_customer_usd": round(a1 + k * ar, 2),
                       "new_customers_per_month": round(n),
-                      "media_at_target_cpr_usd": round(n * (1 - a["organic_share_of_new"]) * a["target_cpr_usd"])}
+                      "media_usd": round(n * cac),
+                      "net_usd": round(net), "net_margin": round(net / ns, 3)}
+    t = C.TARGET_NET_MARGIN * ns + fixed
+    out["repeat_orders_per_customer_needed_15pct"] = round((t * a1 - ns * (a1 - c - cac)) / (ns * (ar - c) - t * ar), 3)
+    out["first_order_profit_usd"] = round(a1 - c - cac, 2)
+    out["repeat_profit_per_order_usd"] = round(ar - c, 2)
     return out
 
 
@@ -314,29 +329,29 @@ def opportunities(metrics: dict, sim: dict, ss: dict) -> list[dict]:
             ],
         },
         {
-            "rank": 3, "name": "Bundle-first Meta offer (makes the ROAS floor reachable)", "owner": "CF Meta Ads",
-            "impact": f"First-order AOV ${l30['new_first_aov_usd']:.0f} (was ~$36 median) → ROAS {sim['first_order_roas_at_target_cpr']}× at ${ASSUMPTIONS['target_cpr_usd']:.0f} CPR",
+            "rank": 3, "name": "Bundle-first offer (lets the first order pay for its $70 CAC)", "owner": "CF Meta Ads",
+            "impact": f"First-order AOV ${l30['new_first_aov_usd']:.0f} (was ~$36 median) → first order nets ${sim['first_order_profit_per_customer_usd']:+.0f} after product, shipping and $70 CAC",
             "impact_usd": None, "confidence": "High (already in the data)", "when": "Now; keep through Q1",
             "why": (f"13+ pair orders went from 10% to {mix.get('bundle13_rev_share', 0):.0%} of revenue in {mix.get('month', '')}. "
-                    f"At a $36 first order no CPR passes 3.5× ROAS; at $90 you need CPR ≤ ${90/3.5:.0f}."),
+                    f"At a $36 first order every new customer costs ~$51 more than it brings in; at $90 the first order breaks even and repeat orders are profit."),
             "steps": [
                 "Every Meta ad lands on the 18/24-pair bundle page with 6-pack as the downsell, not the reverse.",
                 "Creative angle: large feet (sock size 13–15) and non-binding for diabetic / swollen feet (size 13–15 is ~1 in 3 SKU lines).",
-                "Scale rule: +30% budget per week only while 7-day CPR ≤ $25 and purchase ROAS ≥ 3.5×; else hold.",
-                "Connect Adspirer so this page reads real CPR instead of the target.",
+                "Scale rule: +30% budget per week only while 7-day CAC (ad spend ÷ new customers in Shopify) ≤ $70; hold at $70–85; cut a step above $85.",
+                "Connect Meta (Adspirer or Supermetrics) so the War Room reads real spend every day.",
             ],
         },
         {
             "rank": 4, "name": "Scale Meta past the $8k band on proven gates", "owner": "CF Meta Ads → Sy OK",
             "impact": f"$100k needs ~{ss['with_retention']['new_customers_per_month']} new customers/month vs {l30['new_customers']} now",
-            "impact_usd": None, "confidence": "Depends on CPR holding at scale",
+            "impact_usd": None, "confidence": "Depends on CAC holding at $70 at scale",
             "when": f"Decision point when the band is full (modeled {next((r['month'] for r in sim['months'] if r['over_band']), 'n/a')})",
             "why": (f"Retention alone can't reach $100k: a new customer is worth ~${ss['with_retention']['revenue_per_new_customer_usd']:.0f} "
                     f"in year 1. Meta-acquired customers reorder {meta_r:.0%} vs {other_r:.0%} for untagged, so Meta buyers are the better base."),
             "steps": [
-                f"Media at $100k ≈ ${ss['with_retention']['media_at_target_cpr_usd']:,}/mo at $25 CPR. Each step above $8k/mo needs Sy's OK with the last 14 days of CPR/ROAS.",
-                "First order must pay its own CAC: $90 AOV − ~$17 product+ship = $73 contribution > $25 CPR.",
-                "Stop rule: two weeks above $35 CPR → drop back one budget step.",
+                f"Media at $100k ≈ ${ss['with_retention']['media_usd']:,}/mo at $70 CAC. Each step above $8k/mo needs Sy's OK with the last 14 days of CAC.",
+                f"First order ≈ break-even: $90 AOV − ~$17 product+ship − $70 CAC = ${ss['first_order_profit_usd']:+.0f}. Profit is the ${ss['repeat_profit_per_order_usd']:.0f} each repeat order earns.",
+                "Stop rule: two weeks above $85 CAC → drop back one budget step.",
             ],
         },
         {

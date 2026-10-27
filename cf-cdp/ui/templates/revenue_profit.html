@@ -151,6 +151,7 @@ code { font-family: var(--font-mono); font-size: .85em; }
       <div class="panel-head"><h2 id="pnl-h">Modeled P&amp;L</h2><span class="small muted" id="pnl-range"></span></div>
       <div class="scroll"><table id="pnl"></table></div>
       <div class="verdict" id="verdict"></div>
+      <div class="scroll"><table id="split"></table></div>
       <div class="scroll"><table id="scen"></table></div>
     </section>
 
@@ -193,11 +194,11 @@ const pct = (n, d = 1) => (n * 100).toFixed(d) + "%";
 const int = (n) => Number(n).toLocaleString("en-US");
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-const state = { period: "30d", scenario: FEED && FEED.meta_status === "live" ? "live" : "low" };
+const state = { period: "30d", scenario: FEED && FEED.meta_status === "live" ? "live" : "cac70" };
 try { const s = JSON.parse(localStorage.getItem("cf-rp") || "{}"); if (s.period) state.period = s.period; if (s.scenario) state.scenario = s.scenario; } catch (e) {}
 const save = () => { try { localStorage.setItem("cf-rp", JSON.stringify(state)); } catch (e) {} };
 
-const SCEN_LABEL = { low: "$5k/mo", mid: "$6.5k/mo", high: "$8k/mo", live: "Live Meta" };
+const SCEN_LABEL = { cac70: "$70 CAC", low: "$5k/mo", mid: "$6.5k/mo", high: "$8k/mo", live: "Live Meta" };
 
 function seg(el, items, current, onPick) {
   el.innerHTML = items.map(([k, label, disabled]) =>
@@ -208,7 +209,8 @@ function seg(el, items, current, onPick) {
 function render() {
   if (!FEED) { document.querySelector(".wrap").insertAdjacentHTML("beforeend", "<p>No feed loaded. Run <code>python3 cdp_cli.py feed && python3 cdp_cli.py render</code>.</p>"); return; }
   const live = FEED.meta_status === "live";
-  if (state.scenario === "live" && !live) state.scenario = "low";
+  if (state.scenario === "live" && !live) state.scenario = "cac70";
+  if (!FEED.periods[state.period] || !FEED.periods[state.period].pnl[state.scenario]) state.scenario = "cac70";
   if (!FEED.periods[state.period]) state.period = "30d";
   const placeholder = FEED.source === "PLACEHOLDER";
 
@@ -221,7 +223,7 @@ function render() {
   $("guard-meta").innerHTML = live ? "Meta: <b>live</b> from meta_daily" : "Meta: <b>not connected</b>, media lines are estimates";
 
   seg($("period-seg"), Object.entries(FEED.periods).map(([k, p]) => [k, p.label.replace(/\s*\(.*\)/, "")]), state.period, (k) => { state.period = k; save(); render(); });
-  seg($("scenario-seg"), [["low", "$5k"], ["mid", "$6.5k"], ["high", "$8k"], ["live", "Live", !live]], state.scenario, (k) => { state.scenario = k; save(); render(); });
+  seg($("scenario-seg"), [["cac70", "$70 CAC"], ["low", "$5k"], ["mid", "$6.5k"], ["high", "$8k"], ["live", "Live", !live]], state.scenario, (k) => { state.scenario = k; save(); render(); });
 
   const P = FEED.periods[state.period];
   const A = P.actual;
@@ -251,9 +253,13 @@ function render() {
     `<span>Contribution ${pct(M.contribution_pct)} of sales.</span>` +
     `<span>${be ? `At this media level, 15% net needs about <b class="num">${usd(be)}</b>/mo in sales.` : "Contribution is under 15%, so no sales level reaches 15% net here."}</span>`;
 
+  const sp = M.profit_split;
+  $("split").innerHTML = sp ? `<thead><tr><th>Where profit comes from</th><th class="r">Orders</th><th class="r">Profit</th></tr></thead><tbody>` +
+    `<tr><td>First orders, after product, shipping and media</td><td class="r num">${int(sp.first_orders)}</td><td class="r num ${sp.first_order_profit_usd < 0 ? "neg" : "pos"}">${usd(sp.first_order_profit_usd)}</td></tr>` +
+    `<tr><td>Repeat orders (2nd+), after product and shipping</td><td class="r num">${int(sp.repeat_orders)}</td><td class="r num pos">${usd(sp.repeat_profit_usd)}</td></tr></tbody>` : "";
   const scen = Object.keys(P.pnl);
   $("scen").innerHTML = `<thead><tr><th>Media scenario</th><th class="r">Modeled net</th><th class="r">Margin</th><th class="r">Sales for 15% / mo</th></tr></thead><tbody>` +
-    scen.map((k) => { const s = P.pnl[k]; return `<tr${k === state.scenario ? ' style="background:var(--accent-soft)"' : ""}><td>${SCEN_LABEL[k]} ${k === "live" ? '<span class="basis ACTUAL">ACTUAL</span>' : '<span class="basis ESTIMATE">ESTIMATE</span>'}</td>` +
+    scen.map((k) => { const s = P.pnl[k]; return `<tr${k === state.scenario ? ' style="background:var(--accent-soft)"' : ""}><td>${SCEN_LABEL[k]} ${k === "live" ? '<span class="basis ACTUAL">ACTUAL</span>' : k === "cac70" ? '<span class="basis MODELED">MODELED</span>' : '<span class="basis ESTIMATE">ESTIMATE</span>'}</td>` +
       `<td class="r num ${s.net_usd < 0 ? "neg" : "pos"}">${usd(s.net_usd)}</td><td class="r num">${pct(s.net_margin)}</td><td class="r num">${s.monthly_sales_for_15pct_net ? usd(s.monthly_sales_for_15pct_net) : "–"}</td></tr>`; }).join("") + `</tbody>`;
 
   const N = FEED.north_star;

@@ -2,6 +2,11 @@
 
 The five Segment jobs (sources, identity, profiles, audiences, destinations) built in-house on the connectors we already have: Shopify, Omnisend, Meta (Adspirer or Ads Manager dumps). No Twilio Segment, no Klaviyo this quarter.
 
+## Economics (set 2026-10-27)
+- **CAC $70** per new customer (ad spend ÷ new customers in Shopify). At a ~$90 bundle-first order the first order nets ≈ $3 after product, shipping and CAC: it pays for itself, nothing more.
+- **Profit comes from second and later orders** (~$53 each). 15% net at $100k/mo needs ~0.29 repeat orders per customer in year 1 (0.19 today) and ~266 repeat orders/month.
+- Scale / hold / cut on 7-day CAC: ≤ $70 scale +30%/week, $70–85 hold, > $85 cut a step. Any step above the $5–8k/mo band still needs Sy's OK. This replaces the earlier 3.5× ROAS floor for planning.
+
 ## Architecture in 10 bullets
 1. **Sources:** Shopify (orders, customers, consent, SKUs, inventory) via Admin MCP run by CoS only. Meta via Adspirer, or Ads Manager CSV dumps as fallback. Omnisend and Gmail only feed back `email_sent` / `email_click` events.
 2. **Identity:** one person = `lower(email)`, secondary `shopify_customer_id`, Comfort Fresh store only. No cross-store or fuzzy merges.

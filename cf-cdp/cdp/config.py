@@ -21,7 +21,12 @@ FIXED_SALARIES_USD_MONTH = round(STAFF * SALARY_RMB_PER_STAFF_MONTH / RMB_PER_US
 # Media scenarios (ESTIMATE until live Meta is connected). Never invent live spend.
 MEDIA_SCENARIOS_USD_MONTH = {"low": 5_000, "mid": 6_500, "high": 8_000}
 
-# Meta floors for scaling winners
+# Acquisition economics (set 2026-10-27): plan on $70 to acquire a customer.
+# The first order roughly breaks even after product + shipping + CAC; profit comes
+# from second and later orders. CAC = ad spend / new customers (Shopify first orders).
+CAC_USD = 70.0
+CAC_CUT_USD = 85.0            # above ~year-1 contribution per customer: drop a budget step
+# Earlier floors, kept for reference; CAC_USD now drives scale/hold/cut.
 META_MAX_CPR_USD = (25, 35)
 META_MIN_PURCHASE_ROAS = (3.5, 4.0)
 
