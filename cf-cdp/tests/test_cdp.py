@@ -142,6 +142,17 @@ class SourcesTest(unittest.TestCase):
         self.assertEqual(d["2026-10-05"]["net_sales_usd"], 15.0)
         self.assertEqual(d["2026-10-05"]["pairs_sold"], 12)
 
+    def test_meta_period_export(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, newline="") as fh:
+            w = csv.writer(fh)
+            w.writerow(["Reporting starts", "Reporting ends", "Ad set name", "Amount spent (USD)", "Purchases",
+                        "Purchase ROAS (return on ad spend)", "Adds to cart"])
+            w.writerow(["2026-10-22", "2026-10-23", "A", "300", "2", "3.0", "4"])
+            w.writerow(["2026-10-22", "2026-10-23", "B", "100", "", "", "0"])
+        r = sources.meta_period_from_ads_export(fh.name)
+        self.assertEqual((r["days"], r["spend_usd"], r["purchases"], r["cpr_usd"]), (2, 400.0, 2, 200.0))
+        self.assertEqual(r["purchase_value_usd"], 900.0)
+
     def test_meta_dump(self):
         with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, newline="") as fh:
             w = csv.writer(fh)

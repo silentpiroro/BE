@@ -98,21 +98,56 @@ META_COLS = {
 }
 
 
-def meta_daily_from_ads_manager_csv(path: str, as_of: str = "") -> list[dict]:
-    out = []
+def _ads_rows(path: str) -> tuple[list[str], list[dict]]:
+    if path.lower().endswith(".xlsx"):
+        from openpyxl import load_workbook
+        ws = load_workbook(path, read_only=True, data_only=True).worksheets[0]
+        it = ws.iter_rows(values_only=True)
+        head = [str(h) for h in next(it)]
+        return head, [dict(zip(head, ["" if v is None else v for v in r])) for r in it]
     with open(path, newline="", encoding="utf-8-sig") as fh:
         reader = csv.DictReader(fh)
-        cols = {k: next((c for c in opts if c in (reader.fieldnames or [])), None)
-                for k, opts in META_COLS.items()}
+        return list(reader.fieldnames or []), list(reader)
+
+
+def meta_period_from_ads_export(path: str) -> dict:
+    """Totals for an Ads Manager export without a Day breakdown (one reporting period)."""
+    head, rows = _ads_rows(path)
+    starts = {str(r.get("Reporting starts"))[:10] for r in rows}
+    ends = {str(r.get("Reporting ends"))[:10] for r in rows}
+    spend = sum(_f(r.get("Amount spent (USD)")) for r in rows)
+    purchases = sum(_f(r.get("Purchases")) for r in rows)
+    value = sum(_f(r.get("Amount spent (USD)")) * _f(r.get("Purchase ROAS (return on ad spend)")) for r in rows)
+    start, end = min(starts), max(ends)
+    from datetime import date as _date
+    days = (_date.fromisoformat(end) - _date.fromisoformat(start)).days + 1
+    by_set = defaultdict(lambda: {"spend_usd": 0.0, "purchases": 0.0, "adds_to_cart": 0.0})
+    for r in rows:
+        b = by_set[r.get("Ad set name") or ""]
+        b["spend_usd"] += _f(r.get("Amount spent (USD)"))
+        b["purchases"] += _f(r.get("Purchases"))
+        b["adds_to_cart"] += _f(r.get("Adds to cart"))
+    return {"start": start, "end": end, "days": days, "spend_usd": round(spend, 2), "purchases": int(purchases),
+            "purchase_value_usd": round(value, 2), "cpr_usd": round(spend / purchases, 2) if purchases else None,
+            "purchase_roas": round(value / spend, 2) if spend else None,
+            "adds_to_cart": int(sum(_f(r.get("Adds to cart")) for r in rows)),
+            "ad_sets": {k: {kk: round(vv, 2) for kk, vv in v.items()} for k, v in by_set.items() if v["spend_usd"] > 0}}
+
+
+def meta_daily_from_ads_manager_csv(path: str, as_of: str = "") -> list[dict]:
+    out = []
+    head, rows_in = _ads_rows(path)
+    if True:
+        cols = {k: next((c for c in opts if c in head), None) for k, opts in META_COLS.items()}
         if not cols["date"] or not cols["spend_usd"]:
             raise ValueError("Meta dump needs a daily breakdown (Day) and Amount spent column")
-        for row in reader:
+        for row in rows_in:
             g = lambda k: row.get(cols[k]) if cols[k] else None
             spend = _f(g("spend_usd"))
             purchases = int(_f(g("purchases")))
             value = _f(g("purchase_value_usd"))
             out.append({
-                "date": (g("date") or "")[:10],
+                "date": str(g("date") or "")[:10],
                 "campaign_name": g("campaign_name") or "",
                 "adset_name": g("adset_name") or "",
                 "spend_usd": round(spend, 2),

@@ -221,22 +221,24 @@ function planFor(m) { return S.sb ? S.sb.plan_months.find((p) => p.month === m) 
 function metaWindow(days) {
   const end = addDays(today(), -1), start = addDays(end, -(days - 1));
   const rows = S.meta.filter((r) => r.date >= start && r.date <= end);
+  const days = rows.reduce((a, r) => a + (+r.days || 1), 0);
   const spend = rows.reduce((a, r) => a + (+r.spend || 0), 0), purch = rows.reduce((a, r) => a + (+r.purchases || 0), 0),
         val = rows.reduce((a, r) => a + (+r.value || 0), 0);
-  return { rows: rows.length, spend, purch, val, cpr: purch ? spend / purch : null, roas: spend ? val / spend : null };
+  return { rows: rows.length, days, spend, purch, val, cpr: purch ? spend / purch : null, roas: spend ? val / spend : null };
 }
 function metaVerdict() {
   const g = S.sb ? S.sb.gates : { target_cpr_usd: 25, cut_cpr_usd: 35, roas_floor: 3.5, media_band_max_usd: 8000 };
   const w7 = metaWindow(7), w14 = metaWindow(14);
   if (!w7.rows) return { cls: "unk", text: "No Meta numbers for the last 7 days. Log yesterday below.", w7 };
-  const monthly = (w7.spend / w7.rows) * 30.44;
-  if (w14.rows >= 10 && w14.cpr != null && w14.cpr > g.cut_cpr_usd) return { cls: "bad", text: `CUT one budget step: 14-day CPR ${usd(w14.cpr, 2)} is above $${g.cut_cpr_usd}.`, w7 };
+  const monthly = (w7.spend / Math.max(w7.days, 1)) * 30.44;
+  const pace = monthly > g.media_band_max_usd ? ` Spend is pacing ${usd(monthly)}/mo, above the $${g.media_band_max_usd / 1000}k band.` : "";
+  if (w14.days >= 10 && w14.cpr != null && w14.cpr > g.cut_cpr_usd) return { cls: "bad", text: `CUT one budget step: 14-day CPR ${usd(w14.cpr, 2)} is above $${g.cut_cpr_usd}.`, w7 };
   if (w7.cpr != null && w7.cpr <= g.target_cpr_usd && w7.roas >= g.roas_floor) {
     const over = monthly * 1.3 > g.media_band_max_usd;
     return { cls: "ok", text: `SCALE +30%: 7-day CPR ${usd(w7.cpr, 2)}, ROAS ${w7.roas.toFixed(2)}×.` + (over ? ` That takes spend past the $${g.media_band_max_usd / 1000}k/mo band, so it needs Sy's OK.` : ""), w7 };
   }
   if (w7.cpr != null && w7.cpr <= g.cut_cpr_usd) return { cls: "warn", text: `HOLD budget: 7-day CPR ${usd(w7.cpr, 2)}, ROAS ${w7.roas != null ? w7.roas.toFixed(2) + "×" : "–"}. Fix the offer/creative before scaling.`, w7 };
-  return { cls: "bad", text: `CUT one budget step: 7-day CPR ${w7.cpr != null ? usd(w7.cpr, 2) : "no purchases"}.`, w7 };
+  return { cls: "bad", text: `CUT one budget step: 7-day CPR ${w7.cpr != null ? usd(w7.cpr, 2) : "no purchases"} on ${usd(w7.spend)} spend.` + pace, w7 };
 }
 function capCheck(seg, date, channel) {
   // Rolling 30-day windows that contain `date`; BFCM-style "all" sends count for every segment.
@@ -323,7 +325,7 @@ function renderGates() {
   const g3 = g.second_order_month1_now >= g.second_order_month1_goal ? "ok" : "warn";
   const label = { ok: "Holding", warn: "At risk", bad: "Failing", unk: "Not measured" };
   $("gates").innerHTML = [
-    [g1, `Meta CPR ≤ $${g.target_cpr_usd}`, w.rows ? usd(w.cpr, 2) : "–", w.rows ? `7-day: ${usd(w.spend)} spend, ${w.purch} purchases, ROAS ${w.roas != null ? w.roas.toFixed(2) + "×" : "–"}. Floor ${g.roas_floor}×.` : "Log Meta daily below (or connect Meta)."],
+    [g1, `Meta CPR ≤ $${g.target_cpr_usd}`, w.rows ? usd(w.cpr, 2) : "–", w.rows ? `Last 7 days logged (${w.days} day${w.days > 1 ? "s" : ""}): ${usd(w.spend)} spend, ${w.purch} purchases, ROAS ${w.roas != null ? w.roas.toFixed(2) + "×" : "–"}. Floor ${g.roas_floor}×.` : "Log Meta daily below (or connect Meta)."],
     [g2, `First-order AOV ≥ $${g.target_first_aov_usd}`, usd(g2v, 2), `New customers, last 30 days of the export.${aovLive ? ` Live AOV this month (all orders): ${usd(aovLive, 2)}.` : ""} Keep 18/24-pair bundles as the default offer.`],
     [g3, `Month-1 reorder ≥ ${pct(g.second_order_month1_goal)}`, pct(g.second_order_month1_now, 1), "Share of new customers who order again within 30 days. The day 7–30 post-purchase flow moves this."],
   ].map(([c, h, val, t]) => `<div class="gate"><span class="state ${c}">${label[c]}</span><h3>${esc(h)}</h3><span class="v">${val}</span><p class="small muted">${esc(t)}</p></div>`).join("");
@@ -356,7 +358,7 @@ function renderMeta() {
   $("m-verdict").className = "verdict " + v.cls; $("m-verdict").textContent = v.text;
   const rows = S.meta.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 14);
   $("m-table").innerHTML = rows.length ? `<thead><tr><th>Day</th><th class="r">Spend</th><th class="r">Purch.</th><th class="r">CPR</th><th class="r">ROAS</th></tr></thead><tbody>` +
-    rows.map((r) => `<tr><td class="num">${esc(r.date.slice(5))}</td><td class="r num">${usd(r.spend)}</td><td class="r num">${r.purchases}</td><td class="r num">${r.purchases ? usd(r.spend / r.purchases, 2) : "–"}</td><td class="r num">${r.spend ? (r.value / r.spend).toFixed(2) + "×" : "–"}</td></tr>`).join("") + `</tbody>` : "";
+    rows.map((r) => `<tr><td class="num">${r.days > 1 && r.start ? esc(r.start.slice(5)) + "→" : ""}${esc(r.date.slice(5))}</td><td class="r num">${usd(r.spend)}</td><td class="r num">${r.purchases}</td><td class="r num">${r.purchases ? usd(r.spend / r.purchases, 2) : "–"}</td><td class="r num">${r.spend ? (r.value / r.spend).toFixed(2) + "×" : "–"}</td></tr>`).join("") + `</tbody>` : "";
 }
 function segLabel(k) { if (k === "all") return "Everyone subscribed (BFCM / holiday)"; const s = S.sb && S.sb.segments.find((x) => x.key === k); return s ? s.label : k; }
 function renderSends() {
