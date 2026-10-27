@@ -1,0 +1,5 @@
+# Real customer data (PII) never goes in git. Only synthetic/placeholder samples under data/sample/.
+warehouse/*
+!warehouse/README.md
+__pycache__/
+*.pyc

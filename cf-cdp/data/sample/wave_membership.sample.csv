@@ -1,0 +1,9 @@
+email,wave,day_n_band,email_marketing_state,ankle_pref,wave_sub_eligible,as_of
+a.one@example.invalid,A,d28-45,SUBSCRIBED,True,True,2026-10-27
+a.two@example.invalid,A,d28-45,SUBSCRIBED,True,True,2026-10-27
+b.one@example.invalid,B,d46-59,SUBSCRIBED,True,True,2026-10-27
+b.notsub@example.invalid,B,d46-59,NOT_SUBSCRIBED,False,False,2026-10-27
+c60.one@example.invalid,C60,d60-89,SUBSCRIBED,True,True,2026-10-27
+c60.unsub@example.invalid,C60,d60-89,UNSUBSCRIBED,False,False,2026-10-27
+c90.one@example.invalid,C90,d90+,SUBSCRIBED,True,True,2026-10-27
+c90.notsub@example.invalid,C90,d90+,NOT_SUBSCRIBED,False,False,2026-10-27

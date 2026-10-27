@@ -1,0 +1,51 @@
+{
+  "as_of": "2026-10-28",
+  "source": "CoS snapshot 2026-10-28 (counts only)",
+  "profiles": {
+    "total": 16508,
+    "SUBSCRIBED": 3912,
+    "NOT_SUBSCRIBED": 10999,
+    "UNSUBSCRIBED": 1597
+  },
+  "waves": [
+    {
+      "wave": "A",
+      "members_all": 26,
+      "members_sub_eligible": 26,
+      "who": "1 paid order, SUB, d28\u201345, prefers ankle",
+      "offer": "Club Starter ankle 6@$49 alone (no COMEBACK15)",
+      "status": "DRAFT_HELD_FOR_SY"
+    },
+    {
+      "wave": "B",
+      "members_all": 43,
+      "members_sub_eligible": 15,
+      "who": "Ankle-only, d46\u201359",
+      "offer": "Style switch toward crew",
+      "status": "PLANNED"
+    },
+    {
+      "wave": "C60",
+      "members_all": 66,
+      "members_sub_eligible": 35,
+      "who": "Ankle-only, d60\u201389",
+      "offer": "Win-back / ladder",
+      "status": "PLANNED"
+    },
+    {
+      "wave": "C90",
+      "members_all": 4428,
+      "members_sub_eligible": 997,
+      "who": "Ankle-only, d90+",
+      "offer": "Long-tail win-back; COMEBACK15 once, ends ~2026-11-26, Sy OK only",
+      "status": "PLANNED"
+    }
+  ],
+  "wool_c": {
+    "status": "HOLD",
+    "sku": "CF22032",
+    "sku_available": null,
+    "sub_eligible_count": null,
+    "note": "HOLD until CF22032 Shopify available > 0"
+  }
+}

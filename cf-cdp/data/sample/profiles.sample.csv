@@ -1,0 +1,13 @@
+email,shopify_customer_id,first_name,last_name,email_marketing_state,order_count_paid,lifetime_revenue_usd,first_order_at,last_order_at,days_since_last,primary_style,styles_bought,missing_next_style,day_n_band,wave,wave_sub_eligible,has_active_subscription,ankle_pref,tags,as_of,source
+a.one@example.invalid,,,,SUBSCRIBED,1,49,,2026-09-26,31,ankle,ankle,,d28-45,A,True,False,True,,2026-10-27,SYNTHETIC_SAMPLE
+a.two@example.invalid,,,,SUBSCRIBED,1,49,,2026-09-13,44,ankle,ankle,,d28-45,A,True,False,True,,2026-10-27,SYNTHETIC_SAMPLE
+a.notsub@example.invalid,,,,NOT_SUBSCRIBED,1,49,,2026-09-24,33,ankle,ankle,,d28-45,none,False,False,True,,2026-10-27,SYNTHETIC_SAMPLE
+b.one@example.invalid,,,,SUBSCRIBED,2,98,,2026-09-07,50,ankle,ankle,,d46-59,B,True,False,True,,2026-10-27,SYNTHETIC_SAMPLE
+b.notsub@example.invalid,,,,NOT_SUBSCRIBED,1,49,,2026-09-05,52,ankle,ankle,,d46-59,B,False,False,False,,2026-10-27,SYNTHETIC_SAMPLE
+c60.one@example.invalid,,,,SUBSCRIBED,1,49,,2026-08-13,75,ankle,ankle,,d60-89,C60,True,False,True,,2026-10-27,SYNTHETIC_SAMPLE
+c60.unsub@example.invalid,,,,UNSUBSCRIBED,3,147,,2026-08-27,61,ankle,ankle,,d60-89,C60,False,False,False,,2026-10-27,SYNTHETIC_SAMPLE
+c90.one@example.invalid,,,,SUBSCRIBED,1,49,,2026-06-09,140,ankle,ankle,,d90+,C90,True,False,True,,2026-10-27,SYNTHETIC_SAMPLE
+c90.notsub@example.invalid,,,,NOT_SUBSCRIBED,2,98,,2025-09-22,400,ankle,ankle,,d90+,C90,False,False,False,,2026-10-27,SYNTHETIC_SAMPLE
+crew.buyer@example.invalid,,,,SUBSCRIBED,2,98,,2026-08-18,70,mixed,ankle|crew,,d60-89,none,True,False,True,,2026-10-27,SYNTHETIC_SAMPLE
+fresh.buyer@example.invalid,,,,SUBSCRIBED,1,49,,2026-10-18,9,crew,crew,,d0-27,none,True,False,False,,2026-10-27,SYNTHETIC_SAMPLE
+wool.owner@example.invalid,,,,SUBSCRIBED,3,147,,2026-07-24,95,mixed,ankle|crew|wool,,d90+,none,True,False,True,,2026-10-27,SYNTHETIC_SAMPLE

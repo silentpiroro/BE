@@ -1,0 +1,309 @@
+<title>Comfort Fresh Revenue &amp; Profit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: operator console. Header + guardrail strip, controls, then summary → P&L → trend → waves. */
+:root {
+  --bg: #f5f7f4;
+  --surface: #ffffff;
+  --ink: #17221d;
+  --muted: #5b6a62;
+  --line: #dde4de;
+  --accent: #2f6b4f;        /* bamboo green */
+  --accent-soft: #e3efe8;
+  --good: #1f7a4a; --good-soft: #def2e6;
+  --warn: #9a6200; --warn-soft: #fbefd6;
+  --bad: #b23a2e;  --bad-soft: #f9e1dd;
+  --est: #5a4fa8;  --est-soft: #ebe8f8;
+  --bar: #2f6b4f; --bar-partial: #9fc2ae;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1512; --surface: #161e1a; --ink: #e4ece7; --muted: #94a59b; --line: #26312b;
+  --accent: #7cc4a0; --accent-soft: #1d2d25;
+  --good: #6fd29b; --good-soft: #17301f; --warn: #e7b45a; --warn-soft: #33270f;
+  --bad: #f08a7e; --bad-soft: #3a1c18; --est: #b2a8f0; --est-soft: #241f3d;
+  --bar: #7cc4a0; --bar-partial: #3c5e4c; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1512; --surface: #161e1a; --ink: #e4ece7; --muted: #94a59b; --line: #26312b;
+  --accent: #7cc4a0; --accent-soft: #1d2d25;
+  --good: #6fd29b; --good-soft: #17301f; --warn: #e7b45a; --warn-soft: #33270f;
+  --bad: #f08a7e; --bad-soft: #3a1c18; --est: #b2a8f0; --est-soft: #241f3d;
+  --bar: #7cc4a0; --bar-partial: #3c5e4c; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.45; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 20px; }
+h1, h2 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.1rem; font-weight: 700; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.muted { color: var(--muted); }
+
+header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
+  font-size: .78rem; font-weight: 600; border: 1px solid var(--line); background: var(--surface); white-space: nowrap; }
+.chip.lock { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
+.chip.ph { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+.chip.est { color: var(--est); background: var(--est-soft); border-color: transparent; }
+.chip.good { color: var(--good); background: var(--good-soft); border-color: transparent; }
+.chip.bad { color: var(--bad); background: var(--bad-soft); border-color: transparent; }
+
+.guard { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 10px 14px; border-radius: 10px;
+  background: var(--warn-soft); color: var(--ink); font-size: .85rem; border: 1px solid var(--line); }
+.guard b { color: var(--warn); }
+
+.controls { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.seg button { font: inherit; font-size: .88rem; font-weight: 600; padding: 7px 14px; border: 0; background: transparent;
+  color: var(--muted); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.seg button:disabled { cursor: not-allowed; opacity: .5; }
+.ctl { display: grid; gap: 4px; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.kpi { background: var(--surface); padding: 14px 16px; display: grid; gap: 2px; }
+.kpi .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 1.45rem; font-weight: 600; }
+.kpi .s { font-size: .8rem; color: var(--muted); }
+
+.grid2 { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px; }
+
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th { text-align: left; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600;
+  padding: 6px 8px; border-bottom: 1px solid var(--line); }
+td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.r, th.r { text-align: right; }
+tr.sub td { font-weight: 600; border-top: 1px solid var(--muted); }
+tr.total td { font-size: 1.02rem; font-weight: 700; border-bottom: 0; }
+.neg { color: var(--bad); }
+.pos { color: var(--good); }
+.scroll { overflow-x: auto; }
+.basis { font-size: .68rem; font-weight: 600; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+.basis.ACTUAL { background: var(--accent-soft); color: var(--accent); }
+.basis.MODELED { background: var(--line); color: var(--muted); }
+.basis.ESTIMATE { background: var(--est-soft); color: var(--est); }
+
+.verdict { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--bg); font-size: .9rem; }
+
+.meter { height: 12px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.meter > i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.ns-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: .88rem; }
+.ladder { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ladder div { background: var(--bg); border-radius: 10px; padding: 10px; display: grid; gap: 2px; }
+.ladder .v { font-family: var(--font-mono); font-weight: 600; font-size: 1.05rem; }
+
+svg text { fill: var(--muted); font-family: var(--font-mono); font-size: 11px; }
+svg .val { fill: var(--ink); font-weight: 600; }
+.legend { display: flex; gap: 14px; font-size: .8rem; color: var(--muted); flex-wrap: wrap; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+
+.status { font-size: .7rem; font-weight: 700; letter-spacing: .03em; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.status.HOLD, .status.DRAFT_HELD_FOR_SY { background: var(--warn-soft); color: var(--warn); }
+.status.PLANNED { background: var(--line); color: var(--muted); }
+.status.READY { background: var(--good-soft); color: var(--good); }
+.wave-id { font-family: var(--font-mono); font-weight: 600; white-space: nowrap; }
+.small { font-size: .8rem; }
+footer { font-size: .8rem; color: var(--muted); display: grid; gap: 4px; }
+code { font-family: var(--font-mono); font-size: .85em; }
+@media (prefers-reduced-motion: no-preference) { .meter > i { transition: width .4s ease; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div style="display:grid;gap:4px">
+      <span class="eyebrow">Comfort Fresh CDP · Operator page</span>
+      <h1>Revenue &amp; Profit</h1>
+    </div>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <div class="guard" role="note">
+    <span><b>No send</b> and <b>no Shopify change</b> without Sy's OK</span>
+    <span>Wool Wave C: <b>HOLD</b> until CF22032 available &gt; 0</span>
+    <span id="guard-meta"></span>
+  </div>
+
+  <div class="controls">
+    <div class="ctl"><span class="eyebrow">Period</span>
+      <div class="seg" id="period-seg" role="group" aria-label="Period"></div></div>
+    <div class="ctl"><span class="eyebrow">Meta media</span>
+      <div class="seg" id="scenario-seg" role="group" aria-label="Media scenario"></div></div>
+  </div>
+
+  <section class="kpis" id="kpis" aria-label="Shopify actuals"></section>
+
+  <div class="grid2">
+    <section class="panel" aria-labelledby="pnl-h">
+      <div class="panel-head"><h2 id="pnl-h">Modeled P&amp;L</h2><span class="small muted" id="pnl-range"></span></div>
+      <div class="scroll"><table id="pnl"></table></div>
+      <div class="verdict" id="verdict"></div>
+      <div class="scroll"><table id="scen"></table></div>
+    </section>
+
+    <div style="display:grid;gap:20px;min-width:0">
+      <section class="panel" aria-labelledby="ns-h">
+        <div class="panel-head"><h2 id="ns-h">Gap to $100k / month</h2><span class="small muted">30-day run-rate</span></div>
+        <div class="meter" aria-hidden="true"><i id="ns-bar"></i></div>
+        <div class="ns-row" id="ns-row"></div>
+        <div class="ladder" id="ns-ladder"></div>
+        <p class="small muted" style="margin:0">Profit engine is second+ orders. Meta first orders are paid acquisition, so repeat share carries most of the gap.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="tr-h">
+        <div class="panel-head"><h2 id="tr-h">Monthly sales</h2>
+          <div class="legend"><span><i class="sw" style="background:var(--bar)"></i>Full month</span><span><i class="sw" style="background:var(--bar-partial)"></i>Month to date</span></div></div>
+        <div id="trend"></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="panel" aria-labelledby="wv-h">
+    <div class="panel-head"><h2 id="wv-h">Day-N waves</h2><span class="small muted" id="wv-asof"></span></div>
+    <div class="ladder" id="profiles" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))"></div>
+    <div class="scroll"><table id="waves"></table></div>
+    <p class="small muted" style="margin:0">Precedence on multi-match: A &gt; B &gt; C60 &gt; C90. Only SUB-eligible members go to Omnisend, as drafts held for Sy.</p>
+  </section>
+
+  <footer>
+    <span id="foot-src"></span>
+    <span>Feed: <code>dashboard_feed.json</code> from <code>cdp_cli.py feed</code>. Math lives in <code>cdp/pnl.py</code>; this page only renders it.</span>
+  </footer>
+</div>
+
+<script>
+const FEED = /*__CDP_FEED__*/null;
+
+const $ = (id) => document.getElementById(id);
+const usd = (n, d = 0) => (n < 0 ? "−" : "") + "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (n, d = 1) => (n * 100).toFixed(d) + "%";
+const int = (n) => Number(n).toLocaleString("en-US");
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+const state = { period: "30d", scenario: FEED && FEED.meta_status === "live" ? "live" : "low" };
+try { const s = JSON.parse(localStorage.getItem("cf-rp") || "{}"); if (s.period) state.period = s.period; if (s.scenario) state.scenario = s.scenario; } catch (e) {}
+const save = () => { try { localStorage.setItem("cf-rp", JSON.stringify(state)); } catch (e) {} };
+
+const SCEN_LABEL = { low: "$5k/mo", mid: "$6.5k/mo", high: "$8k/mo", live: "Live Meta" };
+
+function seg(el, items, current, onPick) {
+  el.innerHTML = items.map(([k, label, disabled]) =>
+    `<button type="button" data-k="${k}" aria-pressed="${k === current}" ${disabled ? "disabled title=\"Connect Meta to enable\"" : ""}>${esc(label)}</button>`).join("");
+  el.onclick = (e) => { const b = e.target.closest("button"); if (b && !b.disabled) onPick(b.dataset.k); };
+}
+
+function render() {
+  if (!FEED) { document.querySelector(".wrap").insertAdjacentHTML("beforeend", "<p>No feed loaded. Run <code>python3 cdp_cli.py feed && python3 cdp_cli.py render</code>.</p>"); return; }
+  const live = FEED.meta_status === "live";
+  if (state.scenario === "live" && !live) state.scenario = "low";
+  if (!FEED.periods[state.period]) state.period = "30d";
+  const placeholder = FEED.source === "PLACEHOLDER";
+
+  $("meta").innerHTML = [
+    `<span class="chip lock">Shop lock · Comfort Fresh</span>`,
+    `<span class="chip">North star · $100k/mo</span>`,
+    `<span class="chip">As of · <span class="num">${esc(FEED.as_of)}</span></span>`,
+    placeholder ? `<span class="chip ph">Placeholder data, not Shopify actuals</span>` : `<span class="chip good">Source · ${esc(FEED.source)}</span>`,
+  ].join("");
+  $("guard-meta").innerHTML = live ? "Meta: <b>live</b> from meta_daily" : "Meta: <b>not connected</b>, media lines are estimates";
+
+  seg($("period-seg"), Object.entries(FEED.periods).map(([k, p]) => [k, p.label.replace(/\s*\(.*\)/, "")]), state.period, (k) => { state.period = k; save(); render(); });
+  seg($("scenario-seg"), [["low", "$5k"], ["mid", "$6.5k"], ["high", "$8k"], ["live", "Live", !live]], state.scenario, (k) => { state.scenario = k; save(); render(); });
+
+  const P = FEED.periods[state.period];
+  const A = P.actual;
+  const repeatShare = A.orders_paid ? A.repeat_customer_orders / A.orders_paid : 0;
+  $("kpis").innerHTML = [
+    ["Sales", usd(A.gross_sales_usd), `${P.label}`],
+    ["Orders", int(A.orders_paid), `${(A.orders_paid / A.days).toFixed(1)} per day`],
+    ["AOV", usd(A.aov_usd, 2), "gross ÷ paid orders"],
+    ["Repeat orders", pct(repeatShare), `${int(A.repeat_customer_orders)} second+ orders`],
+    ["Pairs / order", A.pairs_per_order.toFixed(2), `${int(A.pairs_sold)} pairs shipped`],
+  ].map(([l, v, s]) => `<div class="kpi"><span class="eyebrow">${l}</span><span class="v">${v}</span><span class="s">${esc(s)}</span></div>`).join("");
+
+  const M = P.pnl[state.scenario];
+  $("pnl-range").textContent = `${P.start} → ${P.end} · media ${SCEN_LABEL[state.scenario]}`;
+  $("pnl").innerHTML = `<thead><tr><th>Line</th><th>Basis</th><th class="r">USD</th><th class="r">% of sales</th></tr></thead><tbody>` +
+    M.lines.map((ln) => {
+      const basis = ln.basis.split(" ")[0];
+      const cls = [ln.subtotal ? "sub" : "", ln.total ? "total" : ""].join(" ");
+      const tone = ln.total ? (ln.usd < 0 ? "neg" : "pos") : "";
+      return `<tr class="${cls}"><td>${esc(ln.label)}</td><td><span class="basis ${basis}" title="${esc(ln.basis)}">${basis}</span></td>` +
+        `<td class="r num ${tone}">${usd(ln.usd)}</td><td class="r num muted">${A.gross_sales_usd ? pct(ln.usd / A.gross_sales_usd) : "–"}</td></tr>`;
+    }).join("") + `</tbody>`;
+
+  const be = M.monthly_sales_for_15pct_net;
+  $("verdict").innerHTML =
+    `<span class="chip ${M.meets_target ? "good" : "bad"}">Net margin ${pct(M.net_margin)} · target ≥15%</span>` +
+    `<span>Contribution ${pct(M.contribution_pct)} of sales.</span>` +
+    `<span>${be ? `At this media level, 15% net needs about <b class="num">${usd(be)}</b>/mo in sales.` : "Contribution is under 15%, so no sales level reaches 15% net here."}</span>`;
+
+  const scen = Object.keys(P.pnl);
+  $("scen").innerHTML = `<thead><tr><th>Media scenario</th><th class="r">Modeled net</th><th class="r">Margin</th><th class="r">Sales for 15% / mo</th></tr></thead><tbody>` +
+    scen.map((k) => { const s = P.pnl[k]; return `<tr${k === state.scenario ? ' style="background:var(--accent-soft)"' : ""}><td>${SCEN_LABEL[k]} ${k === "live" ? '<span class="basis ACTUAL">ACTUAL</span>' : '<span class="basis ESTIMATE">ESTIMATE</span>'}</td>` +
+      `<td class="r num ${s.net_usd < 0 ? "neg" : "pos"}">${usd(s.net_usd)}</td><td class="r num">${pct(s.net_margin)}</td><td class="r num">${s.monthly_sales_for_15pct_net ? usd(s.monthly_sales_for_15pct_net) : "–"}</td></tr>`; }).join("") + `</tbody>`;
+
+  const N = FEED.north_star;
+  $("ns-bar").style.width = Math.min(100, N.pct_of_north_star * 100).toFixed(1) + "%";
+  $("ns-row").innerHTML = `<span><b class="num">${usd(N.run_rate_month_usd)}</b> run-rate · ${pct(N.pct_of_north_star)} of goal</span><span class="neg">Gap <b class="num">${usd(N.gap_usd)}</b>/mo</span>`;
+  $("ns-ladder").innerHTML = [
+    ["Orders / day now", N.orders_per_day_now.toFixed(1)],
+    ["Needed at AOV " + usd(N.aov_usd), N.orders_per_day_needed.toFixed(1)],
+    ["Multiple", (N.orders_per_day_needed / (N.orders_per_day_now || 1)).toFixed(1) + "×"],
+  ].map(([l, v]) => `<div><span class="eyebrow">${esc(l)}</span><span class="v">${v}</span></div>`).join("");
+
+  drawTrend(FEED.monthly_trend);
+  drawWaves(FEED.waves);
+  $("foot-src").textContent = placeholder
+    ? "Revenue rows are PLACEHOLDER, shaped like revenue_daily. Replace with a Shopify orders export via cdp_cli.py build-revenue. Media is never invented: scenarios stay ESTIMATE until meta_daily has rows."
+    : `Revenue source: ${FEED.source}. Meta: ${FEED.meta_status}.`;
+}
+
+function drawTrend(rows) {
+  const W = 460, H = 210, padL = 8, padR = 8, padT = 22, padB = 42;
+  const max = Math.max(...rows.map((r) => r.gross_sales_usd)) * 1.15 || 1;
+  const step = (W - padL - padR) / rows.length, bw = step * 0.62;
+  const y = (v) => padT + (H - padT - padB) * (1 - v / max);
+  const grid = [0.25, 0.5, 0.75].map((f) => { const v = max * f; return `<line x1="${padL}" x2="${W - padR}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-dasharray="2 4"/>`; }).join("");
+  const bars = rows.map((r, i) => {
+    const x = padL + i * step + (step - bw) / 2, yy = y(r.gross_sales_usd);
+    const mon = new Date(r.month + "-15").toLocaleString("en-US", { month: "short" });
+    return `<rect x="${x}" y="${yy}" width="${bw}" height="${H - padB - yy}" rx="3" fill="${r.partial ? "var(--bar-partial)" : "var(--bar)"}"><title>${r.month}: ${usd(r.gross_sales_usd)}, ${r.orders_paid} orders${r.partial ? " (month to date)" : ""}</title></rect>` +
+      `<text class="val" x="${x + bw / 2}" y="${yy - 6}" text-anchor="middle">${(r.gross_sales_usd / 1000).toFixed(1)}k</text>` +
+      `<text x="${x + bw / 2}" y="${H - padB + 16}" text-anchor="middle">${mon}${r.partial ? "*" : ""}</text>` +
+      `<text x="${x + bw / 2}" y="${H - padB + 30}" text-anchor="middle">${pct(r.repeat_share, 0)} rpt</text>`;
+  }).join("");
+  $("trend").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Monthly gross sales, last ${rows.length} months">${grid}<line x1="${padL}" x2="${W - padR}" y1="${H - padB}" y2="${H - padB}" stroke="var(--line)"/>${bars}</svg>` +
+    `<p class="small muted" style="margin:0">* month to date. The $100k goal is about ${(100000 / (rows.at(-2)?.gross_sales_usd || 1)).toFixed(0)}× the last full month, so it's off this scale.</p>`;
+}
+
+function drawWaves(W) {
+  if (!W) return;
+  $("wv-asof").textContent = `Snapshot ${W.as_of} · ${W.source}`;
+  const pr = W.profiles || {};
+  $("profiles").innerHTML = [["Profiles", pr.total], ["Subscribed", pr.SUBSCRIBED], ["Not subscribed", pr.NOT_SUBSCRIBED], ["Unsubscribed", pr.UNSUBSCRIBED]]
+    .map(([l, v]) => `<div><span class="eyebrow">${l}</span><span class="v">${v == null ? "–" : int(v)}</span></div>`).join("");
+  const rows = W.waves.map((w) => `<tr><td class="wave-id">${esc(w.wave)}</td><td>${esc(w.who || "")}</td>` +
+    `<td class="r num">${int(w.members_all)}</td><td class="r num"><b>${int(w.members_sub_eligible)}</b></td>` +
+    `<td>${esc(w.offer || "")}</td><td><span class="status ${esc(w.status || "PLANNED")}">${esc((w.status || "PLANNED").replace(/_/g, " "))}</span></td></tr>`);
+  const tot = W.waves.reduce((a, w) => [a[0] + w.members_all, a[1] + w.members_sub_eligible], [0, 0]);
+  rows.push(`<tr class="sub"><td></td><td>All waves</td><td class="r num">${int(tot[0])}</td><td class="r num">${int(tot[1])}</td><td></td><td></td></tr>`);
+  if (W.wool_c) rows.push(`<tr><td class="wave-id">Wool C</td><td>Missing merino</td><td class="r num">${W.wool_c.sub_eligible_count == null ? "–" : int(W.wool_c.sub_eligible_count)}</td><td class="r num">–</td><td>${esc(W.wool_c.note || "")}</td><td><span class="status ${esc(W.wool_c.status)}">${esc(W.wool_c.status)}</span></td></tr>`);
+  $("waves").innerHTML = `<thead><tr><th>Wave</th><th>Who</th><th class="r">Members</th><th class="r">SUB-eligible</th><th>Offer / job</th><th>Status</th></tr></thead><tbody>${rows.join("")}</tbody>`;
+}
+
+render();
+</script>
