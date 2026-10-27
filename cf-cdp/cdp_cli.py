@@ -203,6 +203,19 @@ def cmd_pull_meta(a):
     _write_json(a.out, sources.meta_daily_from_ads_manager_csv(a.dump, a.as_of))
 
 
+def cmd_magnet(a):
+    from cdp import magnet
+    feed, aud = magnet.build_feed(a.orders, date.fromisoformat(a.as_of))
+    _write_json(a.out, feed)
+    out = WH / "audiences" / "magnet"
+    out.mkdir(parents=True, exist_ok=True)
+    for seg, emails in aud.items():  # PII: stays in git-ignored warehouse/
+        name = seg.replace(" · ", "_").replace(" ", "_").replace("+", "plus").replace("(", "").replace(")", "")
+        _write_csv(out / f"{name}_{a.as_of}.csv", [{"email": e} for e in emails], ["email"])
+    p = feed["path"]
+    print(f"$100k/mo modeled in {p['hits_target']}; first-order ROAS at target CPR {p['first_order_roas_at_target_cpr']}x")
+
+
 def cmd_build_audiences(a):
     profiles = _read_csv(a.profiles)
     rows = waves.build_membership(profiles, a.as_of)
@@ -265,6 +278,12 @@ def main(argv=None):
     s.add_argument("--as-of", default=today)
     s.add_argument("--out", default=str(WH / "meta" / "daily" / f"meta_daily_{today}.json"))
     s.set_defaults(fn=cmd_pull_meta)
+
+    s = sub.add_parser("magnet", help="Money Magnet: findings, ranked moves, path to $100k")
+    s.add_argument("--orders", required=True, help="one-row-per-order Shopify export")
+    s.add_argument("--as-of", default=today)
+    s.add_argument("--out", default=str(WH / "feeds" / "magnet_feed.json"))
+    s.set_defaults(fn=cmd_magnet)
 
     s = sub.add_parser("build-audiences")
     s.add_argument("--profiles", default=str(SAMPLE / "profiles.sample.csv"))

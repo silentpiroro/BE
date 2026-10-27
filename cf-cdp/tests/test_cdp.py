@@ -151,5 +151,31 @@ class SourcesTest(unittest.TestCase):
         self.assertEqual((r["cpr_usd"], r["purchase_roas"]), (25.0, 3.6))
 
 
+class MagnetTest(unittest.TestCase):
+    def metrics(self):
+        return {"repeat_hazard_by_month": [0.10, 0.025, 0.02] + [0.01] * 9,
+                "existing_cohorts": {"0": 100, "1": 100, "2": 100},
+                "last30": {"new_customers": 100, "repeat_orders": 25},
+                "pairs_per_order_recent": 10}
+
+    def test_path_reaches_target_and_flags_band(self):
+        from cdp import magnet
+        sim = magnet.simulate(self.metrics())
+        self.assertIsNotNone(sim["hits_target"])
+        rows = sim["months"]
+        hit = next(r for r in rows if r["month"] == sim["hits_target"])
+        self.assertGreaterEqual(hit["revenue_usd"], 99_500)
+        for a, b in zip(rows, rows[1:]):  # growth cap respected before the target month
+            if b["month"] <= sim["hits_target"]:
+                self.assertLessEqual(b["new_customers"], a["new_customers"] * 1.35 + 1)
+        self.assertTrue(any(r["over_band"] for r in rows))
+        self.assertEqual(rows[3]["po_month"], rows[0]["month"])  # 3-month lead time
+
+    def test_target_cpr_passes_roas_floor(self):
+        from cdp import magnet
+        a = magnet.ASSUMPTIONS
+        self.assertGreaterEqual(a["first_aov_usd"] / a["target_cpr_usd"], C.META_MIN_PURCHASE_ROAS[0])
+
+
 if __name__ == "__main__":
     unittest.main()
