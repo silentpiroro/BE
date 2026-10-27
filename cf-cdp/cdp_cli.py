@@ -209,6 +209,9 @@ def cmd_magnet(a):
     _write_json(a.out, feed)
     out = WH / "audiences" / "magnet"
     out.mkdir(parents=True, exist_ok=True)
+    actions = aud.pop("_actions", [])
+    if actions:  # one next-best action per customer (PII: git-ignored)
+        _write_csv(WH / "audiences" / f"next_best_action_{a.as_of}.csv", actions)
     for seg, emails in aud.items():  # PII: stays in git-ignored warehouse/
         name = seg.replace(" · ", "_").replace(" ", "_").replace("+", "plus").replace("(", "").replace(")", "")
         _write_csv(out / f"{name}_{a.as_of}.csv", [{"email": e} for e in emails], ["email"])

@@ -374,7 +374,10 @@ def build_feed(path: str, as_of: date) -> tuple[dict, dict]:
     metrics, aud = analyze(rows, as_of)
     sim = simulate(metrics)
     ss = steady_state(metrics)
-    feed = {"feed": "money_magnet", "as_of": as_of.isoformat(), "source": "shopify_order_export",
+    from . import playbook
+    pb, actions = playbook.build(rows, as_of)
+    aud["_actions"] = actions
+    feed = {"feed": "money_magnet", "playbook": pb, "as_of": as_of.isoformat(), "source": "shopify_order_export",
             "metrics": metrics, "path": sim, "steady_state": ss,
             "opportunities": opportunities(metrics, sim, ss)}
     return feed, aud

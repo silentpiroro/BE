@@ -133,6 +133,15 @@ code { font-family: var(--font-mono); font-size: .85em; }
     <div class="moves" id="moves"></div>
   </section>
 
+  <section class="panel" aria-labelledby="w-h">
+    <div class="panel-head"><h2 id="w-h">Who to win back, when, and with what</h2><span class="small muted" id="w-sub"></span></div>
+    <div class="finds" id="w-rules"></div>
+    <div class="scroll"><table id="w-seg"></table></div>
+    <h3>VIPs to contact personally first</h3>
+    <div class="scroll"><table id="w-vip"></table></div>
+    <p class="small muted">Full list with one action per customer: <code>warehouse/audiences/next_best_action_&lt;date&gt;.csv</code> (local only). Before any Omnisend send, join it to the CoS profiles and keep only SUBSCRIBED.</p>
+  </section>
+
   <section class="panel" aria-labelledby="c-h">
     <div class="panel-head"><h2 id="c-h">Next 5 weeks</h2><span class="small muted">Owner on every line</span></div>
     <div class="cal" id="cal"></div>
@@ -233,6 +242,7 @@ function render() {
   ];
   $("cal").innerHTML = weeks.map(([w, items]) => `<div class="wk"><span class="eyebrow">${w}</span><ul>${items.map(([o, t, sy]) => `<li class="${sy ? "sy" : ""}"><b>${esc(o)}</b>${esc(t)}</li>`).join("")}</ul></div>`).join("");
 
+  drawPlaybook(FEED.playbook);
   drawChart(P.months);
   $("path").innerHTML = `<thead><tr><th>Month</th><th class="r">Revenue</th><th class="r">New cust.</th><th class="r">Repeat</th><th class="r">Media @$${A.target_cpr_usd}</th><th class="r">@$35</th><th class="r">Pairs</th><th>PO by</th><th class="r">Net*</th></tr></thead><tbody>` +
     P.months.map((r) => `<tr class="${r.month === P.hits_target ? "hit" : ""}"><td>${mon(r.month)}${r.over_band ? ' <span class="band">above $8k band</span>' : ""}</td>
@@ -272,6 +282,30 @@ function render() {
     Object.keys(action).filter((s) => M.ripe[s]).map((s) => `<tr><td>${esc(s)}</td><td class="r num">${int(M.ripe[s].customers)}</td><td class="r num">${usd(M.ripe[s].spent_usd)}</td><td>${esc(action[s])}</td></tr>`).join("") + `</tbody>`;
 
   $("foot").innerHTML = `<span>Source: Shopify one-row-per-order export to ${esc(FEED.as_of)}; 7 cancelled orders excluded. Forward months, media and net are MODELED from the assumptions in <code>cdp/magnet.py</code>. BFCM and win-back assume ${pct(A.bfcm_conv)} and ${pct(A.winback_conv, 1)} conversion.</span><span>Rebuild: <code>python3 cdp_cli.py magnet --orders &lt;export.csv&gt;</code> then render.</span>`;
+}
+
+function drawPlaybook(PB) {
+  if (!PB) return;
+  const E = PB.economics, T = PB.transitions;
+  const comp = Object.entries(T).map(([a, b]) => `${a} → ${b[0][0]} (${b[0][1]})`).join(" · ");
+  $("w-sub").textContent = `Reorder rates measured on customers who looked like each group ${PB.backtest_days} days ago`;
+  $("w-rules").innerHTML = [
+    ["Pairs, not percent", `15% off an $87 order gives away $${E.pct15_on_87_usd}. Four bonus pairs cost $${E.bonus_pairs_cost[4]} at $${E.cogs_per_pair_usd}/pair and ship in the same box. First-order discounts didn't raise repeat (11.6% vs 12.1%).`],
+    ["Complementary product = the other hero", `What real 2nd orders moved to: ${comp}. Offer it in their size and the color they don't own (49% of buyers have only bought black).`],
+    ["Timing beats discount", `One-order buyers 120+ days out came back 0% on their own; 3+ order VIPs lapsed 60+ days still came back 12.5%. Spend effort in that order.`],
+    ["Every segment ≤3 emails / 30 days", `Schedules below are checked by code on a rolling 30-day window. Gmail 1:1 notes count, and never share a week with Omnisend.`],
+  ].map(([h, t]) => `<div class="find"><h3>${esc(h)}</h3><p>${esc(t)}</p></div>`).join("");
+  $("w-seg").innerHTML = `<thead><tr><th>Who</th><th class="r">Buyers</th><th class="r">90-day reorder (measured)</th><th>Offer + product</th><th>Channel</th><th>Sends</th></tr></thead><tbody>` +
+    PB.segments.filter((s) => s.key !== "other").map((s) => {
+      const b = s.baseline_90d || {};
+      const rate = b.reorder_rate == null ? "–" : `${pct(b.reorder_rate, 1)} <span class="muted">· $${(b.rev_per_customer_usd || 0).toFixed(2)}/buyer${b.small_sample ? " · small sample n=" + b.n : ""}</span>`;
+      const prods = (s.top_products || []).map(([p, n]) => `${esc(p)} (${n})`).join(", ");
+      const sends = s.schedule.sends.length ? s.schedule.sends.map((x) => `<span class="num">${x.date.slice(5)}</span> ${esc(x.name)}`).join("<br>") : `<span class="muted">${esc(s.when)}</span>`;
+      return `<tr><td><b>${esc(s.label)}</b><br><span class="small muted">${esc(s.why)}</span></td><td class="r num">${int(s.customers)}</td><td class="r num">${rate}</td>
+        <td>${esc(s.incentive)}<br><span class="small muted">Product: ${prods || "–"}</span></td><td class="small">${esc(s.channel)}</td><td class="small">${sends}</td></tr>`;
+    }).join("") + `</tbody>`;
+  $("w-vip").innerHTML = `<thead><tr><th>Customer</th><th class="r">Lifetime orders</th><th class="r">Days since</th><th class="r">Spent (10 mo)</th><th>Offer next</th><th>Status</th></tr></thead><tbody>` +
+    PB.top_vips.map((v) => `<tr><td>${esc(v.name)}</td><td class="r num">${v.lifetime_orders}</td><td class="r num">${v.days_since}</td><td class="r num">${usd(v.spend_usd)}</td><td>${esc(v.product)}</td><td>${v.segment === "vip_lapsed" ? '<span class="band">gone quiet</span>' : '<span class="chip good" style="font-size:.66rem;padding:0 6px">active</span>'}</td></tr>`).join("") + `</tbody>`;
 }
 
 function drawChart(rows) {

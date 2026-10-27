@@ -151,6 +151,28 @@ class SourcesTest(unittest.TestCase):
         self.assertEqual((r["cpr_usd"], r["purchase_roas"]), (25.0, 3.6))
 
 
+class PlaybookTest(unittest.TestCase):
+    def test_every_segment_respects_cap(self):
+        from datetime import timedelta
+        from cdp import playbook
+        for seg in ["vip_lapsed", "vip_active", "second_order", "wave_a", "household", "bundle_clock",
+                    "large_feet", "ladder", "repeat_lapsed", "dormant", "other"]:
+            ds = [date.fromisoformat(x["date"]) for x in playbook.schedule(seg)["sends"]]
+            for d0 in ds:
+                self.assertLessEqual(sum(d0 <= x < d0 + timedelta(days=30) for x in ds), C.MAX_MARKETING_EMAILS_PER_30D, seg)
+        self.assertEqual(playbook.schedule("service")["sends"], [])
+
+    def test_segment_priority(self):
+        from cdp import playbook
+        base = {"refunded": False, "reordered_after_refund": False, "household": False, "last_pairs": 6, "size": "9-11"}
+        a = lambda **kw: playbook.assign({**base, **kw}, date(2026, 10, 27))
+        self.assertEqual(a(lifetime_orders=5, days_since=90), "vip_lapsed")
+        self.assertEqual(a(lifetime_orders=1, days_since=12), "second_order")
+        self.assertEqual(a(lifetime_orders=1, days_since=30), "wave_a")
+        self.assertEqual(a(lifetime_orders=1, days_since=200), "dormant")
+        self.assertEqual(a(lifetime_orders=1, days_since=3), "recent")
+
+
 class MagnetTest(unittest.TestCase):
     def metrics(self):
         return {"repeat_hazard_by_month": [0.10, 0.025, 0.02] + [0.01] * 9,
