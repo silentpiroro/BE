@@ -14,7 +14,7 @@ Anything that sends email or changes Shopify is out of scope for jobs. Those ste
 ## sync_shopify_profiles
 - **Run by:** CoS only (sole Shopify accessor). Read-only queries; no mutations.
 - **Live path:** Shopify Admin GraphQL via MCP. `customers` (email, id, `emailMarketingConsent.marketingState`, `numberOfOrders`, `amountSpent`, tags), and `orders(query:"financial_status:paid OR financial_status:partially_refunded processed_at:>=<since>")` with line items (sku, title, quantity), `subtotalPriceSet`, `totalDiscountsSet`, `totalRefundedSet`, `processedAt`.
-- **Offline path (works today):** Admin → Orders → Export CSV, then
+- **Offline path (works today):** either the one-row-per-order export (`order_id, processed_at_utc, ... total_quantity, skus`, auto-detected; pairs parsed from SKU pack codes, cancelled orders dropped, days in America/Chicago) or Admin → Orders → Export CSV, then
   `python3 cdp_cli.py build-revenue --shopify-csv orders_export.csv --pairs-map pairs_by_sku.json`.
   Export at least 13 months so new-vs-repeat is right.
 - **Rules:** identity = `lower(email)`; drop other stores; style from SKU map (`ankle|crew|wool|other`); `pairs_sold` from a maintained `pairs_by_sku.json`, falling back to "N pairs" / "N-pack" in the title.

@@ -158,7 +158,18 @@ def cmd_feed(a):
     meta = _read_json(a.meta) if a.meta and Path(a.meta).exists() else []
     wv = _read_json(a.waves)
     source = rev[0].get("source", "unknown") if rev else "empty"
-    _write_json(a.out, pnl.build_feed(rev, meta, wv, date.fromisoformat(a.as_of), source))
+    feed = pnl.build_feed(rev, meta, wv, date.fromisoformat(a.as_of), source)
+    qpath = Path(a.revenue).with_name("revenue_quality.json")
+    if source != "PLACEHOLDER" and qpath.exists():
+        q = _read_json(qpath)
+        known = q["sku_lines_pack_known"] / q["sku_lines"] if q["sku_lines"] else 0
+        feed["notes"] = [
+            f"{q['orders_in_file']} orders in export; {q['cancelled_excluded']} cancelled excluded.",
+            f"Pairs estimated from SKU pack sizes ({known:.0%} of SKU lines parsed; others count as 1 pair).",
+            "Repeat = customer's 2nd+ lifetime order (lifetime count minus their later orders in the export).",
+            "Gross = subtotal + discounts. Shipping charged to customers is not counted as sales.",
+        ]
+    _write_json(a.out, feed)
 
 
 def cmd_render(a):
@@ -167,13 +178,22 @@ def cmd_render(a):
     marker = "/*__CDP_FEED__*/null"
     if marker not in html:
         sys.exit("template is missing the feed marker")
+    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(html.replace(marker, feed.replace("</", "<\\/")))
     print(f"wrote {a.out}")
 
 
 def cmd_build_revenue(a):
-    pairs_map = _read_json(a.pairs_map) if a.pairs_map else None
-    _write_json(a.out, sources.revenue_daily_from_shopify_csv(a.shopify_csv, pairs_map, a.as_of))
+    with open(a.shopify_csv, encoding="utf-8-sig") as fh:
+        header = fh.readline()
+    if "processed_at_utc" in header and "total_quantity" in header:  # one row per order
+        rows, quality = sources.revenue_daily_from_order_summary_csv(a.shopify_csv, a.as_of)
+        _write_json(Path(a.out).with_name("revenue_quality.json"), quality)
+        print(f"quality: {quality}")
+    else:  # Shopify Admin line-item export
+        pairs_map = _read_json(a.pairs_map) if a.pairs_map else None
+        rows = sources.revenue_daily_from_shopify_csv(a.shopify_csv, pairs_map, a.as_of)
+    _write_json(a.out, rows)
 
 
 def cmd_pull_meta(a):

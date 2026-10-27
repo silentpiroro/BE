@@ -216,7 +216,7 @@ function render() {
     `<span class="chip lock">Shop lock · Comfort Fresh</span>`,
     `<span class="chip">North star · $100k/mo</span>`,
     `<span class="chip">As of · <span class="num">${esc(FEED.as_of)}</span></span>`,
-    placeholder ? `<span class="chip ph">Placeholder data, not Shopify actuals</span>` : `<span class="chip good">Source · ${esc(FEED.source)}</span>`,
+    placeholder ? `<span class="chip ph">Placeholder data, not Shopify actuals</span>` : `<span class="chip good">Shopify actuals · order export</span>`,
   ].join("");
   $("guard-meta").innerHTML = live ? "Meta: <b>live</b> from meta_daily" : "Meta: <b>not connected</b>, media lines are estimates";
 
@@ -269,7 +269,7 @@ function render() {
   drawWaves(FEED.waves);
   $("foot-src").textContent = placeholder
     ? "Revenue rows are PLACEHOLDER, shaped like revenue_daily. Replace with a Shopify orders export via cdp_cli.py build-revenue. Media is never invented: scenarios stay ESTIMATE until meta_daily has rows."
-    : `Revenue source: ${FEED.source}. Meta: ${FEED.meta_status}.`;
+    : `Revenue: Shopify actuals (${FEED.source}). Meta: ${FEED.meta_status === "live" ? "live" : "not connected, media is a scenario estimate"}. ` + (FEED.notes || []).join(" ");
 }
 
 function drawTrend(rows) {

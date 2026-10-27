@@ -121,6 +121,27 @@ class SourcesTest(unittest.TestCase):
         self.assertEqual(rows[1]["gross_sales_usd"], 49.0)
         self.assertEqual(rows[1]["repeat_customer_orders"], 1)
 
+    def test_order_summary_export(self):
+        cols = ["order_id", "processed_at_utc", "financial_status", "cancelled_at", "subtotal_original",
+                "total_discounts_original", "total_refunded", "customer_id", "customer_lifetime_orders",
+                "total_quantity", "skus"]
+        data = [
+            ["1", "2026-10-02T03:00:00Z", "PAID", "", "40.00", "10.00", "0", "c1", "3", "2",
+             "CF17180-4Black-10-13; CF17180-1315-B12W6-AID"],          # local date 10-01 (CDT); 2 units x avg 11
+            ["2", "2026-10-05T15:00:00Z", "PARTIALLY_REFUNDED", "", "20.00", "0", "5.00", "c1", "3", "1", "CF17180-1315-N12"],
+            ["3", "2026-10-05T16:00:00Z", "REFUNDED", "2026-10-06T00:00:00Z", "15.00", "0", "15.00", "c2", "1", "1", "CF368-1Black-XL"],
+        ]
+        with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, newline="") as fh:
+            w = csv.writer(fh); w.writerow(cols); w.writerows(data)
+        rows, q = sources.revenue_daily_from_order_summary_csv(fh.name)
+        self.assertEqual(q["cancelled_excluded"], 1)
+        d = {r["date"]: r for r in rows}
+        self.assertEqual(d["2026-10-01"]["gross_sales_usd"], 50.0)
+        self.assertEqual(d["2026-10-01"]["pairs_sold"], 22)
+        self.assertEqual(d["2026-10-01"]["repeat_customer_orders"], 1)  # c1's 2nd lifetime order
+        self.assertEqual(d["2026-10-05"]["net_sales_usd"], 15.0)
+        self.assertEqual(d["2026-10-05"]["pairs_sold"], 12)
+
     def test_meta_dump(self):
         with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, newline="") as fh:
             w = csv.writer(fh)

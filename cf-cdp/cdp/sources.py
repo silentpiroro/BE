@@ -126,3 +126,104 @@ def meta_daily_from_ads_manager_csv(path: str, as_of: str = "") -> list[dict]:
                 "as_of": as_of,
             })
     return out
+
+
+# ---------------------------------------------------------------- order-summary export
+# One row per order (order_id, processed_at_utc, financial_status, subtotal_original,
+# total_discounts_original, total_refunded, customer_id, customer_lifetime_orders,
+# total_quantity, skus "a; b; c"). subtotal_original is AFTER discounts.
+_PACK_PATTERNS = [
+    re.compile(r"PK(\d+)", re.I),                 # CF22032-PK3-Black
+    re.compile(r"(\d+)\s*PR\b", re.I),            # ADDON-BAMBOO-CREW-2PR
+    re.compile(r"^CF-B[A-Z]{2}-(\d+)-", re.I),    # CF-BDA-20-BLK-1315
+    re.compile(r"^[A-Za-z0-9]+-(\d+)-[A-Za-z]", re.I),  # CF17180-8-BLK
+    re.compile(r"(\d+)\s*pairs?\b", re.I),        # "Bonus 6 Pairs"
+]
+_SIZE_FIRST = re.compile(r"^[A-Za-z0-9]+-(?:0?911|1013|1315)-((?:[A-Z]\d+)+)P?\b", re.I)
+_HEAD_COUNTS = re.compile(r"^[A-Za-z0-9]+-((?:\d+[A-Za-z]+)+)")  # CF17180-4Black, -3Black3White, -4Pack
+
+
+def pairs_per_unit_from_sku(sku: str) -> int | None:
+    """Best-effort pack size from a Comfort Fresh SKU or title. None = unknown."""
+    sku = sku.strip()
+    m = _SIZE_FIRST.match(sku)                    # CF17180-1315-B12W6-AID, CF17180-911-B6P
+    if m:
+        n = sum(int(x) for x in re.findall(r"\d+", m.group(1)))
+        return n if 0 < n <= 48 else None
+    m = _HEAD_COUNTS.match(sku)
+    if m:
+        n = sum(int(n) for n in re.findall(r"(\d+)[A-Za-z]+", m.group(1)))
+        return n if 0 < n <= 48 else None
+    for pat in _PACK_PATTERNS:
+        m = pat.search(sku)
+        if m:
+            n = int(m.group(1))
+            return n if 0 < n <= 48 else None
+    return None
+
+
+def _local_date(ts: str, tz: str) -> str:
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    return dt.astimezone(ZoneInfo(tz)).date().isoformat()
+
+
+def revenue_daily_from_order_summary_csv(path: str, as_of: str = "", tz: str = "America/Chicago",
+                                         default_pack: int = 1) -> tuple[list[dict], dict]:
+    """Returns (revenue_daily rows, quality report). Cancelled orders are excluded."""
+    with open(path, newline="", encoding="utf-8-sig") as fh:
+        rows = list(csv.DictReader(fh))
+    # Customer's order number at the time = lifetime orders now - their later orders in this file.
+    by_cust: dict[str, list[dict]] = defaultdict(list)
+    for r in rows:
+        if r.get("customer_id"):
+            by_cust[r["customer_id"]].append(r)
+    seq: dict[str, int] = {}
+    for cust, orders in by_cust.items():
+        orders.sort(key=lambda r: r["processed_at_utc"])
+        life = int(_f(orders[-1].get("customer_lifetime_orders")) or len(orders))
+        for i, r in enumerate(orders):
+            seq[r["order_id"]] = max(life - (len(orders) - 1 - i), i + 1)
+    days: dict[str, dict] = defaultdict(lambda: {
+        "orders_paid": 0, "gross_sales_usd": 0.0, "discounts_usd": 0.0, "refunds_usd": 0.0,
+        "net_sales_usd": 0.0, "pairs_sold": 0, "new_customer_orders": 0, "repeat_customer_orders": 0})
+    q = {"orders_in_file": len(rows), "cancelled_excluded": 0, "not_paid_excluded": 0,
+         "sku_lines": 0, "sku_lines_pack_known": 0}
+    for r in rows:
+        if r.get("cancelled_at"):
+            q["cancelled_excluded"] += 1
+            continue
+        if r["financial_status"].strip().lower() not in PAID_STATUSES:
+            q["not_paid_excluded"] += 1
+            continue
+        d = days[_local_date(r["processed_at_utc"], tz)]
+        sub, disc, ref = _f(r["subtotal_original"]), _f(r["total_discounts_original"]), _f(r["total_refunded"])
+        d["orders_paid"] += 1
+        d["gross_sales_usd"] += sub + disc
+        d["discounts_usd"] += disc
+        d["refunds_usd"] += min(ref, sub)
+        d["net_sales_usd"] += sub - min(ref, sub)
+        packs = []
+        for s in (r.get("skus") or "").split(";"):
+            if not s.strip() or s.strip().lower().startswith("order split"):
+                continue
+            q["sku_lines"] += 1
+            p = pairs_per_unit_from_sku(s)
+            if p is not None:
+                q["sku_lines_pack_known"] += 1
+            packs.append(p if p is not None else default_pack)
+        units = int(_f(r.get("total_quantity")))
+        avg_pack = sum(packs) / len(packs) if packs else default_pack
+        d["pairs_sold"] += round(units * avg_pack)
+        if seq.get(r["order_id"], 1) > 1:
+            d["repeat_customer_orders"] += 1
+        else:
+            d["new_customer_orders"] += 1
+    out = []
+    for day in sorted(days):
+        rr = {"date": day, **days[day], "source": "shopify_order_export", "as_of": as_of}
+        for k in ("gross_sales_usd", "discounts_usd", "refunds_usd", "net_sales_usd"):
+            rr[k] = round(rr[k], 2)
+        out.append(rr)
+    return out, q
