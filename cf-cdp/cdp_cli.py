@@ -219,6 +219,72 @@ def cmd_magnet(a):
     print(f"$100k/mo modeled in {p['hits_target']}; first-order ROAS at target CPR {p['first_order_roas_at_target_cpr']}x")
 
 
+def cmd_export_emails(a):
+    """Workbook of customer emails per playbook segment, for Sy-approved sends."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font
+    from cdp import magnet, playbook
+    rows = magnet.load(a.orders)
+    as_of = date.fromisoformat(a.as_of)
+    summary, actions = playbook.build(rows, as_of)
+    no_email = sum(1 for x in actions if not x["email"])
+    actions = [x for x in actions if x["email"]]
+    # Large feet = bought sock size 13-15 in ANY order, not only their most common size.
+    big = set()
+    print(f"skipped {no_email} customers with no email")
+    for r in rows:
+        if "13-15" in (r.get("skus") or "") or "1315" in (r.get("skus") or ""):
+            big.add((r.get("customer_email") or "").strip().lower())
+    cols = ["email", "first_name", "sock_size", "large_feet_13_15", "lifetime_orders", "days_since_last_order",
+            "last_order", "spent_10mo_usd", "next_product", "offer", "channel", "send_plan", "marketing_consent"]
+    def row(x):
+        return [x["email"], x["first_name"], x["size"] or "", "YES" if x["email"] in big else "",
+                x["lifetime_orders"], x["days_since"], x["last_order"], x["spend_usd"], x["product"],
+                x["incentive"], x["channel"], x["send"], "CHECK in Omnisend before sending"]
+    wb = Workbook()
+    ov = wb.active
+    ov.title = "Read me"
+    ov.append(["Comfort Fresh customer email lists", f"as of {a.as_of}"])
+    ov.append(["Rules", "Sy OK before any send · only SUBSCRIBED contacts get marketing · max 3 marketing emails per 30 days · no Omnisend + Gmail marketing in the same week"])
+    ov.append(["Large feet", "large_feet_13_15 = YES means the customer bought sock size 13-15 at least once"])
+    ov.append([])
+    ov.append(["Tab", "Customers", "When", "Offer"])
+    labels = {s["key"]: s for s in summary["segments"]}
+    order = [s["key"] for s in summary["segments"] if s["key"] not in ("other",)]
+    tabs = {"service": "Refund recovery", "vip_lapsed": "VIP gone quiet", "vip_active": "VIP active",
+            "second_order": "2nd order d7-27", "wave_a": "Wave A d28-45", "household": "Household",
+            "bundle_clock": "Bundle sock clock", "large_feet": "Large feet 1 order", "ladder": "1 order d46-119",
+            "repeat_lapsed": "2 orders lapsed", "dormant": "Dormant 120+ (C90)", "recent": "Just ordered"}
+    for key in order:
+        xs = sorted((x for x in actions if x["segment"] == key), key=lambda x: (-x["lifetime_orders"], -x["spend_usd"]))
+        ws = wb.create_sheet(tabs.get(key, key)[:31])
+        ws.append(cols)
+        for x in xs:
+            ws.append(row(x))
+        s = labels[key]
+        ov.append([ws.title, len(xs), s["when"], s["incentive"]])
+    big.discard("")
+    ws = wb.create_sheet("Large feet 13-15 ALL")
+    ws.append(cols + ["segment"])
+    for x in sorted((x for x in actions if x["email"] in big), key=lambda x: (-x["lifetime_orders"], -x["spend_usd"])):
+        ws.append(row(x) + [x["segment"]])
+    ov.append([ws.title, ws.max_row - 1, "Any time (pick by segment)", "Customers who bought sock size 13-15"])
+    ws = wb.create_sheet("All customers")
+    ws.append(cols + ["segment"])
+    for x in sorted(actions, key=lambda x: x["segment"]):
+        ws.append(row(x) + [x["segment"]])
+    for w in wb.worksheets:
+        for c in w[1]:
+            c.font = Font(bold=True)
+        w.freeze_panes = "A2"
+        for col in w.columns:
+            w.column_dimensions[col[0].column_letter].width = min(max(len(str(c.value or "")) for c in col) + 2, 60)
+    out = Path(a.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    wb.save(out)
+    print(f"wrote {out}: {len(actions)} customers, {len(big)} large-feet (size 13-15)")
+
+
 def cmd_build_audiences(a):
     profiles = _read_csv(a.profiles)
     rows = waves.build_membership(profiles, a.as_of)
@@ -287,6 +353,12 @@ def main(argv=None):
     s.add_argument("--as-of", default=today)
     s.add_argument("--out", default=str(WH / "feeds" / "magnet_feed.json"))
     s.set_defaults(fn=cmd_magnet)
+
+    s = sub.add_parser("export-emails", help="Excel workbook of customer emails per segment")
+    s.add_argument("--orders", required=True)
+    s.add_argument("--as-of", default=today)
+    s.add_argument("--out", default=str(WH / "exports" / f"customer_email_lists_{today}.xlsx"))
+    s.set_defaults(fn=cmd_export_emails)
 
     s = sub.add_parser("build-audiences")
     s.add_argument("--profiles", default=str(SAMPLE / "profiles.sample.csv"))

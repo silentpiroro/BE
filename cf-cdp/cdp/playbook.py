@@ -49,7 +49,7 @@ def _color(s):
 def customers(rows: list[dict], as_of: date) -> list[dict]:
     by = defaultdict(list)
     for r in rows:
-        by[r.get("customer_id") or r["customer_email"].lower()].append(r)
+        by[(r.get("customer_email") or r.get("customer_id") or "").strip().lower()].append(r)
     out = []
     for cid, v in by.items():
         v.sort(key=_d)
@@ -84,7 +84,7 @@ def transitions(rows: list[dict]) -> dict[str, list[tuple[str, int]]]:
     """Family -> families bought in the customer's next order, by count (real 2nd orders)."""
     by = defaultdict(list)
     for r in rows:
-        by[r.get("customer_id") or r["customer_email"].lower()].append(r)
+        by[(r.get("customer_email") or r.get("customer_id") or "").strip().lower()].append(r)
     tr = defaultdict(Counter)
     for v in by.values():
         v.sort(key=_d)
@@ -129,10 +129,10 @@ def _segments(as_of):
          "Omnisend", "Day 75–90 after the bundle; BFCM if inside that window",
          "Same pack, same size in one click, +4 bonus pairs or 90-day auto-ship",
          "13+ pair buyers come back later (median 34 days to 2nd vs 16). Time it to when the socks wear."),
-        ("large_feet", "Large feet 13–15, one order, 46–119 days", lambda c: c["size"] == "13-15" and c["lifetime_orders"] == 1 and c["days_since"] < 120,
+        ("large_feet", "Large-feet customers (sock size 13–15), one order, 46–119 days", lambda c: c["size"] == "13-15" and c["lifetime_orders"] == 1 and c["days_since"] < 120,
          "Omnisend", "Nov 14 (World Diabetes Day)",
-         "'Made for 13–15': the complementary style in their size, +2 bonus pairs, no % off",
-         "13–15 buyers reorder twice as often. Few brands fit them; lean on that, not price."),
+         "'Made for big feet': the complementary style in sock size 13–15, +2 bonus pairs, no % off",
+         "Large-feet customers (sock size 13–15) reorder about twice as often. Few brands fit them; lean on that, not price."),
         ("ladder", "One order, 46–119 days", lambda c: c["lifetime_orders"] == 1 and c["days_since"] < 120,
          "Omnisend (Waves B / C60)", "Nov 14, then BFCM",
          "Complementary style + the color they don't own, +2 bonus pairs",
@@ -158,7 +158,7 @@ SEGMENT_TOUCHES = {
     "vip_active": [("2026-12-10", "Holiday gift send (order by Dec 15)", 2)],
     "wave_a": [("2026-11-05", "Wave A 6@$49 ankle alone", 0)],
     "dormant": [("2026-11-10", "C90 win-back COMEBACK15 once", 0)],
-    "large_feet": [("2026-11-14", "Made for 13–15 (diabetes day)", 0)],
+    "large_feet": [("2026-11-14", "Made for big feet, sock size 13–15 (diabetes day)", 0)],
     "ladder": [("2026-11-14", "Style ladder + bonus pairs (diabetes day)", 0)],
     "household": [("2026-12-10", "Family bundle gift send", 0)],
 }
@@ -192,12 +192,12 @@ def backtest(rows: list[dict], as_of: date, days: int = BACKTEST_DAYS) -> dict:
     after_by = defaultdict(list)
     for r in rows:
         if _d(r) >= t0:
-            after_by[r.get("customer_id") or r["customer_email"].lower()].append(r)
+            after_by[(r.get("customer_email") or r.get("customer_id") or "").strip().lower()].append(r)
     custs = customers(before, t0)
     after_orders = Counter()
     for r in rows:
         if _d(r) >= t0:
-            after_orders[r.get("customer_id") or r["customer_email"].lower()] += 1
+            after_orders[(r.get("customer_email") or r.get("customer_id") or "").strip().lower()] += 1
     for c in custs:  # lifetime at t0 = lifetime now minus orders after t0
         c["lifetime_orders"] = max(c["lifetime_orders"] - after_orders[c["id"]], 1)
     stats = defaultdict(lambda: [0, 0, 0.0])
@@ -224,7 +224,8 @@ def recommend(c: dict, trans: dict) -> str:
     if not nxt:
         nxt = "CF17180" if c["family"] != "CF17180" else "CF1004S"
     color = ("white" if c["colors"] == {"black"} else "black" if c["colors"] == {"white"} else None)
-    return f"{nxt} in {size}" + (f", {color}" if color else "")
+    base = f"{nxt} in sock size {size}" if c["size"] else nxt
+    return base + (f", {color}" if color else "")
 
 
 def build(rows: list[dict], as_of: date, consent: dict | None = None) -> tuple[dict, list[dict]]:
@@ -241,6 +242,7 @@ def build(rows: list[dict], as_of: date, consent: dict | None = None) -> tuple[d
         state = (consent or {}).get(c["email"])
         actions.append({"email": c["email"], "first_name": c["first_name"], "segment": seg,
                         "lifetime_orders": c["lifetime_orders"], "days_since": c["days_since"],
+                        "last_order": c["last_order"],
                         "spend_usd": c["spend_usd"], "size": c["size"], "product": prod,
                         "incentive": meta[seg]["incentive"], "channel": meta[seg]["channel"],
                         "send": "; ".join(f"{s['date']} {s['name']}" for s in schedule(seg)["sends"]),

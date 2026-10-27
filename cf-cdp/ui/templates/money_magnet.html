@@ -228,7 +228,7 @@ function render() {
     ]],
     ["Nov 9 – 15", [
       ["Retention", "Draft C90 win-back (COMEBACK15 once) and both BFCM emails, bundle-first."],
-      ["Meta Ads", "BFCM creative: large feet 13–15, non-binding, 18/24-pair value."],
+      ["Meta Ads", "BFCM creative: large feet (sock size 13–15), non-binding, 18/24-pair value."],
     ]],
     ["Nov 16 – 22", [
       ["Sy", "OK C90 win-back (send by Nov 19) and BFCM drafts (by Nov 20).", true],
@@ -259,7 +259,7 @@ function render() {
     [`${pct(src.meta?.repeat_rate || 0)} vs ${pct(src.untagged?.repeat_rate || 0)}`, `Meta-acquired buyers reorder about twice as often as untagged buyers (cohorts 60+ days old). Meta buys the better base.`],
     [pct(mix.at(-1).bundle13_rev_share), `of ${mon(mix.at(-1).month)} revenue came from 13+ pair orders, up from ${pct(mix[0].bundle13_rev_share)} in ${mon(mix[0].month)}. AOV ${usd(mix[0].aov_usd)} → ${usd(mix.at(-1).aov_usd)}.`],
     [pct(size["13+ pairs"]?.repeat_rate || 0), `reorder rate for 13+ pair first orders vs ${pct(size["1-3 pairs"]?.repeat_rate || 0)} for 1–3 pairs. Bundle buyers are stocked up; give them a 90-day replenish clock.`],
-    [pct(M.size_line_share["13-15"] || 0), `of sized SKU lines are 13–15. Large feet is a third of the business; lead ad creative with it.`],
+    [pct(M.size_line_share["13-15"] || 0), `of sized SKU lines are sock size 13–15 (large feet). Large-feet customers are a third of the business; lead ad creative with it.`],
     [`${M.subscription_orders}`, `subscription orders in 10 months. Replenish is almost untouched.`],
     [pct(M.discounted_order_share), `of orders used a discount (avg ${pct(M.avg_discount_pct)} off). Keep codes for win-back, not first orders.`],
   ].map(([v, t]) => `<div class="find"><span class="v">${esc(v)}</span><p>${esc(t)}</p></div>`).join("");
@@ -291,7 +291,7 @@ function drawPlaybook(PB) {
   $("w-sub").textContent = `Reorder rates measured on customers who looked like each group ${PB.backtest_days} days ago`;
   $("w-rules").innerHTML = [
     ["Pairs, not percent", `15% off an $87 order gives away $${E.pct15_on_87_usd}. Four bonus pairs cost $${E.bonus_pairs_cost[4]} at $${E.cogs_per_pair_usd}/pair and ship in the same box. First-order discounts didn't raise repeat (11.6% vs 12.1%).`],
-    ["Complementary product = the other hero", `What real 2nd orders moved to: ${comp}. Offer it in their size and the color they don't own (49% of buyers have only bought black).`],
+    ["Complementary product = the other hero", `What real 2nd orders moved to: ${comp}. Offer it in their sock size and the color they don't own (49% of buyers have only bought black).`],
     ["Timing beats discount", `One-order buyers 120+ days out came back 0% on their own; 3+ order VIPs lapsed 60+ days still came back 12.5%. Spend effort in that order.`],
     ["Every segment ≤3 emails / 30 days", `Schedules below are checked by code on a rolling 30-day window. Gmail 1:1 notes count, and never share a week with Omnisend.`],
   ].map(([h, t]) => `<div class="find"><h3>${esc(h)}</h3><p>${esc(t)}</p></div>`).join("");

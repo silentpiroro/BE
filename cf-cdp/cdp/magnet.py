@@ -70,7 +70,7 @@ def analyze(rows: list[dict], as_of: date) -> tuple[dict, dict]:
     """Returns (metrics for the page, audiences {segment: [emails]} kept local)."""
     by = defaultdict(list)
     for r in rows:
-        by[r.get("customer_id") or r["customer_email"].lower()].append(r)
+        by[(r.get("customer_email") or r.get("customer_id") or "").strip().lower()].append(r)
     for v in by.values():
         v.sort(key=_d)
     life = {c: int(float(v[-1].get("customer_lifetime_orders") or len(v))) for c, v in by.items()}
@@ -321,7 +321,7 @@ def opportunities(metrics: dict, sim: dict, ss: dict) -> list[dict]:
                     f"At a $36 first order no CPR passes 3.5× ROAS; at $90 you need CPR ≤ ${90/3.5:.0f}."),
             "steps": [
                 "Every Meta ad lands on the 18/24-pair bundle page with 6-pack as the downsell, not the reverse.",
-                "Creative angle: large feet 13–15 and non-binding for diabetic / swollen feet (13–15 is ~1 in 3 SKU lines).",
+                "Creative angle: large feet (sock size 13–15) and non-binding for diabetic / swollen feet (size 13–15 is ~1 in 3 SKU lines).",
                 "Scale rule: +30% budget per week only while 7-day CPR ≤ $25 and purchase ROAS ≥ 3.5×; else hold.",
                 "Connect Adspirer so this page reads real CPR instead of the target.",
             ],
