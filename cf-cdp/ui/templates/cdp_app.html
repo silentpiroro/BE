@@ -1,0 +1,1188 @@
+<title>Comfort Fresh CDP</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: operator app. Sticky tab bar; each tab is one job: Today (war room), Customers (LTV),
+   Act (Omnisend + Gmail execution), Revenue (P&L), Plan (path to $100k), Data (imports/exports). Dark-first. */
+:root {
+  --bg: #0d1210; --surface: #151c19; --raise: #1b2420; --ink: #e6eee9; --muted: #93a39a; --line: #27322d;
+  --accent: #7fd1a8; --accent-ink: #0d1210; --accent-soft: #1b2f25;
+  --good: #6fd29b; --good-soft: #163021; --warn: #f0b85e; --warn-soft: #33270f; --bad: #ff8a7a; --bad-soft: #3b1b17;
+  --plan: #5d6f66; --actual: #7fd1a8; --live: #f0b85e; --rep: #f0b85e;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #f3f6f4; --surface: #ffffff; --raise: #f7faf8; --ink: #15201b; --muted: #58685f; --line: #dbe3de;
+  --accent: #23704c; --accent-ink: #ffffff; --accent-soft: #e2f0e8;
+  --good: #1d7a49; --good-soft: #def2e6; --warn: #8f5a00; --warn-soft: #fbefd6; --bad: #b3352a; --bad-soft: #f9e1dd;
+  --plan: #b9c6bf; --actual: #23704c; --live: #c98a1b; --rep: #c98a1b; color-scheme: light; } }
+:root[data-theme="light"] {
+  --bg: #f3f6f4; --surface: #ffffff; --raise: #f7faf8; --ink: #15201b; --muted: #58685f; --line: #dbe3de;
+  --accent: #23704c; --accent-ink: #ffffff; --accent-soft: #e2f0e8;
+  --good: #1d7a49; --good-soft: #def2e6; --warn: #8f5a00; --warn-soft: #fbefd6; --bad: #b3352a; --bad-soft: #f9e1dd;
+  --plan: #b9c6bf; --actual: #23704c; --live: #c98a1b; --rep: #c98a1b; color-scheme: light; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--surface); border-bottom: 1px solid var(--line); }
+.top-in { max-width: 1240px; margin: 0 auto; padding-block: 10px 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 8px; }
+.brandrow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.brand { font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; }
+.brand small { font-family: var(--font-body); font-weight: 600; color: var(--muted); font-size: .75rem; margin-left: 8px; }
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+nav.tabs a { flex: none; padding: 9px 14px; font-weight: 700; font-size: .9rem; color: var(--muted); text-decoration: none; border-bottom: 3px solid transparent; }
+nav.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+nav.tabs a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 18px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+section.view { display: grid; gap: 18px; min-width: 0; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+h2 { font-size: 1.1rem; font-weight: 600; } h3 { font-size: .95rem; font-weight: 600; }
+p { margin: 0; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-size: .7rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.muted { color: var(--muted); } .small { font-size: .82rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: .74rem; font-weight: 600; border: 1px solid var(--line); background: var(--surface); white-space: nowrap; }
+.chip.ok { color: var(--good); background: var(--good-soft); border-color: transparent; }
+.chip.warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+.chip.bad { color: var(--bad); background: var(--bad-soft); border-color: transparent; }
+.chip.acc { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
+.guard { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 9px 14px; border-radius: 10px; background: var(--raise); border: 1px solid var(--line); font-size: .82rem; }
+.guard b { color: var(--warn); }
+.alerts { display: grid; gap: 6px; }
+.alert { display: flex; gap: 10px; align-items: baseline; padding: 9px 12px; border-radius: 10px; font-size: .9rem; border: 1px solid var(--line); background: var(--surface); }
+.alert .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; transform: translateY(-1px); }
+.alert.bad .dot { background: var(--bad); } .alert.warn .dot { background: var(--warn); } .alert.ok .dot { background: var(--good); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.panel > * { min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+.grid3 > *, .grid2 > * { min-width: 0; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; }
+.score { display: grid; gap: 6px; align-content: start; }
+.score .big { font-family: var(--font-mono); font-size: 1.9rem; font-weight: 600; line-height: 1.1; }
+.bar { position: relative; height: 12px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.bar > i { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 999px; }
+.bar > b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); opacity: .7; }
+.kv { display: flex; justify-content: space-between; gap: 10px; font-size: .86rem; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.tile { background: var(--surface); padding: 12px 14px; display: grid; gap: 2px; }
+.tile .v { font-family: var(--font-mono); font-size: 1.3rem; font-weight: 600; }
+.tile .s { font-size: .78rem; color: var(--muted); }
+.gate { border-radius: 12px; padding: 14px; display: grid; gap: 6px; background: var(--raise); border: 1px solid var(--line); }
+.gate .state { font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.state.ok { color: var(--good); } .state.warn { color: var(--warn); } .state.bad { color: var(--bad); } .state.unk { color: var(--muted); }
+.gate .v { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 600; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; flex-wrap: wrap; }
+.seg button { font: inherit; font-size: .84rem; font-weight: 600; padding: 6px 12px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.seg button:disabled { opacity: .45; cursor: not-allowed; }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.acts { display: grid; gap: 8px; }
+.act { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px 12px; align-items: start; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--raise); }
+.act.done { opacity: .55; } .act.overdue { border-color: var(--bad); }
+.act .due { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); white-space: nowrap; padding-top: 2px; }
+.act.overdue .due { color: var(--bad); font-weight: 600; }
+.act .t { font-weight: 600; }
+.act .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; font-size: .78rem; color: var(--muted); align-items: center; }
+.act .ctl { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+select, input, textarea { font: inherit; font-size: .86rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-width: 0; max-width: 100%; }
+textarea { width: 100%; min-height: 70px; }
+.btn { font: inherit; font-size: .82rem; font-weight: 700; border-radius: 8px; padding: 7px 11px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; white-space: nowrap; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.btn.sy { color: var(--warn); border-color: var(--warn); }
+.btn.danger { background: var(--bad); color: var(--bg); border-color: transparent; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btns { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+form.row, .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.row label, form.row label { display: grid; gap: 3px; font-size: .74rem; color: var(--muted); font-weight: 600; }
+.row label.check { display: flex; gap: 6px; align-items: center; padding-bottom: 6px; }
+input[type=number] { width: 7.5em; }
+table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+th { text-align: left; font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.r, th.r { text-align: right; }
+tr.click { cursor: pointer; } tr.click:hover td { background: var(--raise); }
+tr.sub td { font-weight: 600; border-top: 1px solid var(--muted); } tr.total td { font-weight: 700; }
+.neg { color: var(--bad); } .pos { color: var(--good); }
+.scroll { overflow-x: auto; }
+.verdict { padding: 10px 12px; border-radius: 10px; font-weight: 700; }
+.verdict.ok { background: var(--good-soft); color: var(--good); } .verdict.warn { background: var(--warn-soft); color: var(--warn); }
+.verdict.bad { background: var(--bad-soft); color: var(--bad); } .verdict.unk { background: var(--raise); color: var(--muted); }
+.basis { font-size: .66rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+.basis.ACTUAL { background: var(--accent-soft); color: var(--accent); } .basis.MODELED { background: var(--line); color: var(--muted); } .basis.ESTIMATE { background: var(--warn-soft); color: var(--warn); }
+svg text { fill: var(--muted); font-family: var(--font-mono); font-size: 10px; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .78rem; color: var(--muted); }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.empty { padding: 14px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: .88rem; }
+.card { border: 1px solid var(--line); border-radius: 12px; background: var(--raise); padding: 14px; display: grid; gap: 10px; min-width: 0; align-content: start; }
+#act-cards { align-items: start; }
+.card > * { min-width: 0; }
+.steps { display: grid; gap: 8px; }
+.step { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 4px 10px; align-items: start; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.step .n { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: .78rem; background: var(--line); color: var(--muted); }
+.step.done .n { background: var(--good); color: var(--bg); }
+.step.next .n { background: var(--accent); color: var(--accent-ink); }
+.step > div { display: grid; gap: 6px; min-width: 0; }
+.log { font-family: var(--font-mono); font-size: .74rem; color: var(--muted); white-space: pre-wrap; word-break: break-word; max-height: 160px; overflow: auto; background: var(--bg); border-radius: 8px; padding: 8px; }
+.drawer { position: fixed; inset: 0; z-index: 30; background: rgba(0,0,0,.45); display: flex; justify-content: flex-end; }
+.drawer > div { width: min(560px, 100%); height: 100%; overflow: auto; background: var(--surface); border-left: 1px solid var(--line);
+  padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px));
+  padding-left: 18px; padding-right: max(18px, env(safe-area-inset-right, 0px)); display: grid; gap: 14px; align-content: start; }
+.timeline { display: grid; gap: 8px; }
+.tl { display: grid; grid-template-columns: 90px minmax(0, 1fr) auto; gap: 8px; padding: 8px 10px; border-radius: 8px; background: var(--raise); font-size: .86rem; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 999px; font-size: .85rem; font-weight: 600; z-index: 40; max-width: calc(100% - 32px); }
+footer { font-size: .78rem; color: var(--muted); display: grid; gap: 4px; }
+a { color: var(--accent); }
+@media (max-width: 560px) { .act { grid-template-columns: minmax(0, 1fr); } .act .ctl { justify-content: flex-start; } .tl { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: no-preference) { .bar > i { transition: width .3s ease; } }
+</style>
+
+<div class="top"><div class="top-in">
+  <div class="brandrow"><span class="brand">Comfort Fresh CDP<small>$100k / month north star</small></span><div class="chips" id="chips"></div></div>
+  <nav class="tabs" aria-label="Sections">
+    <a href="#today" data-v="today">Today</a><a href="#customers" data-v="customers">Customers</a><a href="#act" data-v="act">Act</a>
+    <a href="#revenue" data-v="revenue">Revenue &amp; Profit</a><a href="#plan" data-v="plan">Plan</a><a href="#data" data-v="data">Data</a>
+  </nav>
+</div></div>
+
+<div class="wrap">
+  <div class="guard" role="note">
+    <span><b>No send</b>, <b>no Shopify change</b>, no budget step above $8k/mo without Sy's OK</span>
+    <span>≤3 marketing emails / 30 days · never Omnisend + Gmail marketing the same week · subscribed contacts only</span>
+    <span>CAC planned at <b>$70</b>: first order ≈ break-even, profit from repeat orders</span>
+    <span>Wool Wave C: <b>HOLD</b></span>
+  </div>
+
+  <!-- TODAY -->
+  <section class="view" id="v-today" aria-label="Today">
+    <div class="alerts" id="alerts"><div class="empty">Loading the board…</div></div>
+    <div class="grid3">
+      <div class="panel score" id="sc-month"><span class="eyebrow">This month</span><div class="empty">Loading…</div></div>
+      <div class="panel score" id="sc-run"><span class="eyebrow">Run-rate vs $100k</span><div class="empty">Loading…</div></div>
+      <div class="panel score" id="sc-next"><span class="eyebrow">Plan + profit engine</span><div class="empty">Loading…</div></div>
+    </div>
+    <section class="panel"><div class="panel-head"><h2>The three gates</h2><span class="small muted">All three must hold to reach $100k</span></div><div class="grid3" id="gates"></div></section>
+    <section class="panel">
+      <div class="panel-head"><h2>Action board</h2>
+        <div class="btns"><div class="seg" id="a-tabs" role="group" aria-label="Filter actions"><button type="button" data-f="week" aria-pressed="true">Next 7 days</button><button type="button" data-f="open" aria-pressed="false">All open</button><button type="button" data-f="sy" aria-pressed="false">Waiting on Sy</button><button type="button" data-f="done" aria-pressed="false">Done</button></div>
+        <button class="btn" type="button" data-export="actions-csv">CSV</button></div></div>
+      <div class="acts" id="acts"><div class="empty">Loading actions…</div></div>
+      <form class="row" id="a-form" hidden>
+        <label style="flex:1 1 240px">New action<input id="a-title" required maxlength="160" placeholder="What has to happen"></label>
+        <label>Owner<select id="a-owner"><option>CF Retention</option><option>CF Meta Ads</option><option>CoS</option><option>CF CS</option><option>Sy</option></select></label>
+        <label>Due<input id="a-due" type="date" required></label>
+        <label class="check"><input id="a-sy" type="checkbox"> Needs Sy OK</label>
+        <button class="btn primary" type="submit">Add</button>
+      </form>
+    </section>
+    <div class="grid2">
+      <section class="panel">
+        <div class="panel-head"><h2>Meta daily log</h2><span class="small muted">CAC = spend ÷ new customers in Shopify</span></div>
+        <div id="m-verdict" class="verdict unk">No Meta numbers yet.</div>
+        <form class="row" id="m-form" hidden>
+          <label>Day<input id="m-date" type="date" required></label>
+          <label>Spend $<input id="m-spend" type="number" min="0" step="0.01" required></label>
+          <label>Meta purchases<input id="m-purch" type="number" min="0" step="1" required></label>
+          <label>Purchase value $<input id="m-val" type="number" min="0" step="0.01"></label>
+          <label>New customers<input id="m-new" type="number" min="0" step="1" placeholder="auto"></label>
+          <button class="btn primary" type="submit">Save day</button>
+        </form>
+        <p class="small muted">Leave "New customers" empty to use Shopify first orders on that day from the CDP. Bulk upload an Ads Manager export on the Data tab.</p>
+        <div class="scroll"><table id="m-table"></table></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Email sends log</h2><span class="small muted">Omnisend sends from the Act tab log here automatically</span></div>
+        <form class="row" id="s-form" hidden>
+          <label style="flex:1 1 180px">Who<select id="s-seg"></select></label>
+          <label>Date<input id="s-date" type="date" required></label>
+          <label>Channel<select id="s-ch"><option>Omnisend</option><option>Gmail 1:1</option></select></label>
+          <label style="flex:1 1 160px">Email<input id="s-name" required maxlength="120" placeholder="e.g. BFCM ends Monday"></label>
+          <label class="check"><input id="s-ok" type="checkbox" required> Sy approved</label>
+          <button class="btn primary" type="submit">Check + log</button>
+        </form>
+        <div id="s-check" class="small"></div>
+        <div class="scroll"><table id="s-table"></table></div>
+      </section>
+    </div>
+    <section class="panel"><div class="panel-head"><h2>Plan vs actual</h2><div class="legend"><span><i class="sw" style="background:var(--actual)"></i>Actual</span><span><i class="sw" style="background:var(--live)"></i>This month</span><span><i class="sw" style="background:var(--plan)"></i>Plan</span></div></div><div id="chart"></div></section>
+  </section>
+
+  <!-- CUSTOMERS -->
+  <section class="view" id="v-customers" aria-label="Customers" hidden>
+    <div class="tiles" id="c-tiles"></div>
+    <section class="panel">
+      <div class="panel-head"><h2>LTV by first-order month</h2><span class="small muted">Net revenue after discounts and refunds; profit after product, shipping and $70 CAC on new customers</span></div>
+      <div class="scroll"><table id="c-cohorts"></table></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Every customer</h2><div class="btns"><button class="btn" type="button" data-export="cust-csv">CSV</button><button class="btn" type="button" data-export="cust-xlsx">Excel</button><button class="btn" type="button" data-export="cust-pdf">PDF</button></div></div>
+      <div class="row">
+        <label style="flex:1 1 200px">Search<input id="c-q" placeholder="Name, email or order #"></label>
+        <label>Group<select id="c-seg"><option value="">All groups</option></select></label>
+        <label>Sock size<select id="c-size"><option value="">All sizes</option><option>13-15</option><option>10-13</option><option>9-11</option></select></label>
+        <label>Email consent<select id="c-sub"><option value="">Any</option><option value="subscribed">Subscribed</option><option value="unsubscribed">Unsubscribed</option><option value="not subscribed">Not subscribed</option></select></label>
+        <label>Orders<select id="c-ord"><option value="">Any</option><option value="1">1 order</option><option value="2">2+ orders</option></select></label>
+        <label>Sort<select id="c-sort"><option value="ltv">LTV high → low</option><option value="profit">LTV profit high → low</option><option value="recent">Last order newest</option><option value="since">Longest since last order</option><option value="orders">Most orders</option></select></label>
+      </div>
+      <p class="small muted" id="c-count"></p>
+      <div class="scroll"><table id="c-table"></table></div>
+      <div class="btns" id="c-pager"></div>
+    </section>
+  </section>
+
+  <!-- ACT -->
+  <section class="view" id="v-act" aria-label="Act" hidden>
+    <section class="panel">
+      <div class="panel-head"><h2>Who to work this week</h2><div class="btns"><span class="small muted" id="omni-status">Omnisend: not checked yet</span><button class="btn" type="button" data-consent="1">Sync consent from Omnisend</button></div></div>
+      <p class="small muted" id="consent-note"></p>
+      <p class="small muted">Each group runs the same path: sync the list to Omnisend as a tag → build a segment of those tagged contacts who are <b>subscribed</b> → create a draft from your template → send yourself a test → Sy approves → send or schedule. Sends log to the Today tab and count toward the 3-per-30-days cap.</p>
+      <div class="grid2" id="act-cards"><div class="empty">Loading customers…</div></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Campaign history</h2><button class="btn" type="button" data-export="campaigns-csv">CSV</button></div>
+      <div class="scroll"><table id="camp-table"></table></div>
+    </section>
+  </section>
+
+  <!-- REVENUE -->
+  <section class="view" id="v-revenue" aria-label="Revenue and profit" hidden>
+    <div class="row">
+      <div><span class="eyebrow">Period</span><div class="seg" id="r-period"></div></div>
+      <div><span class="eyebrow">Media</span><div class="seg" id="r-scen"></div></div>
+      <div class="btns" style="margin-left:auto"><button class="btn" type="button" data-export="pnl-pdf">PDF</button><button class="btn" type="button" data-export="pnl-xlsx">Excel</button></div>
+    </div>
+    <div class="tiles" id="r-kpis"></div>
+    <div class="grid2">
+      <section class="panel"><div class="panel-head"><h2>Modeled P&amp;L</h2><span class="small muted" id="r-range"></span></div>
+        <div class="scroll"><table id="r-pnl"></table></div><div class="verdict unk" id="r-verdict"></div><div class="scroll"><table id="r-split"></table></div><div class="scroll"><table id="r-scens"></table></div></section>
+      <section class="panel"><div class="panel-head"><h2>Monthly sales</h2><div class="legend"><span><i class="sw" style="background:var(--actual)"></i>First orders</span><span><i class="sw" style="background:var(--rep)"></i>Repeat orders</span></div></div><div id="r-trend"></div></section>
+    </div>
+  </section>
+
+  <!-- PLAN -->
+  <section class="view" id="v-plan" aria-label="Plan" hidden>
+    <section class="panel"><div class="panel-head"><h2 id="p-head">The path to $100k / month</h2><button class="btn" type="button" data-export="plan-xlsx">Excel</button></div><div class="tiles" id="p-need"></div></section>
+    <section class="panel"><div class="panel-head"><h2>Month by month</h2><span class="small muted">MODELED · first orders break even at $70 CAC; repeat orders carry the profit</span></div><div class="scroll"><table id="p-months"></table></div></section>
+    <section class="panel"><div class="panel-head"><h2>Ranked moves</h2></div><div class="acts" id="p-moves"></div></section>
+    <section class="panel"><div class="panel-head"><h2>What the order history says</h2></div><div class="grid3" id="p-finds"></div></section>
+  </section>
+
+  <!-- DATA -->
+  <section class="view" id="v-data" aria-label="Data" hidden>
+    <section class="panel"><div class="panel-head"><h2>Connections</h2></div><div class="scroll"><table id="d-conn"></table></div></section>
+    <div class="grid2">
+      <section class="panel">
+        <div class="panel-head"><h2>Upload Shopify orders</h2><span class="small muted">CSV or Excel · order export</span></div>
+        <p class="small muted">Accepts the one-row-per-order export or Shopify's standard Orders export. New orders merge into each customer by email; existing orders are skipped. Cancelled and unpaid orders are ignored.</p>
+        <input type="file" id="d-orders" accept=".csv,.xlsx,.xls">
+        <div id="d-orders-out" class="small"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Upload Meta Ads export</h2><span class="small muted">Ads Manager · CSV or Excel</span></div>
+        <p class="small muted">With a Day breakdown each day becomes a row in the Meta log; without it the report's period is logged as one entry. New customers come from Shopify first orders in the CDP for the same dates.</p>
+        <input type="file" id="d-meta" accept=".csv,.xlsx,.xls">
+        <div id="d-meta-out" class="small"></div>
+      </section>
+    </div>
+    <section class="panel"><div class="panel-head"><h2>Exports</h2></div>
+      <div class="btns">
+        <button class="btn primary" type="button" data-export="all-xlsx">Full workbook (Excel)</button>
+        <button class="btn" type="button" data-export="cust-csv">Customers CSV</button>
+        <button class="btn" type="button" data-export="orders-csv">Orders CSV</button>
+        <button class="btn" type="button" data-export="pnl-pdf">P&amp;L PDF</button>
+        <button class="btn" type="button" data-export="actions-csv">Actions CSV</button>
+        <button class="btn" type="button" data-export="meta-csv">Meta log CSV</button>
+      </div>
+      <p class="small muted">Customer files contain emails. Keep them inside Comfort Fresh.</p>
+    </section>
+    <section class="panel"><div class="panel-head"><h2>Import history</h2></div><div class="scroll"><table id="d-imports"></table></div></section>
+  </section>
+
+  <footer><span id="foot">Data: Shopify order history in the CDP database. Forward months, media and net are MODELED.</span></footer>
+</div>
+<div class="drawer" id="drawer" hidden><div id="drawer-in" role="dialog" aria-modal="true" aria-label="Customer"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+// ============================================================== constants
+const SHOP = "md-diab.myshopify.com", OMNI_BRAND = "627b6da1bef8064c8d7a4cd4";
+const COGS = 0.85, SHIP = 7.5, CAC = 70, CAC_CUT = 85, SALARIES = 1666.67, DPM = 30.4375, NS = 100000, BAND = 8000;
+const SCEN = { cac70: ["$70 CAC", null], low: ["$5k/mo", 5000], mid: ["$6.5k/mo", 6500], high: ["$8k/mo", 8000] };
+const SEG_ORDER = ["recent", "service", "vip_lapsed", "vip_active", "second_order", "wave_a", "household", "bundle_clock", "large_feet", "ladder", "repeat_lapsed", "dormant", "other"];
+const SEG_LABEL = { recent: "Just ordered (0–6 days)", service: "Refund, never came back", vip_lapsed: "VIP gone quiet (3+ orders, 60+ days)",
+  vip_active: "VIP active (3+ orders, <60 days)", second_order: "Second-order window (1 order, day 7–27)", wave_a: "Wave A (1 order, day 28–45)",
+  household: "Household buyers (2+ sizes in one order)", bundle_clock: "Bundle buyers on the sock clock (13+ pairs, 60+ days)",
+  large_feet: "Large-feet customers (sock size 13–15), 1 order, 46–119 days", ladder: "One order, 46–119 days", repeat_lapsed: "2 orders, 60+ days",
+  dormant: "One order, 120+ days (C90)", other: "Everyone else" };
+const TEMPLATE_HINT = { wave_a: "Wave A", dormant: "COMEBACK15" };
+
+// ============================================================== state + utils
+const S = { db: null, user: null, me: null, canEdit: false, canWrite: null, names: {}, view: "today",
+  shards: {}, cust: [], orders: [], calc: null, sb: null, mag: null, consent: null, actions: [], meta: [], sends: [], camps: [], imports: [],
+  live: null, liveState: "pending", mcp: null, omni: { primed: {}, brand: null, templates: null }, filter: "week",
+  rPeriod: "30d", rScen: "cac70", cPage: 0, pendingImport: null, form: {} };
+const fv = (id, def) => (id in S.form ? S.form[id] : def);
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const usd = (n, d = 0) => (n < 0 ? "−" : "") + "$" + Math.abs(+n || 0).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (n, d = 0) => ((+n || 0) * 100).toFixed(d) + "%";
+const int = (n) => Math.round(+n || 0).toLocaleString("en-US");
+const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
+const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const daysBetween = (a, b) => Math.round((new Date(b + "T12:00:00Z") - new Date(a + "T12:00:00Z")) / 86400000);
+const monLabel = (m) => new Date(m + "-15T12:00:00Z").toLocaleString("en-US", { month: "short", year: "2-digit", timeZone: "UTC" });
+const daysInMonth = (m) => { const [y, mo] = m.split("-").map(Number); return new Date(Date.UTC(y, mo, 0)).getUTCDate(); };
+const nowIso = () => new Date().toISOString();
+function toast(msg, ms = 2800) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => (t.hidden = true), ms); }
+function who(id) { return id ? (S.names[id] || "Someone") : ""; }
+
+// ============================================================== engine: SKUs
+function packOf(sku) {
+  sku = String(sku || "").trim(); let m;
+  const cap = (n) => (n > 0 && n <= 48 ? n : null);
+  if ((m = sku.match(/^[A-Za-z0-9]+-(?:0?911|1013|1315)-((?:[A-Z]\d+)+)P?\b/i))) return cap((m[1].match(/\d+/g) || []).reduce((a, x) => a + +x, 0));
+  if ((m = sku.match(/^[A-Za-z0-9]+-((?:\d+[A-Za-z]+)+)/))) return cap((m[1].match(/(\d+)[A-Za-z]+/g) || []).reduce((a, x) => a + parseInt(x, 10), 0));
+  for (const re of [/PK(\d+)/i, /(\d+)\s*PR\b/i, /^CF-B[A-Z]{2}-(\d+)-/i, /^[A-Za-z0-9]+-(\d+)-[A-Za-z]/i, /(\d+)\s*pairs?\b/i]) if ((m = sku.match(re))) return cap(+m[1]);
+  return null;
+}
+const sizeOf = (s) => /13-15|1315/.test(s) ? "13-15" : /10-13|1013/.test(s) ? "10-13" : /9-11|0911|-911/.test(s) ? "9-11" : null;
+const familyOf = (s) => (/^[A-Z0-9]+-\d/.test(s) ? s.split("-")[0] : null);
+const colorOf = (s) => { s = s.toLowerCase(); return s.includes("black") || s.includes("blk") ? "black" : s.includes("white") || s.includes("wht") ? "white" : null; };
+
+// ============================================================== engine: customers
+function deriveCustomer(c, asOf, trans) {
+  const o = (c.o || []).slice().sort((a, b) => a.d.localeCompare(b.d));
+  const net = (x) => (x.g || 0) - (x.disc || 0) - (x.ref || 0);
+  const cost = (x) => (x.p || 0) * COGS + SHIP;
+  const acquiredHere = o.length && (o[0].seq || 1) === 1;
+  const ltvNet = o.reduce((a, x) => a + net(x), 0);
+  const ltvProfit = o.reduce((a, x) => a + net(x) - cost(x), 0) - (acquiredHere ? CAC : 0);
+  const skus = o.flatMap((x) => x.s || []);
+  const sizes = {}; skus.forEach((s) => { const z = sizeOf(s); if (z) sizes[z] = (sizes[z] || 0) + 1; });
+  const fams = {}; skus.forEach((s) => { const f = familyOf(s); if (f) fams[f] = (fams[f] || 0) + 1; });
+  const colors = new Set(skus.map(colorOf).filter(Boolean));
+  const size = Object.entries(sizes).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+  const family = Object.entries(fams).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+  const last = o[o.length - 1], first = o[0], second = o[1];
+  const lo = Math.max(c.lo || 0, o.length ? o[o.length - 1].seq || o.length : 0);
+  const firstRef = o.findIndex((x) => (x.ref || 0) > 0);
+  const d = { e: c.e, fn: c.fn, ln: c.ln, name: [c.fn, c.ln].filter(Boolean).join(" ") || c.e, lo, n: o.length, o,
+    first, second, ltvNet, ltvProfit, acquiredHere, size, family, colors,
+    days2: second ? daysBetween(first.d, second.d) : null, lastD: last ? last.d : null,
+    since: last ? daysBetween(last.d, asOf) : null, lastPairs: last ? last.p || 0 : 0,
+    household: o.some((x) => new Set((x.s || []).map(sizeOf).filter(Boolean)).size > 1),
+    refunded: firstRef >= 0, reorderedAfterRefund: firstRef >= 0 && firstRef < o.length - 1,
+    bigFeet: skus.some((s) => sizeOf(s) === "13-15") };
+  d.seg = segmentOf(d);
+  d.consent = !S.consent ? "unknown" : S.consentSub.has(c.e) ? "subscribed" : S.consentUnsub.has(c.e) ? "unsubscribed" : "not subscribed";
+  const owned = new Set(Object.keys(fams));
+  let next = ((trans || {})[family] || []).map((t) => t[0]).find((f) => !owned.has(f));
+  if (!next) next = family === "CF17180" ? "CF1004S" : "CF17180";
+  const col = colors.size === 1 ? (colors.has("black") ? "white" : "black") : null;
+  d.next = `${next}${size ? " in sock size " + size : ""}${col ? ", " + col : ""}`;
+  return d;
+}
+function segmentOf(c) {
+  const ds = c.since ?? 9999, lo = c.lo;
+  if (ds < 7) return "recent";
+  if (c.refunded && !c.reorderedAfterRefund && lo <= 2) return "service";
+  if (lo >= 3 && ds >= 60) return "vip_lapsed";
+  if (lo >= 3) return "vip_active";
+  if (lo === 1 && ds <= 27) return "second_order";
+  if (lo === 1 && ds <= 45) return "wave_a";
+  if (c.household) return "household";
+  if (c.lastPairs >= 13 && ds >= 60) return "bundle_clock";
+  if (c.size === "13-15" && lo === 1 && ds < 120) return "large_feet";
+  if (lo === 1 && ds < 120) return "ladder";
+  if (lo === 2 && ds >= 60) return "repeat_lapsed";
+  if (lo === 1) return "dormant";
+  return "other";
+}
+
+// ============================================================== engine: revenue + P&L
+function sumPeriod(orders, start, end) {
+  const a = { orders: 0, gross: 0, disc: 0, ref: 0, pairs: 0, newc: 0, rep: 0, days: daysBetween(start, end) + 1 };
+  for (const x of orders) if (x.d >= start && x.d <= end) {
+    a.orders++; a.gross += x.g || 0; a.disc += x.disc || 0; a.ref += x.ref || 0; a.pairs += x.p || 0;
+    if ((x.seq || 1) > 1) a.rep++; else a.newc++;
+  }
+  a.aov = a.orders ? a.gross / a.orders : 0; a.ppo = a.orders ? a.pairs / a.orders : 0;
+  return a;
+}
+function modelPnl(a, scen, liveMedia) {
+  const frac = a.days / DPM, net = a.gross - a.disc - a.ref, cogs = a.pairs * COGS, ship = a.orders * SHIP, contrib = net - cogs - ship;
+  let media, basis;
+  if (scen === "live") { media = liveMedia || 0; basis = "ACTUAL"; }
+  else if (scen === "cac70") { media = a.newc * CAC; basis = "MODELED"; }
+  else { media = SCEN[scen][1] * frac; basis = "ESTIMATE"; }
+  const sal = SALARIES * frac, netp = contrib - media - sal;
+  const perCost = a.orders ? (cogs + ship) / a.orders : 0, aovNet = a.orders ? net / a.orders : 0;
+  const cpct = a.gross ? contrib / a.gross : 0, fixedMonth = (frac ? media / frac : 0) + SALARIES, head = cpct - 0.15;
+  return {
+    lines: [
+      ["Gross sales", a.gross, "ACTUAL"], ["Discounts + refunds", -(a.disc + a.ref), "ACTUAL"], ["Net sales", net, "ACTUAL", 1],
+      [`COGS (${int(a.pairs)} pairs × $${COGS})`, -cogs, "MODELED"], [`Shipping (${int(a.orders)} orders × $${SHIP.toFixed(2)})`, -ship, "MODELED"],
+      ["Contribution after product + ship", contrib, "MODELED", 1],
+      [scen === "cac70" ? `Media (CAC $${CAC} × ${a.newc} new customers)` : scen === "live" ? "Meta media (logged)" : `Media (${SCEN[scen][0]} scenario)`, -media, basis],
+      ["Fixed salaries (2 staff)", -sal, "MODELED"], ["Modeled net", netp, "MODELED", 2]],
+    net: netp, margin: a.gross ? netp / a.gross : 0, cpct, be15: head > 0 ? fixedMonth / head : null,
+    split: { first: a.newc, firstProfit: a.newc * (aovNet - perCost) - media, rep: a.rep, repProfit: a.rep * (aovNet - perCost) },
+  };
+}
+function compute() {
+  S.consentSub = new Set(S.consent ? S.consent.subscribed || [] : []); S.consentUnsub = new Set(S.consent ? S.consent.unsubscribed || [] : []);
+  const asOfData = S.orders.reduce((m, x) => (x.d > m ? x.d : m), "0000-00-00");
+  const asOf = asOfData === "0000-00-00" ? today() : asOfData;
+  S.cust = Object.values(S.shards).flat().map((c) => deriveCustomer(c, asOf, S.mag ? S.mag.transitions : null));
+  const periods = {};
+  const mStart = asOf.slice(0, 8) + "01";
+  for (const [k, start, label] of [["mtd", mStart, `MTD (${monLabel(asOf.slice(0, 7))})`], ["30d", addDays(asOf, -29), "Last 30 days"], ["90d", addDays(asOf, -89), "Last 90 days"]]) {
+    const a = sumPeriod(S.orders, start, asOf);
+    const live = S.meta.filter((r) => r.date >= start && r.date <= asOf).reduce((s, r) => s + (+r.spend || 0), 0);
+    const pnl = {}; Object.keys(SCEN).forEach((sc) => (pnl[sc] = modelPnl(a, sc)));
+    if (S.meta.some((r) => r.date >= start && r.date <= asOf)) pnl.live = modelPnl(a, "live", live);
+    periods[k] = { label, start, end: asOf, a, pnl };
+  }
+  const months = []; let [y, m] = asOf.split("-").map(Number);
+  for (let i = 0; i < 6; i++) { months.unshift(`${y}-${String(m).padStart(2, "0")}`); m--; if (!m) { m = 12; y--; } }
+  const trend = months.map((mm) => { const a = sumPeriod(S.orders, mm + "-01", mm + "-" + String(daysInMonth(mm)).padStart(2, "0"));
+    const first = S.orders.filter((x) => x.d.startsWith(mm) && (x.seq || 1) === 1).reduce((s, x) => s + x.g, 0);
+    return { month: mm, gross: a.gross, first, repeat: a.gross - first, orders: a.orders, partial: mm === asOf.slice(0, 7) && asOf.slice(8) !== String(daysInMonth(mm)) }; });
+  const l30 = periods["30d"].a;
+  const firstOrders30 = S.orders.filter((x) => x.d >= periods["30d"].start && (x.seq || 1) === 1);
+  const segs = {}; S.cust.forEach((c) => (segs[c.seg] = (segs[c.seg] || []).concat(c)));
+  S.calc = { asOf, periods, trend, segs, last30: { revenue: l30.gross, orders: l30.orders, newc: l30.newc, rep: l30.rep,
+    firstAov: firstOrders30.length ? firstOrders30.reduce((s, x) => s + x.g, 0) / firstOrders30.length : 0 } };
+}
+
+// ============================================================== Meta / caps
+function metaWindow(days) {
+  const end = addDays(today(), -1), start = addDays(end, -(days - 1));
+  const rows = S.meta.filter((r) => r.date >= start && r.date <= end);
+  const covered = rows.reduce((a, r) => a + (+r.days || 1), 0);
+  const spend = rows.reduce((a, r) => a + (+r.spend || 0), 0), purch = rows.reduce((a, r) => a + (+r.purchases || 0), 0), val = rows.reduce((a, r) => a + (+r.value || 0), 0);
+  const newc = rows.reduce((a, r) => a + (r.new_customers != null ? +r.new_customers : +r.purchases || 0), 0);
+  return { rows: rows.length, days: covered, spend, purch, val, newc, cac: newc ? spend / newc : null, roas: spend ? val / spend : null };
+}
+function metaVerdict() {
+  const w7 = metaWindow(7), w14 = metaWindow(14);
+  if (!w7.rows) return { cls: "unk", text: "No Meta numbers for the last 7 days. Log yesterday or upload an Ads Manager export.", w7 };
+  const monthly = (w7.spend / Math.max(w7.days, 1)) * 30.44;
+  const pace = monthly > BAND ? ` Spend is pacing ${usd(monthly)}/mo, above the $8k band.` : "";
+  const t = (w) => (w.cac != null ? usd(w.cac, 2) : "no new customers");
+  if (w14.days >= 10 && (w14.cac == null || w14.cac > CAC_CUT)) return { cls: "bad", text: `CUT one budget step: 14-day CAC ${t(w14)} is above $${CAC_CUT}.` + pace, w7 };
+  if (w7.cac != null && w7.cac <= CAC) return { cls: "ok", text: `SCALE +30%: 7-day CAC ${t(w7)} on ${usd(w7.spend)} spend.` + (monthly * 1.3 > BAND ? " That passes the $8k band, so it needs Sy's OK." : ""), w7 };
+  if (w7.cac != null && w7.cac <= CAC_CUT) return { cls: "warn", text: `HOLD budget: 7-day CAC ${t(w7)} (target $${CAC}).` + pace, w7 };
+  return { cls: "bad", text: `CUT one budget step: 7-day CAC ${t(w7)} on ${usd(w7.spend)} spend (target $${CAC}).` + pace, w7 };
+}
+function capCheck(seg, date, channel) {
+  const hits = S.sends.filter((s) => s.segment === seg || s.segment === "all" || seg === "all");
+  let worst = 0;
+  for (let k = 0; k < 30; k++) { const ws = addDays(date, -k), we = addDays(ws, 29); worst = Math.max(worst, hits.filter((s) => s.date >= ws && s.date <= we).length + 1); }
+  const week = (d) => { const x = new Date(d + "T12:00:00Z"); return addDays(d, -((x.getUTCDay() + 6) % 7)); };
+  const otherCh = hits.find((s) => s.channel !== channel && week(s.date) === week(date));
+  return { worst, ok: worst <= 3 && !otherCh, otherCh };
+}
+function segLabel(k) { return k === "all" ? "Everyone subscribed (BFCM / holiday)" : (S.mag && S.mag.segment_meta[k] ? S.mag.segment_meta[k].label : SEG_LABEL[k] || k); }
+
+// ============================================================== routing
+const VIEWS = ["today", "customers", "act", "revenue", "plan", "data"];
+function route() {
+  const h = (location.hash || "").replace("#", "");
+  S.view = VIEWS.includes(h) ? h : "today";
+  VIEWS.forEach((v) => ($("v-" + v).hidden = v !== S.view));
+  document.querySelectorAll("nav.tabs a").forEach((a) => (a.dataset.v === S.view ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
+  render();
+}
+window.addEventListener("hashchange", route);
+
+// ============================================================== render: shell
+function render() {
+  if (S.dirty) { compute(); S.dirty = false; }
+  renderChips();
+  ({ today: renderToday, customers: renderCustomers, act: renderAct, revenue: renderRevenue, plan: renderPlan, data: renderData })[S.view]();
+}
+function renderChips() {
+  const c = [`<span class="chip acc">Shop lock · Comfort Fresh</span>`];
+  if (S.calc) c.push(`<span class="chip">Orders through ${esc(S.calc.asOf)}</span>`);
+  c.push(S.liveState === "live" ? `<span class="chip ok">Shopify live</span>` : `<span class="chip">Shopify live: ${S.liveState === "pending" ? "connecting…" : "off"}</span>`);
+  if (S.db === false) c.push(`<span class="chip warn">Sign in to claude.ai to use the CDP</span>`);
+  else if (S.canWrite === false) c.push(`<span class="chip warn">Read-only</span>`);
+  $("chips").innerHTML = c.join("");
+}
+
+// ============================================================== TODAY
+function monthNow() {
+  const t = today(), m = t.slice(0, 7), day = +t.slice(8, 10);
+  if (S.live && S.live.month === m) return { m, sales: S.live.sales, day, src: "live" };
+  if (S.calc && S.calc.asOf.startsWith(m)) return { m, sales: S.calc.periods.mtd.a.gross, day: +S.calc.asOf.slice(8, 10), src: "cdp" };
+  return { m, sales: null, day, src: "none" };
+}
+const planFor = (m) => (S.sb ? S.sb.plan_months.find((p) => p.month === m) : null);
+function renderToday() {
+  const t = today();
+  // alerts
+  const out = [];
+  if (!S.sb || !S.calc) { $("alerts").innerHTML = `<div class="empty">${S.db === false ? "Open this page signed in to claude.ai to load the CDP." : "Loading the board…"}</div>`; }
+  else {
+    const age = daysBetween(S.calc.asOf, t);
+    if (age > 3 && S.liveState !== "live") out.push(["warn", `Order data ends ${S.calc.asOf} (${age} days ago). Upload a fresh Shopify export on the Data tab.`]);
+    const overdue = S.actions.filter((a) => a.status !== "done" && a.due < t);
+    if (overdue.length) out.push(["bad", `${overdue.length} action${overdue.length > 1 ? "s" : ""} overdue: ${overdue.slice(0, 3).map((a) => esc(a.title)).join(" · ")}${overdue.length > 3 ? " …" : ""}`]);
+    const sy = S.actions.filter((a) => a.needs_sy && !a.sy_ok && a.status !== "done" && a.due <= addDays(t, 7));
+    if (sy.length) out.push(["warn", `${sy.length} waiting on Sy's OK this week: ${sy.slice(0, 3).map((a) => esc(a.title)).join(" · ")}`]);
+    const syC = S.camps.filter((c) => c.status === "tested" || c.status === "draft");
+    if (syC.length) out.push(["warn", `${syC.length} Omnisend draft${syC.length > 1 ? "s" : ""} waiting for test / Sy OK on the Act tab.`]);
+    if (!S.meta.some((r) => r.date === addDays(t, -1) || (r.start && r.start <= addDays(t, -1) && r.date >= addDays(t, -1)))) out.push(["warn", `Meta numbers for ${addDays(t, -1)} not logged yet.`]);
+    const v = metaVerdict(); if (v.cls === "bad") out.push(["bad", esc(v.text)]);
+    const mn = monthNow(), plan = planFor(mn.m);
+    if (mn.sales != null && plan) { const pace = mn.sales / Math.max(mn.day, 1) * daysInMonth(mn.m); if (pace < plan.revenue_usd * 0.9) out.push(["bad", `Month pacing ${usd(pace)} vs plan ${usd(plan.revenue_usd)}.`]); }
+    if (!out.length) out.push(["ok", "Nothing on fire. Work the board."]);
+    $("alerts").innerHTML = out.map(([c, x]) => `<div class="alert ${c}"><span class="dot"></span><span>${x}</span></div>`).join("");
+  }
+  if (S.sb && S.calc) renderScore();
+  renderGates(); renderActions(); renderMeta(); renderSends(); renderPlanChart();
+}
+function renderScore() {
+  const mn = monthNow(), dim = daysInMonth(mn.m), plan = planFor(mn.m), head = (x) => `<span class="eyebrow">${x}</span>`;
+  if (mn.sales != null) {
+    const pace = mn.sales / Math.max(mn.day, 1) * dim, target = plan ? plan.revenue_usd : NS;
+    $("sc-month").innerHTML = head(`${monLabel(mn.m)} · ${mn.src === "live" ? "live from Shopify" : "CDP orders"}`) + `<div class="big">${usd(mn.sales)}</div>` +
+      `<div class="bar" aria-hidden="true"><i style="width:${Math.min(100, mn.sales / target * 100).toFixed(1)}%"></i><b style="left:${Math.min(100, mn.day / dim * 100).toFixed(1)}%"></b></div>` +
+      `<div class="kv"><span>Pacing to</span><span class="num">${usd(pace)}</span></div><div class="kv"><span>${plan ? "Plan this month" : "North star"}</span><span class="num">${usd(target)}</span></div>` +
+      `<div class="kv"><span>Needed per day from here</span><span class="num">${usd(Math.max(target - mn.sales, 0) / Math.max(dim - mn.day, 1))}</span></div>`;
+  } else $("sc-month").innerHTML = head(monLabel(mn.m)) + `<div class="empty">No ${monLabel(mn.m)} orders in the CDP yet. Upload this month's Shopify export on the Data tab.</div>`;
+  const l = S.calc.last30, run = l.revenue / 30 * 30.44;
+  $("sc-run").innerHTML = head("30-day run-rate vs $100k") + `<div class="big">${usd(run)}</div><div class="bar" aria-hidden="true"><i style="width:${Math.min(100, run / NS * 100).toFixed(1)}%"></i></div>` +
+    `<div class="kv"><span>Gap</span><span class="num neg">${usd(Math.max(NS - run, 0))}/mo</span></div><div class="kv"><span>New customers / 30d</span><span class="num">${l.newc}</span></div><div class="kv"><span>Repeat orders / 30d</span><span class="num">${l.rep}</span></div>`;
+  const hit = S.sb.plan_months.find((p) => p.month === S.sb.hits_target), next = S.sb.plan_months.find((p) => p.month > mn.m) || S.sb.plan_months[0], E = S.sb.economics || {};
+  $("sc-next").innerHTML = head("Plan + profit engine") + `<div class="big">${hit ? monLabel(hit.month) : "–"}</div><p class="small muted">Modeled month the business reaches $100k if the gates hold.</p>` +
+    (next ? `<div class="kv"><span>${monLabel(next.month)} target</span><span class="num">${usd(next.revenue_usd)}</span></div><div class="kv"><span>Meta at $${CAC} CAC</span><span class="num">${usd(next.media_usd)}</span></div>` : "") +
+    `<div class="kv"><span>Repeat orders / 30d now</span><span class="num">${l.rep}</span></div><div class="kv"><span>Needed at $100k for 15% net</span><span class="num">${hit ? hit.repeat_orders_needed_15pct : "–"}</span></div>` +
+    `<div class="kv"><span>Profit per repeat order</span><span class="num">${usd(E.repeat_profit_per_order_usd || 0)}</span></div>`;
+}
+function renderGates() {
+  if (!S.sb || !S.calc) { $("gates").innerHTML = ""; return; }
+  const g = S.sb.gates, w = metaVerdict().w7;
+  const g1 = w.rows ? (w.cac != null && w.cac <= CAC ? "ok" : w.cac != null && w.cac <= CAC_CUT ? "warn" : "bad") : "unk";
+  const aov = S.calc.last30.firstAov, g2 = aov >= g.target_first_aov_usd ? "ok" : aov >= g.target_first_aov_usd * 0.85 ? "warn" : "bad";
+  const m1 = S.mag ? S.mag.findings.repeat_hazard_by_month[0] : g.second_order_month1_now, g3 = m1 >= 0.15 ? "ok" : "warn";
+  const L = { ok: "Holding", warn: "At risk", bad: "Failing", unk: "Not measured" };
+  $("gates").innerHTML = [
+    [g1, `CAC ≤ $${CAC}`, w.rows ? (w.cac != null ? usd(w.cac, 2) : "no new customers") : "–", w.rows ? `Last 7 days logged: ${usd(w.spend)} ÷ ${w.newc} new customers. Above $${CAC_CUT} every first order loses money.` : "Log Meta spend daily or upload an Ads Manager export."],
+    [g2, `First-order AOV ≥ $${g.target_first_aov_usd}`, usd(aov, 2), "New customers in the last 30 days of CDP orders. Keep 18/24-pair bundles as the default offer."],
+    [g3, "Month-1 reorder ≥ 15%", pct(m1, 1), "Repeat orders are the profit. The day 7–30 post-purchase flow moves this."],
+  ].map(([c, h, v, x]) => `<div class="gate"><span class="state ${c}">${L[c]}</span><h3>${esc(h)}</h3><span class="v">${v}</span><p class="small muted">${esc(x)}</p></div>`).join("");
+}
+function renderActions() {
+  const t = today(), f = S.filter;
+  document.querySelectorAll("#a-tabs button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.f === f)));
+  let xs = S.actions.slice().sort((a, b) => (a.due || "").localeCompare(b.due || "") || (a.order || 0) - (b.order || 0));
+  if (f === "week") xs = xs.filter((a) => a.status !== "done" && a.due <= addDays(t, 7));
+  if (f === "open") xs = xs.filter((a) => a.status !== "done");
+  if (f === "sy") xs = xs.filter((a) => a.needs_sy && !a.sy_ok && a.status !== "done");
+  if (f === "done") xs = xs.filter((a) => a.status === "done");
+  if (!S.actions.length) { $("acts").innerHTML = `<div class="empty">No actions yet.</div>`; return; }
+  if (!xs.length) { $("acts").innerHTML = `<div class="empty">${f === "week" ? "Nothing due in the next 7 days." : "Nothing here."}</div>`; return; }
+  const writable = !!S.db && S.canWrite !== false;
+  $("acts").innerHTML = xs.map((a) => {
+    const over = a.status !== "done" && a.due < t, block = a.needs_sy && !a.sy_ok;
+    const syChip = a.needs_sy ? (a.sy_ok ? `<span class="chip ok">Sy OK${a.sy_ok_by ? " · " + esc(who(a.sy_ok_by)) : ""}</span>` : `<span class="chip warn">Needs Sy OK</span>`) : "";
+    return `<div class="act ${a.status === "done" ? "done" : ""} ${over ? "overdue" : ""}"><span class="due">${esc((a.due || "").slice(5))}</span>
+      <div><div class="t">${esc(a.title)}</div><div class="meta"><span>${esc(a.owner)}</span>${syChip}${a.impact_usd ? `<span class="num">≈${usd(a.impact_usd)}</span>` : ""}${a.status === "blocked" ? `<span class="chip bad">Blocked</span>` : ""}${a.updated_by ? `<span>· ${esc(who(a.updated_by))}</span>` : ""}</div>${a.note ? `<div class="small muted" style="margin-top:3px">${esc(a.note)}</div>` : ""}</div>
+      <div class="ctl">${writable ? `<select data-st="${esc(a.id)}" aria-label="Status for ${esc(a.title)}">${["todo", "doing", "blocked", "done"].map((s) => `<option value="${s}" ${a.status === s ? "selected" : ""} ${s === "done" && block ? "disabled" : ""}>${{ todo: "To do", doing: "Doing", blocked: "Blocked", done: block ? "Done (needs Sy OK)" : "Done" }[s]}</option>`).join("")}</select>` : `<span class="chip">${esc(a.status)}</span>`}
+      ${block && S.canEdit ? `<button type="button" class="btn sy" data-sy="${esc(a.id)}">Sy OK</button>` : ""}</div></div>`;
+  }).join("");
+}
+function renderMeta() {
+  const v = metaVerdict(); $("m-verdict").className = "verdict " + v.cls; $("m-verdict").textContent = v.text;
+  const rows = S.meta.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 14);
+  $("m-table").innerHTML = rows.length ? `<thead><tr><th>Day</th><th class="r">Spend</th><th class="r">New cust.</th><th class="r">CAC</th><th class="r">Meta purch.</th><th class="r">ROAS</th></tr></thead><tbody>` +
+    rows.map((r) => `<tr><td class="num">${r.days > 1 && r.start ? esc(r.start.slice(5)) + "→" : ""}${esc(r.date.slice(5))}</td><td class="r num">${usd(r.spend)}</td><td class="r num">${r.new_customers ?? "–"}</td><td class="r num">${r.new_customers ? usd(r.spend / r.new_customers, 2) : "–"}</td><td class="r num">${r.purchases}</td><td class="r num">${r.spend && r.value != null ? (r.value / r.spend).toFixed(2) + "×" : "–"}</td></tr>`).join("") + `</tbody>` : "";
+}
+function renderSends() {
+  if ($("s-seg").options.length < 2) $("s-seg").innerHTML = `<option value="all">${esc(segLabel("all"))}</option>` + SEG_ORDER.filter((k) => !["recent", "other"].includes(k)).map((k) => `<option value="${k}">${esc(segLabel(k))}</option>`).join("");
+  const rows = S.sends.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 20);
+  $("s-table").innerHTML = rows.length ? `<thead><tr><th>Date</th><th>Who</th><th>Email</th><th>Channel</th><th>By</th></tr></thead><tbody>` +
+    rows.map((s) => `<tr><td class="num">${esc(s.date.slice(5))}</td><td>${esc(segLabel(s.segment))}</td><td>${esc(s.name)}</td><td>${esc(s.channel)}</td><td class="small">${esc(who(s.by))}</td></tr>`).join("") + `</tbody>` : `<tbody><tr><td class="muted">No sends logged yet.</td></tr></tbody>`;
+}
+function renderPlanChart() {
+  if (!S.sb || !S.calc) return;
+  const mn = monthNow(), act = {}; S.calc.trend.forEach((t) => (act[t.month] = t.gross)); if (mn.src === "live") act[mn.m] = mn.sales;
+  const plan = Object.fromEntries(S.sb.plan_months.map((m) => [m.month, m.revenue_usd]));
+  const months = [...new Set([...Object.keys(act), ...Object.keys(plan)])].sort();
+  const W = 760, H = 220, pl = 40, pr = 8, pt = 14, pb = 26, max = 110000, step = (W - pl - pr) / months.length, bw = step * 0.62, y = (v) => pt + (H - pt - pb) * (1 - Math.min(v, max) / max);
+  let s = [0, 25000, 50000, 75000].map((t) => `<line x1="${pl}" x2="${W - pr}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)" stroke-dasharray="2 4"/><text x="${pl - 5}" y="${y(t) + 3}" text-anchor="end">${t / 1000}k</text>`).join("");
+  s += `<line x1="${pl}" x2="${W - pr}" y1="${y(NS)}" y2="${y(NS)}" stroke="var(--accent)" stroke-width="1.5"/><text x="${pl - 5}" y="${y(NS) + 3}" text-anchor="end" style="fill:var(--accent);font-weight:600">100k</text>`;
+  months.forEach((m, i) => { const x = pl + i * step + (step - bw) / 2;
+    if (plan[m] != null) s += `<rect x="${x}" y="${y(plan[m])}" width="${bw}" height="${y(0) - y(plan[m])}" fill="none" stroke="var(--plan)" stroke-width="1.5" rx="2"><title>${monLabel(m)} plan ${usd(plan[m])}</title></rect>`;
+    if (act[m] != null) s += `<rect x="${x + bw * .18}" y="${y(act[m])}" width="${bw * .64}" height="${y(0) - y(act[m])}" fill="${m === mn.m ? "var(--live)" : "var(--actual)"}" rx="2"><title>${monLabel(m)} actual ${usd(act[m])}</title></rect>`;
+    if (i % 2 === 0) s += `<text x="${x + bw / 2}" y="${H - pb + 14}" text-anchor="middle">${monLabel(m).replace(" ", "’")}</text>`; });
+  $("chart").innerHTML = `<div class="scroll"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:560px" role="img" aria-label="Monthly sales, actual vs plan">${s}</svg></div>`;
+}
+
+// ============================================================== CUSTOMERS
+function filteredCustomers() {
+  const sub = $("c-sub").value, q = $("c-q").value.trim().toLowerCase(), seg = $("c-seg").value, size = $("c-size").value, ord = $("c-ord").value, sort = $("c-sort").value;
+  let xs = S.cust.filter((c) => (!sub || c.consent === sub) && (!seg || c.seg === seg) && (!size || c.size === size) && (!ord || (ord === "1" ? c.n === 1 : c.n >= 2)) &&
+    (!q || c.e.includes(q) || c.name.toLowerCase().includes(q) || c.o.some((o) => String(o.n || "").toLowerCase().includes(q))));
+  const key = { ltv: (c) => -c.ltvNet, profit: (c) => -c.ltvProfit, recent: (c) => -(new Date(c.lastD || 0)), since: (c) => -(c.since || 0), orders: (c) => -c.n }[sort];
+  return xs.sort((a, b) => key(a) - key(b));
+}
+function renderCustomers() {
+  if (!S.calc) return;
+  if (!S.cust.length) { $("c-tiles").innerHTML = `<div class="empty">No customers visible. Customer data is only shown to people invited to this app as Contributor or above.</div>`; $("c-cohorts").innerHTML = $("c-table").innerHTML = ""; return; }
+  const cs = S.cust, n = cs.length, two = cs.filter((c) => c.n >= 2), acq = cs.filter((c) => c.acquiredHere);
+  const avg = (xs, f) => (xs.length ? xs.reduce((a, c) => a + f(c), 0) / xs.length : 0);
+  const repRev = S.orders.filter((o) => (o.seq || 1) > 1).reduce((a, o) => a + o.g, 0), allRev = S.orders.reduce((a, o) => a + o.g, 0);
+  $("c-tiles").innerHTML = [
+    ["Customers", int(n), `${int(acq.length)} first bought in this data`], ["With a 2nd order", pct(two.length / (n || 1), 1), `${int(two.length)} customers`],
+    ["Avg LTV (net)", usd(avg(cs, (c) => c.ltvNet), 2), `orders since ${S.orders.length ? S.orders.reduce((m, o) => (o.d < m ? o.d : m), "9999").slice(0, 7) : ""}`],
+    ["Avg LTV profit", usd(avg(acq, (c) => c.ltvProfit), 2), `new customers, after $${CAC} CAC`], ["Median days to 2nd", (() => { const d = two.map((c) => c.days2).sort((a, b) => a - b); return d.length ? d[Math.floor(d.length / 2)] + " days" : "–"; })(), "first → second order"],
+    ["Repeat share of revenue", pct(repRev / (allRev || 1), 1), "2nd+ orders"],
+  ].map(([l, v, s]) => `<div class="tile"><span class="eyebrow">${l}</span><span class="v">${v}</span><span class="s">${esc(s)}</span></div>`).join("");
+  // cohorts
+  const coh = {}; acq.forEach((c) => { const m = c.first.d.slice(0, 7); (coh[m] = coh[m] || []).push(c); });
+  $("c-cohorts").innerHTML = `<thead><tr><th>First order</th><th class="r">Customers</th><th class="r">2nd ≤30d</th><th class="r">2nd ≤60d</th><th class="r">2nd ever</th><th class="r">Avg LTV</th><th class="r">Avg LTV profit</th></tr></thead><tbody>` +
+    Object.keys(coh).sort().reverse().map((m) => { const xs = coh[m], k = (d) => xs.filter((c) => c.days2 != null && c.days2 <= d).length / xs.length;
+      return `<tr><td>${monLabel(m)}</td><td class="r num">${xs.length}</td><td class="r num">${pct(k(30), 1)}</td><td class="r num">${pct(k(60), 1)}</td><td class="r num">${pct(xs.filter((c) => c.n >= 2).length / xs.length, 1)}</td><td class="r num">${usd(avg(xs, (c) => c.ltvNet), 2)}</td><td class="r num ${avg(xs, (c) => c.ltvProfit) < 0 ? "neg" : "pos"}">${usd(avg(xs, (c) => c.ltvProfit), 2)}</td></tr>`; }).join("") + `</tbody>`;
+  if ($("c-seg").options.length < 2) $("c-seg").innerHTML += SEG_ORDER.map((k) => `<option value="${k}">${esc(segLabel(k))}</option>`).join("");
+  const xs = filteredCustomers(), per = 50, pages = Math.max(1, Math.ceil(xs.length / per)); S.cPage = Math.min(S.cPage, pages - 1);
+  $("c-count").textContent = `${int(xs.length)} customers · LTV counts orders in the CDP; "lifetime" is Shopify's all-time order count.`;
+  $("c-table").innerHTML = `<thead><tr><th>Customer</th><th>Size</th><th class="r">Orders</th><th>First order</th><th>2nd order</th><th class="r">LTV net</th><th class="r">LTV profit</th><th>Last</th><th>Group</th></tr></thead><tbody>` +
+    xs.slice(S.cPage * per, S.cPage * per + per).map((c) => `<tr class="click" data-c="${esc(c.e)}" tabindex="0"><td><b>${esc(c.name)}</b><br><span class="small muted">${esc(c.e)}</span>${c.consent === "subscribed" ? ' <span class="chip ok" style="font-size:.62rem;padding:0 6px">SUB</span>' : c.consent === "unsubscribed" ? ' <span class="chip bad" style="font-size:.62rem;padding:0 6px">UNSUB</span>' : ""}</td><td>${esc(c.size || "–")}</td>
+      <td class="r num">${c.n}${c.lo > c.n ? `<span class="muted"> / ${c.lo}</span>` : ""}</td><td class="small num">${c.first ? esc(c.first.d) + "<br>" + usd(c.first.g) : "–"}</td>
+      <td class="small num">${c.second ? esc(c.second.d) + "<br>" + usd(c.second.g) + ` · ${c.days2}d` : "–"}</td><td class="r num">${usd(c.ltvNet)}</td><td class="r num ${c.ltvProfit < 0 ? "neg" : "pos"}">${usd(c.ltvProfit)}</td>
+      <td class="small num">${esc(c.lastD || "")}<br><span class="muted">${c.since}d ago</span></td><td class="small">${esc(segLabel(c.seg))}</td></tr>`).join("") + `</tbody>`;
+  $("c-pager").innerHTML = pages > 1 ? `<button class="btn" type="button" data-pg="-1" ${S.cPage === 0 ? "disabled" : ""}>Previous</button><span class="small muted">Page ${S.cPage + 1} of ${pages}</span><button class="btn" type="button" data-pg="1" ${S.cPage >= pages - 1 ? "disabled" : ""}>Next</button>` : "";
+}
+function openCustomer(email) {
+  const c = S.cust.find((x) => x.e === email); if (!c) return;
+  const camps = S.camps.filter((k) => k.segment === c.seg);
+  $("drawer-in").innerHTML = `<div class="panel-head"><h2>${esc(c.name)}</h2><button class="btn" type="button" data-close>Close</button></div>
+    <p class="small muted">${esc(c.e)} · sock size ${esc(c.size || "unknown")}${c.bigFeet ? " · large feet" : ""}${c.household ? " · buys for a household" : ""}</p>
+    <div class="tiles"><div class="tile"><span class="eyebrow">LTV net</span><span class="v">${usd(c.ltvNet, 2)}</span></div><div class="tile"><span class="eyebrow">LTV profit</span><span class="v ${c.ltvProfit < 0 ? "neg" : "pos"}">${usd(c.ltvProfit, 2)}</span><span class="s">${c.acquiredHere ? `after $${CAC} CAC` : "acquired before this data; no CAC charged"}</span></div>
+      <div class="tile"><span class="eyebrow">Orders</span><span class="v">${c.n}</span><span class="s">Shopify lifetime: ${c.lo}</span></div><div class="tile"><span class="eyebrow">First → 2nd</span><span class="v">${c.days2 != null ? c.days2 + "d" : "–"}</span></div></div>
+    <div class="card"><span class="eyebrow">Next move</span><b>${esc(segLabel(c.seg))}</b><span>${esc(S.mag && S.mag.segment_meta[c.seg] ? S.mag.segment_meta[c.seg].offer : "")}</span><span class="small muted">Product: ${esc(c.next)} · ${esc(S.mag && S.mag.segment_meta[c.seg] ? S.mag.segment_meta[c.seg].when : "")}</span>${camps.length ? `<span class="small">Campaigns for this group: ${camps.map((k) => esc(k.name) + " (" + esc(k.status) + ")").join(", ")}</span>` : ""}</div>
+    <h3>Order history</h3><div class="timeline">${c.o.slice().reverse().map((o) => `<div class="tl"><span class="num">${esc(o.d)}</span><span>${esc(o.n || "")} · ${o.p} pairs${(o.seq || 1) > 1 ? ` · order #${o.seq}` : " · first order"}<br><span class="small muted">${esc((o.s || []).join(", "))}</span></span><span class="num">${usd(o.g)}${o.disc ? `<br><span class="small muted">−${usd(o.disc)} disc</span>` : ""}${o.ref ? `<br><span class="small neg">−${usd(o.ref)} refund</span>` : ""}</span></div>`).join("")}</div>
+    <div class="btns"><button class="btn" type="button" data-export="one-pdf" data-email="${esc(c.e)}">PDF</button></div>`;
+  $("drawer").hidden = false; $("drawer-in").querySelector("[data-close]").focus();
+}
+
+// ============================================================== ACT
+const DONE = ["sent", "scheduled", "canceled"];
+function campFor(seg) { return S.camps.filter((c) => c.segment === seg && c.kind !== "gmail").sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))[0] || null; }
+function activeCamp(seg) { const c = campFor(seg); return c && !DONE.includes(c.status) ? c : null; }
+function renderAct() {
+  if (!S.calc) return;
+  $("consent-note").textContent = S.consent ? `Consent synced ${S.consent.at.slice(0, 16).replace("T", " ")}: ${int(S.consentSub.size)} of ${int(S.cust.length)} customers are subscribed to email.` : "Consent not synced yet. Sync it so lists and Gmail notes only include subscribed customers.";
+  const keys = SEG_ORDER.filter((k) => !["recent", "other"].includes(k) && (S.calc.segs[k] || []).length);
+  $("act-cards").innerHTML = keys.map((k) => {
+    const xs = S.calc.segs[k], meta = S.mag ? S.mag.segment_meta[k] || {} : {}, base = S.mag ? S.mag.segment_baselines[k] : null, camp = campFor(k);
+    const open = S.openCard === k;
+    return `<article class="card" id="card-${k}"><div class="panel-head"><h3>${esc(segLabel(k))}</h3><span class="num">${int(xs.length)} buyers${S.consent ? ` · <span class="pos">${int(xs.filter((c) => c.consent === "subscribed").length)} subscribed</span>` : ""}</span></div>
+      <p class="small">${esc(meta.offer || "")}</p><p class="small muted">${esc(meta.when || "")}${base && base.reorder_rate != null ? ` · measured 90-day reorder ${pct(base.reorder_rate, 1)}${base.small_sample ? " (small sample)" : ""}` : ""}</p>
+      ${camp ? `<p class="small">Latest: <b>${esc(camp.name)}</b> · <span class="chip ${camp.status === "sent" || camp.status === "scheduled" ? "ok" : "warn"}">${esc(camp.status)}</span></p>` : ""}
+      <div class="btns"><button class="btn primary" type="button" data-launch="${k}">${open ? "Hide steps" : activeCamp(k) ? "Continue" : "Launch in Omnisend"}</button>
+        <button class="btn" type="button" data-export="seg-csv" data-seg="${k}">List CSV</button><button class="btn" type="button" data-export="seg-xlsx" data-seg="${k}">Excel</button>
+        ${["vip_lapsed", "service", "vip_active"].includes(k) ? `<button class="btn" type="button" data-gmail="${k}">Draft Gmail notes</button>` : ""}</div>
+      ${open ? flowHtml(k, activeCamp(k)) : ""}</article>`;
+  }).join("") || `<div class="empty">No customers loaded.</div>`;
+  const rows = S.camps.slice().sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
+  $("camp-table").innerHTML = rows.length ? `<thead><tr><th>Created</th><th>Group</th><th>Campaign</th><th class="r">Listed</th><th>Status</th><th>Sy OK</th><th>Omnisend</th></tr></thead><tbody>` +
+    rows.map((c) => `<tr><td class="num">${esc((c.created_at || "").slice(0, 10))}</td><td>${esc(segLabel(c.segment))}</td><td>${esc(c.name)}</td><td class="r num">${int(c.listed || 0)}</td><td>${esc(c.status)}</td><td>${c.sy_ok ? esc(who(c.sy_ok_by) || "yes") : "–"}</td><td>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">Open</a>` : "–"}</td></tr>`).join("") + `</tbody>` : `<tbody><tr><td class="muted">No campaigns yet. Launch one from a group above.</td></tr></tbody>`;
+}
+function flowHtml(k, c) {
+  const st = c ? c.status : "new", order = ["new", "tagged", "segment", "draft", "tested", "approved", "sent"], at = order.indexOf(st === "scheduled" ? "sent" : st);
+  const stepCls = (i) => (at >= i ? "done" : at === i - 1 ? "next" : "");
+  const t = today(), cap = capCheck(k, (c && c.send_date) || fv("f-date-" + k, t), "Omnisend");
+  const hint = TEMPLATE_HINT[k], tplSel = fv("f-tpl-" + k, c && c.template_id ? c.template_id : ((S.omni.templates || []).find((x) => hint && x.name.includes(hint)) || {}).id || "");
+  const tplOpts = (S.omni.templates || []).map((x) => `<option value="${esc(x.id)}" ${tplSel === x.id ? "selected" : ""}>${esc(x.name)}</option>`).join("");
+  const dis = (i) => (S.busy || at !== i - 1 ? "disabled" : "");
+  return `<div class="steps">
+    <div class="step ${stepCls(1)}"><span class="n">1</span><div><b>Sync the list to Omnisend</b><span class="small muted">Tags these ${int((S.calc.segs[k] || []).length)} buyers in Omnisend with <code>${esc(c && c.tag ? c.tag : tagFor(k))}</code>. Emails Omnisend doesn't know are skipped. Nothing is sent.</span>
+      <div class="btns"><button class="btn primary" type="button" data-step="tag" data-seg="${k}" ${dis(1)}>Sync list</button></div></div></div>
+    <div class="step ${stepCls(2)}"><span class="n">2</span><div><b>Build the subscribed segment</b><span class="small muted">Segment = contacts with that tag who are subscribed to email. Omnisend enforces consent.</span>
+      <div class="btns"><button class="btn primary" type="button" data-step="segment" data-seg="${k}" ${dis(2)}>Create segment</button>${c && c.segment_id ? `<button class="btn" type="button" data-step="stats" data-seg="${k}">Check size</button>` : ""}</div>${c && c.segment_stats ? `<span class="small">${esc(c.segment_stats)}</span>` : ""}</div></div>
+    <div class="step ${stepCls(3)}"><span class="n">3</span><div><b>Create the draft</b>
+      <div class="row"><label style="flex:1 1 220px">Template<select id="f-tpl-${k}"><option value="">${S.omni.templates ? "Choose a template" : "Load templates first"}</option>${tplOpts}</select></label><button class="btn" type="button" data-step="templates" data-seg="${k}">Load templates</button></div>
+      <div class="row"><label style="flex:1 1 220px">Subject<input id="f-sub-${k}" maxlength="250" value="${esc(fv("f-sub-" + k, c && c.subject ? c.subject : defaultSubject(k)))}"></label><label style="flex:1 1 220px">Preview text<input id="f-pre-${k}" maxlength="250" value="${esc(fv("f-pre-" + k, c && c.preheader ? c.preheader : ""))}"></label></div>
+      <div class="row"><label>Sender name<input id="f-from-${k}" maxlength="250" value="${esc(fv("f-from-" + k, c && c.sender_name ? c.sender_name : "Comfort Fresh"))}"></label><label>Send on<input id="f-date-${k}" type="date" value="${esc(fv("f-date-" + k, c && c.send_date ? c.send_date : t))}"></label><label>Time (your clock)<input id="f-time-${k}" type="time" value="${esc(fv("f-time-" + k, c && c.send_time ? c.send_time : "10:00"))}"></label></div>
+      <div class="btns"><button class="btn primary" type="button" data-step="draft" data-seg="${k}" ${dis(3)}>Create draft</button>${c && c.url ? `<a class="btn" href="${esc(c.url)}" target="_blank" rel="noopener">Edit design in Omnisend</a>` : ""}</div></div></div>
+    <div class="step ${stepCls(4)}"><span class="n">4</span><div><b>Send yourself a test</b><div class="row"><label style="flex:1 1 220px">Test to<input id="f-test-${k}" value="${esc(fv("f-test-" + k, "brand@comfortfresh.shop"))}"></label><button class="btn primary" type="button" data-step="test" data-seg="${k}" ${at >= 3 && at < 6 && !S.busy ? "" : "disabled"}>Send test</button></div></div></div>
+    <div class="step ${stepCls(5)}"><span class="n">5</span><div><b>Sy approves</b><span class="small muted">Sy checks the test email and the cap check below.</span>
+      <div class="btns">${S.canEdit ? `<button class="btn sy" type="button" data-step="approve" data-seg="${k}" ${dis(5)}>Sy OK</button>` : `<span class="small muted">Only Sy (an Editor of this app) can approve.</span>`}</div></div></div>
+    <div class="step ${stepCls(6)}"><span class="n">6</span><div><b>Send or schedule</b>
+      <span class="small ${cap.ok ? "pos" : "neg"}">${cap.ok ? `Cap check passes: this is email #${cap.worst} inside 30 days for this group.` : cap.worst > 3 ? `Blocked: this would be email #${cap.worst} inside 30 days for this group. Move the date.` : `Blocked: "${esc(cap.otherCh.name)}" went by ${esc(cap.otherCh.channel)} the same week.`}</span>
+      <div class="row"><label>Type SEND to confirm<input id="f-confirm-${k}" autocomplete="off" style="width:8em" value="${esc(fv("f-confirm-" + k, ""))}"></label><button class="btn danger" type="button" data-step="send" data-seg="${k}" ${at === 5 && cap.ok && S.canEdit && !S.busy ? "" : "disabled"}>Send / schedule</button>${c && c.campaign_id ? `<button class="btn" type="button" data-step="status" data-seg="${k}">Refresh status</button>` : ""}</div>
+      <span class="small muted">Sends on the date and time above (now if that time has passed). Cannot be recalled once sending starts.</span></div></div>
+    ${c && c.log ? `<div class="log">${esc(c.log.slice(-1200))}</div>` : ""}</div>`;
+}
+const tagFor = (k) => `cf-${k.replace(/_/g, "-")}-${today().replace(/-/g, "")}`;
+function defaultSubject(k) {
+  return { vip_lapsed: "A thank-you, with 4 extra pairs on us", vip_active: "Your socks, on autopilot", second_order: "Your second pair of colors is waiting", wave_a: "Your Club Starter: 6 pairs for $49",
+    household: "Socks for everyone at home", bundle_clock: "Time for fresh socks?", large_feet: "Made for big feet (sizes 13–15)", ladder: "Try the other half of the drawer",
+    repeat_lapsed: "Upgrade to the 18-pair bundle", dormant: "We saved you 15%: COMEBACK15", service: "Let us make it right" }[k] || "From Comfort Fresh";
+}
+
+// ============================================================== Omnisend + Gmail via the viewer's connectors
+async function needMcp() { if (!S.mcp) S.mcp = await (window.claude?.use?.("mcp") ?? null); if (!S.mcp) throw { code: "no_mcp", message: "Connector access isn't available in this view. Open the app in claude.ai." }; return S.mcp; }
+function mcpMsg(e, server) {
+  const c = e && e.code;
+  if (c === "needs_reauth") return `Reconnect ${server} in claude.ai Settings → Connectors.`;
+  if (c === "server_not_connected") return `Add the ${server} connector in claude.ai Settings → Connectors.`;
+  if (c === "approval_required" || c === "not_in_manifest") return `${server} isn't allowed for this app yet. Allow it when claude.ai asks, or in the app's Permissions menu.`;
+  if (c === "omnisend") return `Omnisend said ${e.status}: ${typeof e.body === "string" ? e.body : JSON.stringify(e.body).slice(0, 300)}`;
+  if (c === "brand") return e.message;
+  return (e && e.message) || `${server} call failed.`;
+}
+async function omni(tool, payload) {
+  const mcp = await needMcp();
+  if (!S.omni.primed[tool]) {
+    await mcp.callTool("Omnisend", "tool_schema", { tool_name: tool }, { cache: false });
+    await mcp.callTool("Omnisend", "tool_documentation", { tool_name: tool }, { cache: false });
+    S.omni.primed[tool] = true;
+  }
+  const r = await mcp.callTool("Omnisend", "execute", { tool_name: tool, payload }, { cache: false });
+  const p = r.payload;
+  if (p && typeof p === "object" && p.statusCode >= 400) throw { code: "omnisend", status: p.statusCode, body: p.body };
+  return p && typeof p === "object" && "body" in p ? p.body : p;
+}
+async function omniBrand() {
+  if (S.omni.brand === OMNI_BRAND) return;
+  const b = await omni("get_brands_current", {});
+  if (!b || b.brandID !== OMNI_BRAND) { S.omni.brand = null; throw { code: "brand", message: `The Omnisend connector is signed in to ${b && b.name ? b.name : "another account"}, not Comfort-fresh.com. Nothing was changed.` }; }
+  S.omni.brand = OMNI_BRAND; $("omni-status").textContent = `Omnisend: ${b.name} ✓`;
+}
+async function saveCamp(k, patch, logLine, c) {
+  const line = `${new Date().toLocaleString()} · ${logLine}`;
+  if (!c) {
+    const doc = { segment: k, kind: "omnisend", name: `CF · ${segLabel(k)} · ${today()}`, created_at: nowIso(), created_by: S.me, status: "new", log: line, ...patch };
+    const ref = await S.db.collection("campaigns").add(doc); return ref.id;
+  }
+  await S.db.doc("campaigns/" + c.id).update({ ...patch, updated_at: nowIso(), updated_by: S.me, log: ((c.log || "") + "\n" + line).slice(-6000) });
+  return c.id;
+}
+async function runStep(step, k) {
+  if (!S.db || S.canWrite === false) return toast("You can view the CDP but not act in it.");
+  const c = activeCamp(k) || (step === "status" ? campFor(k) : null), xs = (S.calc.segs[k] || []).map((x) => x.e);
+  const sv = (patch, line) => saveCamp(k, patch, line, c);
+  S.busy = true; renderAct();
+  try {
+    if (step === "templates") {
+      await omniBrand();
+      const b = await omni("get_email_templates", { limit: 100 });
+      S.omni.templates = (b && b.templates) || [];
+      toast(`${S.omni.templates.length} templates loaded`);
+    } else if (step === "tag") {
+      await omniBrand();
+      const tag = tagFor(k);
+      for (let i = 0; i < xs.length; i += 250) await omni("post_contacts_tags", { emails: xs.slice(i, i + 250), tags: [tag] });
+      await sv({ status: "tagged", tag, listed: xs.length }, `Tagged ${xs.length} emails with ${tag}`);
+      toast("List synced to Omnisend");
+    } else if (step === "segment") {
+      await omniBrand();
+      const body = await omni("post_segments", { name: `CF · ${segLabel(k)} · ${today()}`.slice(0, 250), conditionGroups: [{ conditions: [{ entity: "contact", junction: "and", filters: [
+        { operator: "anyOf", property: "tags", value: [c.tag] }, { channels: ["email"], operator: "equals", property: "subscriptionStatus", value: "subscribed" }] }] }] });
+      const id = body && (body.segmentID || body.id);
+      if (!id) throw { message: "Omnisend didn't return a segment id: " + JSON.stringify(body).slice(0, 200) };
+      await sv({ status: "segment", segment_id: id }, `Created segment ${id} (tag ${c.tag} AND subscribed to email)`);
+      toast("Segment created. It may take a minute to build.");
+    } else if (step === "stats") {
+      await omniBrand();
+      const b = await omni("get_segments_segment_id_statistics", { segmentID: c.segment_id });
+      const flat = Object.entries(b || {}).filter(([, v]) => typeof v === "number").map(([kk, v]) => `${kk}: ${int(v)}`).join(" · ") || JSON.stringify(b).slice(0, 200);
+      await sv({ segment_stats: flat }, `Segment stats ${flat}`);
+    } else if (step === "draft") {
+      await omniBrand();
+      const tpl = $("f-tpl-" + k).value, subject = $("f-sub-" + k).value.trim(), pre = $("f-pre-" + k).value.trim(), from = $("f-from-" + k).value.trim() || "Comfort Fresh";
+      const date = $("f-date-" + k).value, time = $("f-time-" + k).value || "10:00";
+      if (!tpl) throw { message: "Choose a template (Load templates first)." };
+      if (!subject) throw { message: "Write a subject line." };
+      const when = new Date(`${date}T${time}:00`), future = when.getTime() > Date.now() + 5 * 60000;
+      const payload = { name: `CF · ${segLabel(k)} · ${date}`.slice(0, 250), type: "regular", channel: "email",
+        content: { email: { subject, senderName: from, templateID: tpl, ...(pre ? { preheader: pre } : {}) } },
+        audience: { includedSegmentIDs: [c.segment_id] }, sendingSettings: future ? { strategy: "scheduled", scheduledAt: when.toISOString() } : { strategy: "immediate" } };
+      const b = await omni("post_campaigns", payload);
+      if (!b || !b.id) throw { message: "Omnisend didn't return a campaign id: " + JSON.stringify(b).slice(0, 200) };
+      await sv({ status: "draft", campaign_id: b.id, url: b.url || null, template_id: tpl, subject, preheader: pre, sender_name: from, send_date: date, send_time: time, name: payload.name },
+        `Draft ${b.id} created (${future ? "scheduled " + when.toISOString() : "immediate"})`);
+      toast("Draft created in Omnisend");
+    } else if (step === "test") {
+      await omniBrand();
+      const to = $("f-test-" + k).value.split(/[,\s]+/).filter(Boolean).slice(0, 5);
+      await omni("post_campaigns_id_test_email", { id: c.campaign_id, recipients: to });
+      await sv({ status: c.status === "draft" ? "tested" : c.status }, `Test sent to ${to.join(", ")}`);
+      toast("Test email sent");
+    } else if (step === "approve") {
+      if (!S.canEdit) throw { message: "Only Sy can approve." };
+      await sv({ status: "approved", sy_ok: true, sy_ok_by: S.me, sy_ok_at: nowIso() }, "Sy approved");
+      toast("Approved");
+    } else if (step === "send") {
+      if (!S.canEdit || !c.sy_ok) throw { message: "Needs Sy's approval first." };
+      if ($("f-confirm-" + k).value.trim() !== "SEND") throw { message: "Type SEND to confirm." };
+      const cap = capCheck(k, c.send_date || today(), "Omnisend"); if (!cap.ok) throw { message: "The email cap check fails for this date." };
+      await omniBrand();
+      const cur = await omni("get_campaigns_id", { id: c.campaign_id });
+      if (cur && cur.status && cur.status !== "draft") throw { message: `Omnisend shows this campaign as "${cur.status}", so it can't be sent again.` };
+      await omni("post_campaigns_id_send", { id: c.campaign_id });
+      const after = await omni("get_campaigns_id", { id: c.campaign_id }).catch(() => null);
+      const status = (after && after.status) || "sent";
+      await sv({ status: status === "scheduled" ? "scheduled" : "sent", sent_at: nowIso(), sent_by: S.me }, `Send called; Omnisend status ${status}`);
+      await S.db.collection("sends").add({ segment: k, date: c.send_date || today(), channel: "Omnisend", name: c.subject || c.name, sy_ok: true, by: S.me, at: nowIso(), campaign_id: c.campaign_id });
+      delete S.form["f-confirm-" + k];
+      toast(status === "scheduled" ? "Scheduled in Omnisend" : "Sending in Omnisend", 4000);
+    } else if (step === "status") {
+      await omniBrand();
+      const cur = await omni("get_campaigns_id", { id: c.campaign_id });
+      await sv({ omni_status: cur && cur.status, ...(cur && ["sent", "scheduled", "started", "canceled"].includes(cur.status) ? { status: cur.status === "started" ? "sent" : cur.status } : {}) }, `Omnisend status: ${cur && cur.status}`);
+    }
+  } catch (e) {
+    const msg = mcpMsg(e, step === "gmail" ? "Gmail" : "Omnisend"); toast(msg, 6000);
+    if (c && step !== "templates") { try { await sv({}, "Error: " + msg); } catch (_) {} }
+  } finally { S.busy = false; renderAct(); }
+}
+async function gmailDrafts(k) {
+  if (!S.db || S.canWrite === false) return toast("You can view the CDP but not act in it.");
+  if (!S.consent) return toast("Sync consent from Omnisend first, so notes only go to subscribed customers.", 5000);
+  const done = new Set(S.camps.filter((c) => c.kind === "gmail" && c.segment === k).flatMap((c) => c.emails || []));
+  const pool = (S.calc.segs[k] || []).filter((c) => c.consent === "subscribed" && !done.has(c.e)), xs = pool.slice(0, 25);
+  if (!xs.length) return toast("No subscribed customers left in this group without a draft.");
+  try {
+    const mcp = await needMcp(); let n = 0;
+    for (const c of xs) {
+      const fn = c.fn || "there";
+      const body = k === "service"
+        ? `Hi ${fn},\n\nI saw your last order didn't work out, and I'm sorry about that. Socks only help if they fit and feel right.\n\nIf you tell me your shoe size and what felt off, I'll send you a pair in the right size, free, with your next order.\n\nThank you for giving us a try,\nComfort Fresh`
+        : `Hi ${fn},\n\nYou've ordered from us ${c.lo} times, and I wanted to say thank you personally.\n\nYour socks are probably due for a refresh, so I've set aside 4 extra pairs for you on any 12+ pack. ${c.next ? "If you'd like to try something new, " + c.next + " is a favorite with customers like you." : ""}\n\nJust reply to this email and I'll make sure the extra pairs go in your next box.\n\nWarmly,\nComfort Fresh`;
+      await mcp.callTool("Gmail", "create_draft", { to: [c.e], subject: k === "service" ? "Let us make it right" : `${fn}, a thank-you from Comfort Fresh`, body }, { cache: false });
+      n++;
+    }
+    await S.db.collection("campaigns").add({ segment: k, kind: "gmail", status: "gmail drafts", listed: n, emails: xs.slice(0, n).map((c) => c.e), name: `Gmail notes · ${segLabel(k)} · ${today()}`, created_at: nowIso(), created_by: S.me,
+      log: `Created ${n} Gmail drafts (not sent). Send them from Gmail after Sy's OK, then log the send on Today.` });
+    toast(`${n} Gmail drafts created (${pool.length - n} subscribed left). Nothing was sent.`, 5000);
+  } catch (e) { toast(mcpMsg(e, "Gmail"), 6000); }
+}
+
+async function syncConsent() {
+  if (!S.db || !S.canEdit) return toast("Only an Editor can sync consent.");
+  const btns = document.querySelectorAll("[data-consent]"); btns.forEach((x) => (x.disabled = true));
+  try {
+    await omniBrand();
+    const mine = new Set(S.cust.map((c) => c.e)), got = { subscribed: [], unsubscribed: [] }, totals = {};
+    for (const status of ["subscribed", "unsubscribed"]) {
+      let after = null, pages = 0; totals[status] = 0;
+      do {
+        const b = await omni("get_contacts", { status, limit: 250, ...(after ? { after } : {}) });
+        (b.contacts || []).forEach((c) => { totals[status]++; const e = String(c.email || "").toLowerCase(); if (mine.has(e)) got[status].push(e); });
+        after = b.paging && b.paging.hasMore ? b.paging.cursors && b.paging.cursors.after : null; pages++;
+        toast(`Reading ${status} contacts… ${int(totals[status])}`, 1500);
+      } while (after && pages < 80);
+    }
+    await S.db.doc("pii/consent").set({ at: nowIso(), by: S.me, subscribed: got.subscribed, unsubscribed: got.unsubscribed, totals });
+    await S.db.collection("imports").add({ at: nowIso(), file: "Omnisend contacts", kind: "Consent sync", result: `${got.subscribed.length} customers subscribed, ${got.unsubscribed.length} unsubscribed (Omnisend totals: ${int(totals.subscribed)} / ${int(totals.unsubscribed)})`, by: S.me });
+    toast(`Consent synced: ${got.subscribed.length} customers subscribed`, 4000);
+  } catch (e) { toast(mcpMsg(e, "Omnisend"), 6000); } finally { btns.forEach((x) => (x.disabled = false)); }
+}
+
+// ============================================================== REVENUE
+function renderRevenue() {
+  if (!S.calc) return;
+  const P = S.calc.periods[S.rPeriod], sc = P.pnl[S.rScen] ? S.rScen : "cac70", M = P.pnl[sc], a = P.a;
+  $("r-period").innerHTML = Object.entries(S.calc.periods).map(([k, p]) => `<button type="button" data-rp="${k}" aria-pressed="${k === S.rPeriod}">${esc(p.label)}</button>`).join("");
+  $("r-scen").innerHTML = [...Object.keys(SCEN), "live"].map((k) => `<button type="button" data-rs="${k}" aria-pressed="${k === sc}" ${P.pnl[k] ? "" : "disabled"}>${k === "live" ? "Logged Meta" : SCEN[k][0]}</button>`).join("");
+  $("r-kpis").innerHTML = [["Sales", usd(a.gross), P.label], ["Orders", int(a.orders), `${(a.orders / a.days).toFixed(1)} per day`], ["AOV", usd(a.aov, 2), "gross ÷ orders"],
+    ["New customers", int(a.newc), "first orders"], ["Repeat orders", int(a.rep), pct(a.orders ? a.rep / a.orders : 0, 1) + " of orders"], ["Pairs / order", a.ppo.toFixed(2), `${int(a.pairs)} pairs`]]
+    .map(([l, v, s]) => `<div class="tile"><span class="eyebrow">${l}</span><span class="v">${v}</span><span class="s">${esc(s)}</span></div>`).join("");
+  $("r-range").textContent = `${P.start} → ${P.end}`;
+  $("r-pnl").innerHTML = `<thead><tr><th>Line</th><th>Basis</th><th class="r">USD</th><th class="r">% of sales</th></tr></thead><tbody>` +
+    M.lines.map(([l, v, b, sub]) => `<tr class="${sub ? "sub" : ""} ${sub === 2 ? "total" : ""}"><td>${esc(l)}</td><td><span class="basis ${b}">${b}</span></td><td class="r num ${sub === 2 ? (v < 0 ? "neg" : "pos") : ""}">${usd(v)}</td><td class="r num muted">${a.gross ? pct(v / a.gross, 1) : "–"}</td></tr>`).join("") + `</tbody>`;
+  $("r-verdict").className = "verdict " + (M.margin >= 0.15 ? "ok" : M.margin >= 0 ? "warn" : "bad");
+  $("r-verdict").textContent = `Net margin ${pct(M.margin, 1)} (target ≥15%). Contribution ${pct(M.cpct, 1)} of sales.` + (M.be15 ? ` At this media level 15% net needs about ${usd(M.be15)}/mo in sales.` : "");
+  const sp = M.split;
+  $("r-split").innerHTML = `<thead><tr><th>Where profit comes from</th><th class="r">Orders</th><th class="r">Profit</th></tr></thead><tbody><tr><td>First orders, after product, shipping and media</td><td class="r num">${sp.first}</td><td class="r num ${sp.firstProfit < 0 ? "neg" : "pos"}">${usd(sp.firstProfit)}</td></tr><tr><td>Repeat orders (2nd+), after product and shipping</td><td class="r num">${sp.rep}</td><td class="r num pos">${usd(sp.repProfit)}</td></tr></tbody>`;
+  $("r-scens").innerHTML = `<thead><tr><th>Media</th><th class="r">Net</th><th class="r">Margin</th></tr></thead><tbody>` + Object.entries(P.pnl).map(([k, m]) => `<tr${k === sc ? ' style="background:var(--accent-soft)"' : ""}><td>${k === "live" ? "Logged Meta" : SCEN[k][0]}</td><td class="r num ${m.net < 0 ? "neg" : "pos"}">${usd(m.net)}</td><td class="r num">${pct(m.margin, 1)}</td></tr>`).join("") + `</tbody>`;
+  const T = S.calc.trend, W = 460, H = 210, pl = 8, pb = 40, pt = 20, max = Math.max(...T.map((t) => t.gross), 1) * 1.15, step = (W - 16) / T.length, bw = step * .62, y = (v) => pt + (H - pt - pb) * (1 - v / max);
+  $("r-trend").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Monthly sales split into first and repeat orders">` + T.map((t, i) => { const x = pl + i * step + (step - bw) / 2;
+    return `<rect x="${x}" y="${y(t.first)}" width="${bw}" height="${y(0) - y(t.first)}" fill="var(--actual)"><title>${monLabel(t.month)} first orders ${usd(t.first)}</title></rect><rect x="${x}" y="${y(t.gross)}" width="${bw}" height="${y(t.first) - y(t.gross)}" fill="var(--rep)"><title>${monLabel(t.month)} repeat ${usd(t.repeat)}</title></rect>` +
+      `<text x="${x + bw / 2}" y="${y(t.gross) - 5}" text-anchor="middle" style="fill:var(--ink);font-weight:600">${(t.gross / 1000).toFixed(1)}k</text><text x="${x + bw / 2}" y="${H - pb + 14}" text-anchor="middle">${monLabel(t.month).split(" ")[0]}${t.partial ? "*" : ""}</text><text x="${x + bw / 2}" y="${H - pb + 28}" text-anchor="middle">${t.gross ? pct(t.repeat / t.gross) : "0%"} rpt</text>`; }).join("") + `</svg><p class="small muted">* month to date</p>`;
+}
+
+// ============================================================== PLAN
+function renderPlan() {
+  const G = S.mag; if (!G) { $("p-need").innerHTML = `<div class="empty">Plan not loaded yet.</div>`; return; }
+  const P = G.path, SS = G.steady_state, hit = P.months.find((m) => m.month === P.hits_target), l = S.calc ? S.calc.last30 : null;
+  $("p-head").textContent = hit ? `Modeled: $100k / month in ${monLabel(hit.month)}` : "The path to $100k / month";
+  $("p-need").innerHTML = [["New customers / month", `${l ? l.newc : "–"} → ${hit ? int(hit.new_customers) : "–"}`], ["Repeat orders / month", `${l ? l.rep : "–"} → ${hit ? int(hit.repeat_orders) : "–"}`],
+    ["Needed for 15% net", hit ? int(hit.repeat_orders_needed_15pct) + " repeat orders" : "–"], ["Meta at $70 CAC", hit ? usd(hit.media_usd) + "/mo" : "–"],
+    ["First order after CAC", usd(SS.first_order_profit_usd, 2)], ["Profit per repeat order", usd(SS.repeat_profit_per_order_usd, 2)],
+    ["Repeat orders / customer yr 1", `${SS.today.repeat_orders_per_customer_yr1} → need ${SS.repeat_orders_per_customer_needed_15pct}`], ["Stock / month", hit ? int(hit.pairs) + " pairs" : "–"]]
+    .map(([lb, v]) => `<div class="tile"><span class="eyebrow">${lb}</span><span class="v" style="font-size:1.05rem">${v}</span></div>`).join("");
+  $("p-months").innerHTML = `<thead><tr><th>Month</th><th class="r">Revenue</th><th class="r">New</th><th class="r">Repeat</th><th class="r">Repeat needed</th><th class="r">Media @$70</th><th class="r">Net</th><th class="r">Pairs</th><th>PO by</th></tr></thead><tbody>` +
+    P.months.map((r) => `<tr${r.month === P.hits_target ? ' style="background:var(--accent-soft)"' : ""}><td>${monLabel(r.month)}${r.over_band ? ' <span class="chip warn">above $8k band</span>' : ""}</td><td class="r num">${usd(r.revenue_usd)}</td><td class="r num">${int(r.new_customers)}</td><td class="r num">${int(r.repeat_orders)}</td><td class="r num">${int(r.repeat_orders_needed_15pct)}</td><td class="r num">${usd(r.media_usd)}</td><td class="r num ${r.modeled_net_usd < 0 ? "neg" : ""}">${pct(r.modeled_net_margin)}</td><td class="r num">${int(r.pairs)}</td><td>${esc(r.po_month)}</td></tr>`).join("") + `</tbody>`;
+  $("p-moves").innerHTML = G.opportunities.map((o) => `<div class="act"><span class="due">#${o.rank}</span><div><div class="t">${esc(o.name)}</div><div class="meta"><span>${esc(o.owner)}</span><span>· ${esc(o.when)}</span><span class="chip ${o.confidence.startsWith("High") ? "ok" : "warn"}">${esc(o.confidence)}</span></div>
+    <div class="small" style="margin-top:4px"><b class="num">${esc(o.impact)}</b></div><div class="small muted" style="margin-top:4px">${esc(o.why)}</div><details><summary class="small" style="cursor:pointer;color:var(--accent);font-weight:700">How to execute</summary><ol class="small">${o.steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></details></div><span></span></div>`).join("");
+  const F = G.findings, g = F.gap_to_2nd_days, src = F.repeat_by_source, mix = F.month_mix;
+  $("p-finds").innerHTML = [[`${g.median} days`, `Median gap from 1st to 2nd order; ${pct(g.share_by_day30)} of 2nd orders land by day 30.`],
+    [pct(F.repeat_hazard_by_month[0]), `of new customers reorder in month 1, then ~${pct(F.repeat_hazard_by_month[1], 1)}/month.`],
+    [`${pct(src.meta?.repeat_rate || 0)} vs ${pct(src.untagged?.repeat_rate || 0)}`, "Meta-acquired buyers reorder about twice as often as untagged buyers."],
+    [pct(mix.at(-1).bundle13_rev_share), `of ${monLabel(mix.at(-1).month)} revenue came from 13+ pair orders.`],
+    [pct(F.size_line_share["13-15"] || 0), "of sized SKU lines are sock size 13–15 (large feet)."], [String(F.subscription_orders), "subscription orders: replenish is almost untouched."]]
+    .map(([v, t]) => `<div class="card"><span class="num" style="font-size:1.3rem;font-weight:600">${esc(v)}</span><p class="small">${esc(t)}</p></div>`).join("");
+}
+
+// ============================================================== DATA
+function renderData() {
+  const conn = [["Shopify (live month-to-date)", S.liveState === "live" ? "Live" : "Off", S.liveState === "live" ? "ok" : "warn", `Reads month-to-date sales through your Shopify connector, only for ${SHOP}. Order history comes from uploads below.`],
+    ["Omnisend", S.omni.brand ? "Connected · Comfort-fresh.com" : "Checked on first action", S.omni.brand ? "ok" : "", "Tags, segments, drafts, tests and sends from the Act tab, through your Omnisend connector."],
+    ["Omnisend consent", S.consent ? `Synced ${S.consent.at.slice(0, 10)}` : "Not synced", S.consent ? "ok" : "warn", "Subscribed / unsubscribed status for every customer. Editors: use the Sync button on the Act tab."],
+    ["Gmail", "On first use", "", "Creates drafts for VIP / refund notes. Never sends."],
+    ["Meta Ads", S.meta.length ? `${S.meta.length} log entries` : "Upload", S.meta.length ? "ok" : "warn", "Upload Ads Manager exports below, or log daily on Today. Live pull comes once Supermetrics or Adspirer is connected."]];
+  $("d-conn").innerHTML = `<thead><tr><th>Source</th><th>Status</th><th>What it does</th></tr></thead><tbody>` + conn.map(([a, b, c, d]) => `<tr><td><b>${a}</b></td><td><span class="chip ${c}">${esc(b)}</span></td><td class="small">${esc(d)}</td></tr>`).join("") + `</tbody>`;
+  $("d-imports").innerHTML = S.imports.length ? `<thead><tr><th>When</th><th>File</th><th>Kind</th><th>Result</th><th>By</th></tr></thead><tbody>` + S.imports.slice().sort((a, b) => b.at.localeCompare(a.at)).map((i) => `<tr><td class="num">${esc(i.at.slice(0, 16).replace("T", " "))}</td><td>${esc(i.file)}</td><td>${esc(i.kind)}</td><td class="small">${esc(i.result)}</td><td class="small">${esc(who(i.by))}</td></tr>`).join("") + `</tbody>` : `<tbody><tr><td class="muted">No uploads yet.</td></tr></tbody>`;
+}
+
+// ============================================================== libraries (lazy, cdnjs)
+const LIBS = { xlsx: "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js", jspdf: "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js", autotable: "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" };
+const loaded = {};
+function lib(name) { return loaded[name] || (loaded[name] = new Promise((res, rej) => { const s = document.createElement("script"); s.src = LIBS[name]; s.onload = res; s.onerror = () => rej(new Error("Couldn't load " + name)); document.head.appendChild(s); })); }
+
+// ============================================================== imports
+async function readTable(file) {
+  await lib("xlsx");
+  const buf = await file.arrayBuffer(), wb = XLSX.read(buf, { type: "array", cellDates: false, raw: false });
+  return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "", raw: false });
+}
+const fnum = (v) => { const n = parseFloat(String(v ?? "").replace(/[$,]/g, "")); return isNaN(n) ? 0 : n; };
+const chicago = (ts) => { const d = new Date(String(ts).replace(" ", "T").replace(/ ([+-]\d{4})$/, "$1")); return isNaN(d) ? String(ts).slice(0, 10) : new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(d); };
+function parseOrders(rows) {
+  const out = [], seen = new Set();
+  if (!rows.length) return out;
+  const h = Object.keys(rows[0]);
+  if (h.includes("processed_at_utc")) {
+    for (const r of rows) {
+      if (r.cancelled_at || !/paid|refunded/i.test(r.financial_status || "")) continue;
+      const email = String(r.customer_email || "").trim().toLowerCase(); if (!email) continue;
+      const skus = String(r.skus || "").split(";").map((s) => s.trim()).filter(Boolean), packs = skus.map((s) => packOf(s) || 1), units = fnum(r.total_quantity);
+      out.push({ email, fn: r.customer_first_name || "", ln: r.customer_last_name || "", life: fnum(r.customer_lifetime_orders), ts: r.processed_at_utc,
+        o: { id: String(r.order_id), n: r.order_name, d: chicago(r.processed_at_utc), g: +(fnum(r.subtotal_original) + fnum(r.total_discounts_original)).toFixed(2), disc: fnum(r.total_discounts_original),
+          ref: Math.min(fnum(r.total_refunded), fnum(r.subtotal_original)), p: Math.round(units * (packs.length ? packs.reduce((a, b) => a + b, 0) / packs.length : 1)), u: units, s: skus.slice(0, 6), src: "" } });
+    }
+  } else if (h.includes("Financial Status") && h.includes("Name")) {
+    const by = {};
+    for (const r of rows) { const n = r.Name; if (!n) continue; const o = by[n] || (by[n] = { lines: [] }); if (r["Financial Status"]) o.head = r; o.lines.push(r); }
+    for (const [n, o] of Object.entries(by)) {
+      const r = o.head; if (!r || !/paid|refunded/i.test(r["Financial Status"]) || r["Cancelled at"]) continue;
+      const email = String(r.Email || "").trim().toLowerCase(); if (!email) continue;
+      let pairs = 0, units = 0; const skus = [];
+      o.lines.forEach((l) => { const q = fnum(l["Lineitem quantity"]); units += q; const s = l["Lineitem sku"] || l["Lineitem name"]; skus.push(s); pairs += q * (packOf(l["Lineitem sku"] || "") || packOf(l["Lineitem name"] || "") || 1); });
+      out.push({ email, fn: r["Billing Name"] ? String(r["Billing Name"]).split(" ")[0] : "", ln: "", life: 0, ts: r["Paid at"] || r["Created at"],
+        o: { id: String(r.Id || n), n, d: chicago(r["Paid at"] || r["Created at"]), g: +(fnum(r.Subtotal) + fnum(r["Discount Amount"])).toFixed(2), disc: fnum(r["Discount Amount"]), ref: Math.min(fnum(r["Refunded Amount"]), fnum(r.Subtotal)), p: Math.round(pairs), u: units, s: skus.slice(0, 6), src: "" } });
+    }
+  } else throw new Error("This doesn't look like a Shopify orders export (missing processed_at_utc or Name / Financial Status columns).");
+  return out.filter((x) => (seen.has(x.o.id) ? false : seen.add(x.o.id)));
+}
+async function shardOf(email) { const h = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(email)); const hex = [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join(""); return "c" + String(Number(BigInt("0x" + hex) % 16n)).padStart(2, "0"); }
+async function previewOrders(file) {
+  const out = $("d-orders-out"); out.textContent = "Reading…";
+  try {
+    const parsed = parseOrders(await readTable(file));
+    const known = new Set(Object.values(S.shards).flat().flatMap((c) => c.o.map((o) => o.id)));
+    const fresh = parsed.filter((p) => !known.has(p.o.id)), emails = new Set(Object.values(S.shards).flat().map((c) => c.e));
+    const newCust = new Set(fresh.filter((p) => !emails.has(p.email)).map((p) => p.email));
+    S.pendingImport = { file: file.name, fresh };
+    out.innerHTML = `<p>${int(parsed.length)} paid orders in the file · <b>${int(fresh.length)} new</b> · ${int(newCust.size)} new customers · ${int(parsed.length - fresh.length)} already in the CDP.</p>` +
+      (fresh.length ? (S.canEdit ? `<div class="btns"><button class="btn primary" type="button" id="d-orders-save">Add ${int(fresh.length)} orders to the CDP</button></div>` : `<p class="muted">Only an Editor can add orders.</p>`) : "");
+  } catch (e) { out.innerHTML = `<span class="neg">${esc(e.message || e)}</span>`; }
+}
+async function saveOrders() {
+  const P = S.pendingImport; if (!P || !S.db) return;
+  const btn = $("d-orders-save"); if (btn) btn.disabled = true;
+  try {
+    const shards = JSON.parse(JSON.stringify(S.shards)), touched = new Set();
+    const byEmail = {}; Object.entries(shards).forEach(([k, rows]) => rows.forEach((c) => (byEmail[c.e] = { k, c })));
+    P.fresh.sort((a, b) => String(a.ts).localeCompare(String(b.ts)));
+    const perEmail = {}; P.fresh.forEach((p) => (perEmail[p.email] = (perEmail[p.email] || 0) + 1));
+    const seenEmail = {};
+    for (const p of P.fresh) {
+      let hit = byEmail[p.email];
+      if (!hit) { const k = await shardOf(p.email); const c = { e: p.email, fn: p.fn, ln: p.ln, cid: "", lo: 0, o: [] }; (shards[k] = shards[k] || []).push(c); hit = byEmail[p.email] = { k, c }; }
+      const c = hit.c, prev = c.o.length ? Math.max(...c.o.map((x) => x.seq || 1)) : 0;
+      const j = seenEmail[p.email] = (seenEmail[p.email] || 0) + 1, later = perEmail[p.email] - j;
+      p.o.seq = Math.max(p.life ? p.life - later : 0, prev + 1);
+      c.o.push(p.o); c.lo = Math.max(c.lo || 0, p.o.seq, p.life || 0); if (p.fn && !c.fn) c.fn = p.fn;
+      touched.add(hit.k);
+    }
+    for (const k of touched) await S.db.doc("cust/" + k).set({ rows: shards[k], updated_at: nowIso() });
+    const result = `${P.fresh.length} orders added across ${touched.size} shards`;
+    await S.db.collection("imports").add({ at: nowIso(), file: P.file, kind: "Shopify orders", result, by: S.me });
+    $("d-orders-out").innerHTML = `<span class="pos">${esc(result)}.</span>`; S.pendingImport = null; toast("Orders added");
+  } catch (e) { $("d-orders-out").innerHTML = `<span class="neg">Couldn't save: ${esc(e.message || e.code || e)}</span>`; }
+}
+async function importMeta(file) {
+  const out = $("d-meta-out"); out.textContent = "Reading…";
+  try {
+    const rows = await readTable(file); if (!rows.length) throw new Error("Empty file.");
+    const h = Object.keys(rows[0]), col = (opts) => opts.find((o) => h.includes(o));
+    const cSpend = col(["Amount spent (USD)", "Amount spent", "Spend"]), cPurch = col(["Purchases", "Website purchases", "Results"]), cRoas = col(["Purchase ROAS (return on ad spend)"]),
+      cVal = col(["Purchases conversion value", "Website purchases conversion value", "Purchase conversion value"]), cDay = col(["Day", "Date"]), cS = col(["Reporting starts"]), cE = col(["Reporting ends"]);
+    if (!cSpend) throw new Error("No 'Amount spent' column.");
+    const agg = {};
+    for (const r of rows) {
+      const start = String(cDay ? r[cDay] : r[cS] || "").slice(0, 10), end = String(cDay ? r[cDay] : r[cE] || start).slice(0, 10); if (!start) continue;
+      const key = start + "|" + end, a = agg[key] || (agg[key] = { start, end, spend: 0, purchases: 0, value: 0 });
+      const sp = fnum(r[cSpend]); a.spend += sp; a.purchases += cPurch ? fnum(r[cPurch]) : 0; a.value += cVal ? fnum(r[cVal]) : cRoas ? sp * fnum(r[cRoas]) : 0;
+    }
+    const entries = Object.values(agg).map((a) => { const newc = S.orders.filter((o) => o.d >= a.start && o.d <= a.end && (o.seq || 1) === 1).length;
+      return { date: a.end, start: a.start, days: daysBetween(a.start, a.end) + 1, spend: +a.spend.toFixed(2), purchases: Math.round(a.purchases), value: +a.value.toFixed(2), new_customers: newc, source: "Ads Manager upload: " + file.name, by: S.me, at: nowIso() }; });
+    const covered = S.orders.length ? S.calc.asOf : null;
+    out.innerHTML = `<p>${entries.length} entr${entries.length === 1 ? "y" : "ies"}: ${entries.map((e) => `${e.start}${e.days > 1 ? "→" + e.date : ""} ${usd(e.spend)} spend, ${e.new_customers} new customers (CAC ${e.new_customers ? usd(e.spend / e.new_customers, 2) : "–"})`).join("; ")}</p>` +
+      (entries.some((e) => covered && e.date > covered) ? `<p class="warn" style="color:var(--warn)">Some dates are after the last order in the CDP (${covered}). Upload newer Shopify orders too, or CAC will read high.</p>` : "") +
+      (S.canWrite !== false ? `<div class="btns"><button class="btn primary" type="button" id="d-meta-save">Save to the Meta log</button></div>` : "");
+    S.pendingMeta = { file: file.name, entries };
+  } catch (e) { out.innerHTML = `<span class="neg">${esc(e.message || e)}</span>`; }
+}
+async function saveMeta() {
+  const P = S.pendingMeta; if (!P || !S.db) return;
+  try { for (const e of P.entries) await S.db.doc("meta_daily/" + e.date).set(e);
+    await S.db.collection("imports").add({ at: nowIso(), file: P.file, kind: "Meta Ads", result: `${P.entries.length} Meta log entries`, by: S.me });
+    $("d-meta-out").innerHTML = `<span class="pos">Saved ${P.entries.length} entries.</span>`; S.pendingMeta = null; toast("Meta log updated"); } catch (e) { $("d-meta-out").innerHTML = `<span class="neg">Couldn't save: ${esc(e.message || e.code)}</span>`; }
+}
+
+// ============================================================== exports
+async function save(filename, data) {
+  const dl = await (window.claude?.use?.("downloads") ?? null);
+  if (!dl) return toast("Downloads aren't available in this view.");
+  try { await dl.save({ filename, data }); } catch (e) { if (e && e.code !== "declined") toast("Couldn't save the file: " + (e.message || e.code)); }
+}
+const csvOf = (rows) => { if (!rows.length) return ""; const h = Object.keys(rows[0]); const q = (v) => { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }; return [h.join(","), ...rows.map((r) => h.map((k) => q(r[k])).join(","))].join("\n"); };
+const custRow = (c) => ({ email: c.e, first_name: c.fn, last_name: c.ln, sock_size: c.size || "", large_feet_13_15: c.bigFeet ? "YES" : "", orders: c.n, shopify_lifetime_orders: c.lo,
+  first_order_date: c.first ? c.first.d : "", first_order_usd: c.first ? c.first.g : "", second_order_date: c.second ? c.second.d : "", second_order_usd: c.second ? c.second.g : "",
+  days_to_second: c.days2 ?? "", ltv_net_usd: +c.ltvNet.toFixed(2), ltv_profit_usd: +c.ltvProfit.toFixed(2), last_order: c.lastD, days_since_last: c.since, group: segLabel(c.seg), next_product: c.next,
+  offer: S.mag && S.mag.segment_meta[c.seg] ? S.mag.segment_meta[c.seg].offer : "", consent: c.consent });
+const orderRows = () => S.cust.flatMap((c) => c.o.map((o) => ({ email: c.e, order: o.n, date: o.d, gross_usd: o.g, discount_usd: o.disc, refund_usd: o.ref, pairs: o.p, order_number_for_customer: o.seq || 1, skus: (o.s || []).join("; ") })));
+const pnlRows = () => { const out = []; Object.entries(S.calc.periods).forEach(([k, p]) => Object.entries(p.pnl).forEach(([sc, m]) => m.lines.forEach(([l, v, b]) => out.push({ period: p.label, media: sc === "live" ? "Logged Meta" : SCEN[sc][0], line: l, usd: +v.toFixed(2), basis: b })))); return out; };
+async function xlsxOf(sheets) { await lib("xlsx"); const wb = XLSX.utils.book_new(); for (const [name, rows] of sheets) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.length ? rows : [{ note: "no rows" }]), name.slice(0, 31)); return new Uint8Array(XLSX.write(wb, { bookType: "xlsx", type: "array" })); }
+async function pdfOf(title, head, body, extra) {
+  await lib("jspdf"); await lib("autotable");
+  const doc = new window.jspdf.jsPDF({ orientation: "landscape", unit: "pt", format: "letter" });
+  doc.setFontSize(14); doc.text(title, 36, 40); doc.setFontSize(9); doc.text(`Comfort Fresh CDP · generated ${new Date().toLocaleString()}`, 36, 56);
+  let y = 70; (extra || []).forEach((line) => { doc.text(line, 36, y); y += 12; });
+  doc.autoTable({ head: [head], body, startY: y + 6, styles: { fontSize: 8 }, headStyles: { fillColor: [35, 112, 76] } });
+  return doc.output("arraybuffer");
+}
+async function doExport(kind, el) {
+  try {
+    const d = today();
+    if (kind === "cust-csv") return save(`cf_customers_${d}.csv`, csvOf((S.view === "customers" ? filteredCustomers() : S.cust).map(custRow)));
+    if (kind === "cust-xlsx") return save(`cf_customers_${d}.xlsx`, await xlsxOf([["Customers", filteredCustomers().map(custRow)]]));
+    if (kind === "cust-pdf") { const xs = filteredCustomers().slice(0, 300); return save(`cf_customers_${d}.pdf`, await pdfOf("Customers by LTV", ["Customer", "Email", "Size", "Orders", "First order", "2nd order", "LTV net", "LTV profit", "Group"],
+      xs.map((c) => [c.name, c.e, c.size || "", c.n, c.first ? `${c.first.d} ${usd(c.first.g)}` : "", c.second ? `${c.second.d} ${usd(c.second.g)}` : "", usd(c.ltvNet), usd(c.ltvProfit), segLabel(c.seg)]), [`${xs.length} customers (filtered view, max 300)`])); }
+    if (kind === "orders-csv") return save(`cf_orders_${d}.csv`, csvOf(orderRows()));
+    if (kind === "seg-csv" || kind === "seg-xlsx") { const k = el.dataset.seg, rows = (S.calc.segs[k] || []).map(custRow); return kind === "seg-csv" ? save(`cf_${k}_${d}.csv`, csvOf(rows)) : save(`cf_${k}_${d}.xlsx`, await xlsxOf([[k, rows]])); }
+    if (kind === "pnl-xlsx") return save(`cf_pnl_${d}.xlsx`, await xlsxOf([["P&L", pnlRows()], ["Monthly", S.calc.trend]]));
+    if (kind === "pnl-pdf") { const P = S.calc.periods[S.rPeriod], sc = P.pnl[S.rScen] ? S.rScen : "cac70", M = P.pnl[sc];
+      return save(`cf_pnl_${S.rPeriod}_${d}.pdf`, await pdfOf(`Revenue & Profit · ${P.label} · ${sc === "live" ? "Logged Meta" : SCEN[sc][0]}`, ["Line", "Basis", "USD", "% of sales"],
+        M.lines.map(([l, v, b]) => [l, b, usd(v), P.a.gross ? pct(v / P.a.gross, 1) : ""]).concat([["First orders profit (after media)", "MODELED", usd(M.split.firstProfit), ""], ["Repeat orders profit", "MODELED", usd(M.split.repProfit), ""]]),
+        [`${P.start} to ${P.end} · ${int(P.a.orders)} orders · ${int(P.a.newc)} new customers · ${int(P.a.rep)} repeat orders`, `Net margin ${pct(M.margin, 1)} (target 15%)`])); }
+    if (kind === "plan-xlsx") return save(`cf_plan_${d}.xlsx`, await xlsxOf([["Months", S.mag.path.months.map(({ events, media_sensitivity_usd, ...r }) => r)], ["Moves", S.mag.opportunities.map((o) => ({ rank: o.rank, move: o.name, owner: o.owner, when: o.when, impact: o.impact, why: o.why, steps: o.steps.join(" | ") }))]]));
+    if (kind === "actions-csv") return save(`cf_actions_${d}.csv`, csvOf(S.actions.map((a) => ({ due: a.due, title: a.title, owner: a.owner, status: a.status, needs_sy: a.needs_sy, sy_ok: a.sy_ok, note: a.note }))));
+    if (kind === "meta-csv") return save(`cf_meta_log_${d}.csv`, csvOf(S.meta.map(({ by, ...r }) => r)));
+    if (kind === "campaigns-csv") return save(`cf_campaigns_${d}.csv`, csvOf(S.camps.map(({ log, ...r }) => r)));
+    if (kind === "one-pdf") { const c = S.cust.find((x) => x.e === el.dataset.email); return save(`cf_customer_${d}.pdf`, await pdfOf(`${c.name} · ${c.e}`, ["Date", "Order", "Pairs", "Gross", "Discount", "Refund", "Order #"],
+      c.o.map((o) => [o.d, o.n || "", o.p, usd(o.g), usd(o.disc), usd(o.ref), o.seq || 1]), [`LTV net ${usd(c.ltvNet, 2)} · LTV profit ${usd(c.ltvProfit, 2)} · group: ${segLabel(c.seg)}`, `Next: ${c.next}`])); }
+    if (kind === "all-xlsx") return save(`cf_cdp_${d}.xlsx`, await xlsxOf([["Customers", S.cust.map(custRow)], ["Orders", orderRows()], ["P&L", pnlRows()], ["Monthly", S.calc.trend],
+      ["Plan", S.mag ? S.mag.path.months.map(({ events, media_sensitivity_usd, ...r }) => r) : []], ["Actions", S.actions.map(({ id, ...a }) => a)], ["Meta log", S.meta.map(({ by, ...r }) => r)], ["Sends", S.sends.map(({ by, ...r }) => r)], ["Campaigns", S.camps.map(({ log, ...r }) => r)]]));
+  } catch (e) { toast("Export failed: " + (e.message || e)); }
+}
+
+// ============================================================== events
+document.addEventListener("click", (e) => {
+  const x = e.target.closest("[data-export]"); if (x) return doExport(x.dataset.export, x);
+  const tab = e.target.closest("#a-tabs button"); if (tab) { S.filter = tab.dataset.f; return renderActions(); }
+  const sy = e.target.closest("button[data-sy]"); if (sy && S.db) { sy.disabled = true; return S.db.doc("actions/" + sy.dataset.sy).update({ sy_ok: true, sy_ok_by: S.me, sy_ok_at: nowIso() }).then(() => toast("Approved")).catch(onWriteError); }
+  const tr = e.target.closest("tr[data-c]"); if (tr) return openCustomer(tr.dataset.c);
+  if (e.target.closest("[data-close]") || e.target.id === "drawer") { $("drawer").hidden = true; return; }
+  const pg = e.target.closest("[data-pg]"); if (pg) { S.cPage += +pg.dataset.pg; return renderCustomers(); }
+  const rp = e.target.closest("[data-rp]"); if (rp) { S.rPeriod = rp.dataset.rp; return renderRevenue(); }
+  const rs = e.target.closest("[data-rs]"); if (rs) { S.rScen = rs.dataset.rs; return renderRevenue(); }
+  const ln = e.target.closest("[data-launch]"); if (ln) { S.openCard = S.openCard === ln.dataset.launch ? null : ln.dataset.launch; return renderAct(); }
+  const st = e.target.closest("[data-step]"); if (st) return runStep(st.dataset.step, st.dataset.seg);
+  const gm = e.target.closest("[data-gmail]"); if (gm) return gmailDrafts(gm.dataset.gmail);
+  if (e.target.closest("[data-consent]")) return syncConsent();
+  if (e.target.id === "d-orders-save") return saveOrders();
+  if (e.target.id === "d-meta-save") return saveMeta();
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("drawer").hidden = true; if (e.key === "Enter" && e.target.matches("tr[data-c]")) openCustomer(e.target.dataset.c); });
+["c-q", "c-seg", "c-size", "c-ord", "c-sort", "c-sub"].forEach((id) => $(id).addEventListener("input", () => { S.cPage = 0; renderCustomers(); }));
+document.addEventListener("input", (e) => { if (e.target.id && e.target.id.startsWith("f-")) S.form[e.target.id] = e.target.value; });
+document.addEventListener("change", (e) => { if (e.target.id && e.target.id.startsWith("f-")) S.form[e.target.id] = e.target.value; });
+$("d-orders").addEventListener("change", (e) => e.target.files[0] && previewOrders(e.target.files[0]));
+$("d-meta").addEventListener("change", (e) => e.target.files[0] && importMeta(e.target.files[0]));
+$("acts").addEventListener("change", async (e) => { const sel = e.target.closest("select[data-st]"); if (!sel || !S.db) return; sel.disabled = true;
+  try { await S.db.doc("actions/" + sel.dataset.st).update({ status: sel.value, updated_by: S.me, updated_at: nowIso() }); toast("Saved"); } catch (err) { onWriteError(err); } finally { sel.disabled = false; } });
+$("a-form").addEventListener("submit", async (e) => { e.preventDefault(); if (!S.db) return; const title = $("a-title").value.trim(); if (!title) return;
+  try { await S.db.collection("actions").add({ title, owner: $("a-owner").value, due: $("a-due").value, lane: "custom", needs_sy: $("a-sy").checked, sy_ok: false, status: "todo", note: "", impact_usd: null, order: 100, updated_by: S.me, updated_at: nowIso() }); e.target.reset(); toast("Action added"); } catch (err) { onWriteError(err); } });
+$("m-form").addEventListener("submit", async (e) => { e.preventDefault(); if (!S.db) return; const d = $("m-date").value;
+  const nc = $("m-new").value === "" ? S.orders.filter((o) => o.d === d && (o.seq || 1) === 1).length : +$("m-new").value;
+  try { await S.db.doc("meta_daily/" + d).set({ date: d, spend: +$("m-spend").value, purchases: +$("m-purch").value, value: $("m-val").value === "" ? null : +$("m-val").value, new_customers: nc, by: S.me, at: nowIso() });
+    toast(`Saved · ${nc} new customers that day`); ["m-spend", "m-purch", "m-val", "m-new"].forEach((i) => ($(i).value = "")); } catch (err) { onWriteError(err); } });
+$("s-form").addEventListener("submit", async (e) => { e.preventDefault(); if (!S.db) return; const seg = $("s-seg").value, date = $("s-date").value, ch = $("s-ch").value, c = capCheck(seg, date, ch);
+  if (!c.ok) { $("s-check").innerHTML = `<span class="chip bad">Blocked</span> ${c.worst > 3 ? `This would be email #${c.worst} inside 30 days for "${esc(segLabel(seg))}".` : ""} ${c.otherCh ? `"${esc(c.otherCh.name)}" already went by ${esc(c.otherCh.channel)} the same week.` : ""}`; return; }
+  try { await S.db.collection("sends").add({ segment: seg, date, channel: ch, name: $("s-name").value.trim(), sy_ok: true, by: S.me, at: nowIso() }); $("s-check").innerHTML = `<span class="chip ok">Within the cap</span> Logged.`; $("s-name").value = ""; $("s-ok").checked = false; } catch (err) { onWriteError(err); } });
+function onWriteError(err) {
+  if (err && err.code === "invalid_argument") { S.canWrite = false; showForms(); render(); toast("You can view the CDP but not change it."); }
+  else if (err && err.code === "quota_exceeded") toast("The CDP database is full. Tell Claude to prune old logs.");
+  else toast("Couldn't save. Try again in a moment.");
+}
+function showForms() { const w = !!S.db && S.canWrite !== false; ["a-form", "m-form", "s-form"].forEach((id) => ($(id).hidden = !w)); }
+async function resolveNames() {
+  if (!S.user) return;
+  const ids = [...new Set([...S.actions.flatMap((a) => [a.updated_by, a.sy_ok_by]), ...S.sends.map((s) => s.by), ...S.camps.flatMap((c) => [c.sy_ok_by, c.created_by]), ...S.imports.map((i) => i.by)].filter(Boolean))].filter((id) => !(id in S.names));
+  if (!ids.length) return;
+  try { const ps = await S.user.profiles(ids); ids.forEach((id) => (S.names[id] = (ps[id] && ps[id].name) || "Someone")); render(); } catch (_) {}
+}
+
+// ============================================================== boot
+$("m-date").value = addDays(today(), -1); $("s-date").value = today(); $("a-due").value = addDays(today(), 3);
+route();
+(async () => {
+  const [db, user] = await Promise.all([window.claude?.use?.("db") ?? null, window.claude?.use?.("user") ?? null]);
+  S.user = user;
+  if (!db) { S.db = false; render(); return; }
+  S.db = db;
+  if (user) { try { S.me = await user.id(); } catch (_) {} try { S.canEdit = await user.canEdit(); } catch (_) {} try { S.canWrite = await user.can("data.write"); } catch (_) {} }
+  showForms();
+  const fail = () => (e) => { if (e && e.code === "revoked") { S.db = false; showForms(); } render(); };
+  let t; const soon = (dirty) => { if (dirty) S.dirty = true; clearTimeout(t); t = setTimeout(() => { render(); resolveNames(); }, 60); };
+  db.collection("cust").onSnapshot((q) => { S.shards = {}; q.docs.forEach((d) => (S.shards[d.id] = (d.data().rows || []))); S.orders = Object.values(S.shards).flat().flatMap((c) => c.o); soon(true); }, fail());
+  db.doc("board/scoreboard").onSnapshot((s) => { S.sb = s.exists ? s.data() : null; soon(); }, fail());
+  db.doc("board/magnet").onSnapshot((s) => { S.mag = s.exists ? s.data() : null; soon(true); }, fail());
+  db.doc("pii/consent").onSnapshot((s) => { S.consent = s.exists ? s.data() : null; soon(true); }, fail());
+  db.collection("actions").onSnapshot((q) => { S.actions = q.docs.map((d) => ({ id: d.id, ...d.data() })); soon(); }, fail());
+  db.collection("meta_daily").onSnapshot((q) => { S.meta = q.docs.map((d) => d.data()); soon(true); }, fail());
+  db.collection("sends").onSnapshot((q) => { S.sends = q.docs.map((d) => d.data()); soon(); }, fail());
+  db.collection("campaigns").onSnapshot((q) => { S.camps = q.docs.map((d) => ({ id: d.id, ...d.data() })); soon(); }, fail());
+  db.collection("imports").onSnapshot((q) => { S.imports = q.docs.map((d) => d.data()); soon(); }, fail());
+})();
+(async () => {
+  const mcp = await (window.claude?.use?.("mcp") ?? null); S.mcp = mcp;
+  if (!mcp) { S.liveState = "off"; renderChips(); return; }
+  const month = today().slice(0, 7);
+  mcp.watchTool("Shopify", "run-analytics-query", { query: `FROM sales SHOW orders, gross_sales TIMESERIES day SINCE ${month}-01 UNTIL today` }, (ev) => {
+    if (ev.type === "error") { S.live = null; S.liveState = "off"; renderChips(); return; }
+    const p = ev.result && ev.result.payload;
+    if (!p || p.shopDomain !== SHOP) { S.live = null; S.liveState = "off"; renderChips(); return; }
+    const cols = (p.columns || []).map((c) => c.name), io = cols.indexOf("orders"), ig = cols.indexOf("gross_sales"); let orders = 0, sales = 0;
+    (p.rows || []).forEach((r) => { orders += +r[io] || 0; sales += +r[ig] || 0; });
+    S.live = { month, sales, orders }; S.liveState = "live"; render();
+  }, { cache: { staleTime: 10 * 60 * 1000, gcTime: 60 * 60 * 1000 }, refetchInterval: 15 * 60 * 1000 });
+})();
+</script>

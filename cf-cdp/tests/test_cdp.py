@@ -187,6 +187,26 @@ class PlaybookTest(unittest.TestCase):
         self.assertEqual(a(lifetime_orders=1, days_since=3), "recent")
 
 
+class AppSeedTest(unittest.TestCase):
+    def test_shards_and_order_sequence(self):
+        from cdp import appseed
+        rows = [
+            {"customer_email": "A@x.invalid", "processed_at_utc": "2026-10-01T15:00:00Z", "customer_lifetime_orders": "3",
+             "subtotal_original": "49", "total_discounts_original": "0", "total_refunded": "0", "total_quantity": "1",
+             "skus": "CF17180-6Black-13-15", "order_id": "1", "order_name": "#1", "tags": "facebook"},
+            {"customer_email": "a@x.invalid", "processed_at_utc": "2026-10-10T15:00:00Z", "customer_lifetime_orders": "3",
+             "subtotal_original": "79", "total_discounts_original": "0", "total_refunded": "0", "total_quantity": "1",
+             "skus": "CF17180-1315-B12W6-AID", "order_id": "2", "order_name": "#2", "tags": ""},
+        ]
+        shards = appseed.customer_shards(rows)
+        (k, custs), = shards.items()
+        self.assertEqual(k, appseed.shard_of("a@x.invalid"))
+        c = custs[0]
+        self.assertEqual([o["seq"] for o in c["o"]], [2, 3])   # lifetime 3: this file holds the customer's 2nd and 3rd orders
+        self.assertEqual([o["p"] for o in c["o"]], [6, 18])
+        self.assertEqual(c["o"][0]["src"], "meta")
+
+
 class PageScriptTest(unittest.TestCase):
     def test_page_scripts_parse(self):
         import shutil

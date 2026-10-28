@@ -54,6 +54,13 @@ Swap in actuals with no credentials needed: export orders from Shopify Admin, th
 `python3 cdp_cli.py build-revenue --shopify-csv orders_export.csv` and
 `python3 cdp_cli.py feed --revenue warehouse/revenue/revenue_daily.json`.
 
+## The app: Comfort Fresh CDP (one artifact, six tabs)
+`ui/templates/cdp_app.html` → published at the War Room link. Tabs: **Today** (alerts, pacing, gates, action board, Meta log, email-cap log), **Customers** (every customer's orders, first → second order, LTV net and LTV profit after $70 CAC, cohorts, consent), **Act** (per group: sync list to Omnisend as a tag → subscribed-only segment → draft from a template → test → Sy OK → send/schedule; Gmail drafts for VIP/refund notes), **Revenue & Profit**, **Plan**, **Data** (upload Shopify orders and Meta exports, consent sync, exports to CSV / Excel / PDF).
+
+- Customer history lives in the app's database (`cust/c00..c15`, read: Contributor+, write: Editor). Load or refresh it from the Data tab by uploading the Shopify order export; uploads merge by order id.
+- All Omnisend calls run through the viewer's Omnisend connector and refuse to act unless the brand is Comfort-fresh.com. Sends need Sy (Editor) approval, a passing 3-per-30-days cap check, and typing SEND.
+- `cdp/appseed.py` builds the same customer shards and plan document offline (Python and the app use the same SHA-1 shard key).
+
 ## Operator pages (Claude artifacts)
 | Page | What it's for | Data |
 |---|---|---|
