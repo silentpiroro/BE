@@ -2,88 +2,186 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* Layout: operator app. Sticky tab bar; each tab is one job: Today (war room), Customers (LTV),
-   Act (Omnisend + Gmail execution), Revenue (P&L), Plan (path to $100k), Data (imports/exports). Dark-first. */
+/* Layout: CDP operator console. Fixed green sidebar (Home → Journeys → Audiences → Profiles → Insights → Connections),
+   work area on the right. Home leads with the 4 ranked moves; every audience opens a side panel that runs it end to end. */
 :root {
-  --bg: #0d1210; --surface: #151c19; --raise: #1b2420; --ink: #e6eee9; --muted: #93a39a; --line: #27322d;
-  --accent: #7fd1a8; --accent-ink: #0d1210; --accent-soft: #1b2f25;
-  --good: #6fd29b; --good-soft: #163021; --warn: #f0b85e; --warn-soft: #33270f; --bad: #ff8a7a; --bad-soft: #3b1b17;
-  --plan: #5d6f66; --actual: #7fd1a8; --live: #f0b85e; --rep: #f0b85e;
+  --bg: #f4f6f3; --surface: #ffffff; --raise: #eef2ee; --ink: #15201b; --muted: #5a685f; --line: #dbe3dd;
+  --accent: #1d7350; --accent-ink: #ffffff; --accent-soft: #e0efe6;
+  --nav: #0f2a1f; --nav-ink: #b9d3c5; --nav-hi: #ffffff; --nav-act: #1e4434; --nav-line: #1d3b2e;
+  --good: #1d7a49; --good-soft: #def2e6; --warn: #8a5600; --warn-soft: #fbefd6; --bad: #b3352a; --bad-soft: #f9e1dd;
+  --plan: #b5c4bb; --actual: #1d7350; --live: #c98a1b; --rep: #c98a1b; --shadow: 0 1px 2px rgba(15, 42, 31, .06), 0 4px 14px rgba(15, 42, 31, .05);
   --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-  color-scheme: dark;
 }
-@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
-  --bg: #f3f6f4; --surface: #ffffff; --raise: #f7faf8; --ink: #15201b; --muted: #58685f; --line: #dbe3de;
-  --accent: #23704c; --accent-ink: #ffffff; --accent-soft: #e2f0e8;
-  --good: #1d7a49; --good-soft: #def2e6; --warn: #8f5a00; --warn-soft: #fbefd6; --bad: #b3352a; --bad-soft: #f9e1dd;
-  --plan: #b9c6bf; --actual: #23704c; --live: #c98a1b; --rep: #c98a1b; color-scheme: light; } }
-:root[data-theme="light"] {
-  --bg: #f3f6f4; --surface: #ffffff; --raise: #f7faf8; --ink: #15201b; --muted: #58685f; --line: #dbe3de;
-  --accent: #23704c; --accent-ink: #ffffff; --accent-soft: #e2f0e8;
-  --good: #1d7a49; --good-soft: #def2e6; --warn: #8f5a00; --warn-soft: #fbefd6; --bad: #b3352a; --bad-soft: #f9e1dd;
-  --plan: #b9c6bf; --actual: #23704c; --live: #c98a1b; --rep: #c98a1b; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0c110f; --surface: #141b18; --raise: #1a2420; --ink: #e5eee9; --muted: #92a39a; --line: #26322c;
+  --accent: #74cfa2; --accent-ink: #0c110f; --accent-soft: #1a2f24;
+  --nav: #08130e; --nav-ink: #9fbcae; --nav-hi: #ffffff; --nav-act: #173327; --nav-line: #15271e;
+  --good: #6fd29b; --good-soft: #163021; --warn: #f0b85e; --warn-soft: #33270f; --bad: #ff8a7a; --bad-soft: #3b1b17;
+  --plan: #4f6158; --actual: #74cfa2; --live: #f0b85e; --rep: #f0b85e; --shadow: none; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0c110f; --surface: #141b18; --raise: #1a2420; --ink: #e5eee9; --muted: #92a39a; --line: #26322c;
+  --accent: #74cfa2; --accent-ink: #0c110f; --accent-soft: #1a2f24;
+  --nav: #08130e; --nav-ink: #9fbcae; --nav-hi: #ffffff; --nav-act: #173327; --nav-line: #15271e;
+  --good: #6fd29b; --good-soft: #163021; --warn: #f0b85e; --warn-soft: #33270f; --bad: #ff8a7a; --bad-soft: #3b1b17;
+  --plan: #4f6158; --actual: #74cfa2; --live: #f0b85e; --rep: #f0b85e; --shadow: none; color-scheme: dark; }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.45; }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
-.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--surface); border-bottom: 1px solid var(--line); }
-.top-in { max-width: 1240px; margin: 0 auto; padding-block: 10px 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 8px; }
-.brandrow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
-.brand { font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; }
-.brand small { font-family: var(--font-body); font-weight: 600; color: var(--muted); font-size: .75rem; margin-left: 8px; }
-nav.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
-nav.tabs a { flex: none; padding: 9px 14px; font-weight: 700; font-size: .9rem; color: var(--muted); text-decoration: none; border-bottom: 3px solid transparent; }
-nav.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
-nav.tabs a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.wrap { max-width: 1240px; margin: 0 auto; padding-block: 18px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
-section.view { display: grid; gap: 18px; min-width: 0; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--nav); }
 h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
-h2 { font-size: 1.1rem; font-weight: 600; } h3 { font-size: .95rem; font-weight: 600; }
+h1 { font-size: 1.45rem; font-weight: 800; letter-spacing: -.01em; }
+h2 { font-size: 1.08rem; font-weight: 600; } h3 { font-size: .96rem; font-weight: 600; }
 p { margin: 0; }
+a { color: var(--accent); }
 .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.eyebrow { font-size: .7rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
-.muted { color: var(--muted); } .small { font-size: .82rem; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: .74rem; font-weight: 600; border: 1px solid var(--line); background: var(--surface); white-space: nowrap; }
+.eyebrow { font-size: .68rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.muted { color: var(--muted); } .small { font-size: .82rem; } .neg { color: var(--bad); } .pos { color: var(--good); }
+
+/* shell */
+.app { display: grid; grid-template-columns: 228px minmax(0, 1fr); min-height: 100vh; }
+.side { background: var(--nav); color: var(--nav-ink); position: sticky; top: 0; height: 100vh; overflow: auto;
+  padding-block: calc(18px + env(safe-area-inset-top, 0px)) 18px; padding-left: max(14px, env(safe-area-inset-left, 0px)); padding-right: 14px; display: grid; grid-template-rows: auto 1fr auto; gap: 18px; }
+.logo { display: grid; gap: 2px; padding: 0 8px; }
+.logo b { font-family: var(--font-display); font-weight: 800; color: var(--nav-hi); font-size: 1.12rem; }
+.logo span { font-size: .74rem; }
+nav.menu { display: grid; gap: 14px; align-content: start; }
+.menu .grp { display: grid; gap: 2px; }
+.menu .grp > span { font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; padding: 0 10px 4px; opacity: .7; }
+.menu a { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 8px; color: var(--nav-ink); text-decoration: none; font-weight: 600; font-size: .9rem; }
+.menu a:hover { background: var(--nav-act); color: var(--nav-hi); }
+.menu a[aria-current="page"] { background: var(--nav-act); color: var(--nav-hi); box-shadow: inset 3px 0 0 var(--accent); }
+.menu a .badge { font-family: var(--font-mono); font-size: .7rem; background: var(--nav-line); color: var(--nav-hi); border-radius: 999px; padding: 1px 7px; }
+.menu a .badge.hot { background: var(--warn); color: #1d1300; }
+.side-foot { font-size: .72rem; display: grid; gap: 6px; padding: 10px 8px 0; border-top: 1px solid var(--nav-line); }
+.side-foot b { color: var(--nav-hi); }
+main { min-width: 0; padding-block: 22px 72px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+.main-in { max-width: 1180px; margin: 0 auto; display: grid; gap: 18px; }
+.statusbar { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+section.view { display: grid; gap: 18px; min-width: 0; }
+.phead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 10px 16px; }
+.phead > div { display: grid; gap: 4px; min-width: 0; }
+.phead p { color: var(--muted); max-width: 70ch; }
+@media (max-width: 900px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .side { position: sticky; top: env(safe-area-inset-top, 0px); height: auto; z-index: 9; grid-template-rows: auto; padding-block: 10px 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); gap: 8px; }
+  .logo { padding: 0; } .logo span, .side-foot, .menu .grp > span { display: none; }
+  nav.menu { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; padding-bottom: 8px; }
+  .menu .grp { display: flex; gap: 2px; }
+  .menu a { flex: none; padding: 7px 11px; font-size: .86rem; }
+  .menu a[aria-current="page"] { box-shadow: inset 0 -3px 0 var(--accent); }
+  main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 64px; }
+}
+
+/* building blocks */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; box-shadow: var(--shadow); }
+.panel > * { min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px; align-items: start; }
+.nowrap { white-space: nowrap; }
+.grid2 > * { min-width: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; font-size: .73rem; font-weight: 700; border: 1px solid var(--line); background: var(--surface); white-space: nowrap; color: var(--ink); }
 .chip.ok { color: var(--good); background: var(--good-soft); border-color: transparent; }
 .chip.warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
 .chip.bad { color: var(--bad); background: var(--bad-soft); border-color: transparent; }
 .chip.acc { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
-.guard { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 9px 14px; border-radius: 10px; background: var(--raise); border: 1px solid var(--line); font-size: .82rem; }
-.guard b { color: var(--warn); }
-.alerts { display: grid; gap: 6px; }
-.alert { display: flex; gap: 10px; align-items: baseline; padding: 9px 12px; border-radius: 10px; font-size: .9rem; border: 1px solid var(--line); background: var(--surface); }
-.alert .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; transform: translateY(-1px); }
-.alert.bad .dot { background: var(--bad); } .alert.warn .dot { background: var(--warn); } .alert.ok .dot { background: var(--good); }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
-.panel > * { min-width: 0; }
-.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px; }
-.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
-.grid3 > *, .grid2 > * { min-width: 0; }
-.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; }
-.score { display: grid; gap: 6px; align-content: start; }
-.score .big { font-family: var(--font-mono); font-size: 1.9rem; font-weight: 600; line-height: 1.1; }
-.bar { position: relative; height: 12px; border-radius: 999px; background: var(--line); overflow: hidden; }
-.bar > i { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 999px; }
-.bar > b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); opacity: .7; }
-.kv { display: flex; justify-content: space-between; gap: 10px; font-size: .86rem; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-.tile { background: var(--surface); padding: 12px 14px; display: grid; gap: 2px; }
-.tile .v { font-family: var(--font-mono); font-size: 1.3rem; font-weight: 600; }
-.tile .s { font-size: .78rem; color: var(--muted); }
-.gate { border-radius: 12px; padding: 14px; display: grid; gap: 6px; background: var(--raise); border: 1px solid var(--line); }
-.gate .state { font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-.state.ok { color: var(--good); } .state.warn { color: var(--warn); } .state.bad { color: var(--bad); } .state.unk { color: var(--muted); }
-.gate .v { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 600; }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; flex-wrap: wrap; }
-.seg button { font: inherit; font-size: .84rem; font-weight: 600; padding: 6px 12px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--muted); display: inline-block; }
+.dot.ok { background: var(--good); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
+.btn { font: inherit; font-size: .84rem; font-weight: 700; border-radius: 9px; padding: 8px 13px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.sy { color: var(--warn); border-color: var(--warn); }
+.btn.danger { background: var(--bad); color: var(--bg); border-color: transparent; }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--accent); padding-inline: 6px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btns { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+select, input, textarea { font: inherit; font-size: .86rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; min-width: 0; max-width: 100%; }
+textarea { width: 100%; min-height: 70px; }
+form.row, .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.row label, form.row label { display: grid; gap: 3px; font-size: .74rem; color: var(--muted); font-weight: 600; }
+.row label.check { display: flex; gap: 6px; align-items: center; padding-bottom: 7px; }
+input[type=number] { width: 7.5em; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; flex-wrap: wrap; background: var(--surface); }
+.seg button { font: inherit; font-size: .84rem; font-weight: 700; padding: 7px 12px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 .seg button:disabled { opacity: .45; cursor: not-allowed; }
-button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+th { text-align: left; font-size: .67rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 7px 9px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 9px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+td.r, th.r { text-align: right; }
+tr.click { cursor: pointer; } tr.click:hover td { background: var(--raise); }
+tr.sub td { font-weight: 600; border-top: 1px solid var(--muted); } tr.total td { font-weight: 700; }
+.scroll { overflow-x: auto; }
+.empty { padding: 16px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: .9rem; }
+.verdict { padding: 10px 12px; border-radius: 10px; font-weight: 700; }
+.verdict.ok { background: var(--good-soft); color: var(--good); } .verdict.warn { background: var(--warn-soft); color: var(--warn); }
+.verdict.bad { background: var(--bad-soft); color: var(--bad); } .verdict.unk { background: var(--raise); color: var(--muted); }
+.basis { font-size: .62rem; font-weight: 800; letter-spacing: .04em; padding: 1px 6px; border-radius: 999px; white-space: nowrap; vertical-align: 1px; }
+.basis.ACTUAL { background: var(--accent-soft); color: var(--accent); } .basis.MODELED { background: var(--raise); color: var(--muted); border: 1px solid var(--line); } .basis.ESTIMATE { background: var(--warn-soft); color: var(--warn); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.tile { background: var(--surface); padding: 12px 14px; display: grid; gap: 2px; align-content: start; }
+.tile .v { font-family: var(--font-mono); font-size: 1.25rem; font-weight: 600; }
+.tile .s { font-size: .78rem; color: var(--muted); }
+svg text { fill: var(--muted); font-family: var(--font-mono); font-size: 10px; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .78rem; color: var(--muted); }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.bar { position: relative; height: 10px; border-radius: 999px; background: var(--raise); border: 1px solid var(--line); overflow: hidden; }
+.bar > i { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 999px; }
+.bar > b { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--ink); opacity: .65; }
+.bar.warn > i { background: var(--warn); } .bar.bad > i { background: var(--bad); }
+
+/* HOME: north star + levers */
+.ns { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 0; padding: 0; overflow: hidden; }
+.ns > div { padding: 18px; display: grid; gap: 8px; align-content: start; }
+.ns > div + div { border-left: 1px solid var(--line); background: var(--raise); }
+.ns .big { font-family: var(--font-mono); font-size: 2.1rem; font-weight: 600; line-height: 1.05; }
+.ns .big small { font-size: .95rem; color: var(--muted); font-weight: 400; }
+.kv { display: flex; justify-content: space-between; gap: 10px; font-size: .87rem; }
+@media (max-width: 720px) { .ns { grid-template-columns: minmax(0, 1fr); } .ns > div + div { border-left: 0; border-top: 1px solid var(--line); } }
+.levers { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.lever { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 14px; display: grid; gap: 7px; align-content: start; box-shadow: var(--shadow); position: relative; }
+.lever::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; border-radius: 12px 0 0 12px; background: var(--line); }
+.lever.ok::before { background: var(--good); } .lever.warn::before { background: var(--warn); } .lever.bad::before { background: var(--bad); }
+.lever .v { font-family: var(--font-mono); font-size: 1.45rem; font-weight: 600; line-height: 1.1; }
+.lever .t { font-size: .8rem; color: var(--muted); }
+.lever .fix { font-size: .8rem; font-weight: 700; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-align: left; font-family: inherit; }
+.eq { font-size: .82rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.eq b { color: var(--ink); font-weight: 700; }
+
+/* HOME: ranked moves */
+.moves { display: grid; gap: 10px; }
+.move { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; gap: 6px 16px; align-items: center; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 16px; box-shadow: var(--shadow); }
+.move .rank { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; background: var(--accent); color: var(--accent-ink); align-self: start; }
+.move.later .rank { background: var(--raise); color: var(--muted); border: 1px solid var(--line); }
+.move .body { display: grid; gap: 6px; min-width: 0; }
+.move .title { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; }
+.move .why { font-size: .88rem; color: var(--muted); }
+.move .facts { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; align-items: center; }
+.move .facts .val { font-family: var(--font-mono); font-weight: 600; font-size: .92rem; }
+.move .cta { display: grid; gap: 6px; justify-items: end; align-self: center; }
+.move .cta .small { text-align: right; max-width: 280px; }
+.track { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
+.track i { display: block; width: 26px; height: 6px; border-radius: 3px; background: var(--line); }
+.track i.done { background: var(--good); } .track i.now { background: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.track span { font-size: .74rem; color: var(--muted); margin-left: 6px; }
+@media (max-width: 640px) { .move { grid-template-columns: 40px minmax(0, 1fr); } .move .cta { grid-column: 1 / -1; justify-items: stretch; } .move .cta .btn { justify-content: center; } .move .cta .small { text-align: left; } }
+.inbox { display: grid; gap: 6px; }
+.inbox .it { display: flex; gap: 10px; align-items: center; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-size: .88rem; flex-wrap: wrap; }
+.inbox .it > span:nth-child(2) { flex: 1 1 240px; min-width: 0; }
+.rules { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .78rem; color: var(--muted); padding: 2px 2px; }
+.rules b { color: var(--ink); }
+details.fold > summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary h2::before { content: "▸ "; color: var(--muted); }
+details.fold[open] > summary h2::before { content: "▾ "; }
+
+/* tasks */
 .acts { display: grid; gap: 8px; }
 .act { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px 12px; align-items: start; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--raise); }
 .act.done { opacity: .55; } .act.overdue { border-color: var(--bad); }
@@ -92,140 +190,130 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .act .t { font-weight: 600; }
 .act .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; font-size: .78rem; color: var(--muted); align-items: center; }
 .act .ctl { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-select, input, textarea { font: inherit; font-size: .86rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-width: 0; max-width: 100%; }
-textarea { width: 100%; min-height: 70px; }
-.btn { font: inherit; font-size: .82rem; font-weight: 700; border-radius: 8px; padding: 7px 11px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; white-space: nowrap; }
-.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
-.btn.sy { color: var(--warn); border-color: var(--warn); }
-.btn.danger { background: var(--bad); color: var(--bg); border-color: transparent; }
-.btn:disabled { opacity: .45; cursor: not-allowed; }
-.btns { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-form.row, .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
-.row label, form.row label { display: grid; gap: 3px; font-size: .74rem; color: var(--muted); font-weight: 600; }
-.row label.check { display: flex; gap: 6px; align-items: center; padding-bottom: 6px; }
-input[type=number] { width: 7.5em; }
-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
-th { text-align: left; font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-td.r, th.r { text-align: right; }
-tr.click { cursor: pointer; } tr.click:hover td { background: var(--raise); }
-tr.sub td { font-weight: 600; border-top: 1px solid var(--muted); } tr.total td { font-weight: 700; }
-.neg { color: var(--bad); } .pos { color: var(--good); }
-.scroll { overflow-x: auto; }
-.verdict { padding: 10px 12px; border-radius: 10px; font-weight: 700; }
-.verdict.ok { background: var(--good-soft); color: var(--good); } .verdict.warn { background: var(--warn-soft); color: var(--warn); }
-.verdict.bad { background: var(--bad-soft); color: var(--bad); } .verdict.unk { background: var(--raise); color: var(--muted); }
-.basis { font-size: .66rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
-.basis.ACTUAL { background: var(--accent-soft); color: var(--accent); } .basis.MODELED { background: var(--line); color: var(--muted); } .basis.ESTIMATE { background: var(--warn-soft); color: var(--warn); }
-svg text { fill: var(--muted); font-family: var(--font-mono); font-size: 10px; }
-.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .78rem; color: var(--muted); }
-.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
-.empty { padding: 14px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: .88rem; }
-.card { border: 1px solid var(--line); border-radius: 12px; background: var(--raise); padding: 14px; display: grid; gap: 10px; min-width: 0; align-content: start; }
-#act-cards { align-items: start; }
-.card > * { min-width: 0; }
+@media (max-width: 560px) { .act { grid-template-columns: minmax(0, 1fr); } .act .ctl { justify-content: flex-start; } }
+
+/* JOURNEYS */
+.lanes { display: grid; gap: 14px; }
+.lane { display: grid; gap: 8px; }
+.lane > .eyebrow { padding-left: 2px; }
+.flow { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(176px, 1fr); gap: 22px; overflow-x: auto; padding: 4px 2px 8px; }
+.node { position: relative; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 12px; display: grid; gap: 5px; align-content: start; cursor: pointer; text-align: left; font: inherit; color: var(--ink); box-shadow: var(--shadow); }
+.node:hover { border-color: var(--accent); }
+.flow > .node:not(:last-child)::after, .flow > .stack:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 700; }
+.node .nm { font-weight: 700; font-size: .86rem; line-height: 1.25; }
+.node .ct { font-family: var(--font-mono); font-size: 1.35rem; font-weight: 600; }
+.node .sb { font-size: .76rem; color: var(--muted); }
+.node.hot { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.node.quiet { background: var(--raise); box-shadow: none; }
+.node .st { display: flex; gap: 6px; flex-wrap: wrap; }
+.stack { display: grid; gap: 8px; position: relative; }
+.flow.free > *::after { content: none !important; }
+
+/* AUDIENCES */
+.pipe { display: inline-flex; gap: 2px; }
+.pipe i { width: 14px; height: 6px; border-radius: 2px; background: var(--line); display: block; }
+.pipe i.done { background: var(--good); } .pipe i.now { background: var(--accent); }
+
+/* drawer */
+.drawer { position: fixed; inset: 0; z-index: 30; background: rgba(6, 14, 10, .45); display: flex; justify-content: flex-end; }
+.drawer > div { width: min(640px, 100%); height: 100%; overflow: auto; background: var(--bg); border-left: 1px solid var(--line);
+  padding-block: calc(18px + env(safe-area-inset-top, 0px)) calc(28px + env(safe-area-inset-bottom, 0px));
+  padding-left: 20px; padding-right: max(20px, env(safe-area-inset-right, 0px)); display: grid; gap: 14px; align-content: start; }
+.dhead { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.dhead > div { display: grid; gap: 6px; min-width: 0; }
+.facts2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.facts2 > div { background: var(--surface); padding: 10px 12px; display: grid; gap: 2px; }
+.facts2 .v { font-family: var(--font-mono); font-weight: 600; font-size: 1.1rem; }
+.rule { font-family: var(--font-mono); font-size: .8rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 4px; }
+.rule span::before { content: "where "; color: var(--muted); }
+.rule span + span::before { content: "and "; }
 .steps { display: grid; gap: 8px; }
-.step { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 4px 10px; align-items: start; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
-.step .n { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: .78rem; background: var(--line); color: var(--muted); }
-.step.done .n { background: var(--good); color: var(--bg); }
-.step.next .n { background: var(--accent); color: var(--accent-ink); }
+.step { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 4px 10px; align-items: start; padding: 11px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); }
+.step .n { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: .78rem; background: var(--raise); color: var(--muted); border: 1px solid var(--line); }
+.step.done { background: var(--raise); } .step.done .n { background: var(--good); color: var(--bg); border-color: transparent; }
+.step.next { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); } .step.next .n { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
 .step > div { display: grid; gap: 6px; min-width: 0; }
-.log { font-family: var(--font-mono); font-size: .74rem; color: var(--muted); white-space: pre-wrap; word-break: break-word; max-height: 160px; overflow: auto; background: var(--bg); border-radius: 8px; padding: 8px; }
-.drawer { position: fixed; inset: 0; z-index: 30; background: rgba(0,0,0,.45); display: flex; justify-content: flex-end; }
-.drawer > div { width: min(560px, 100%); height: 100%; overflow: auto; background: var(--surface); border-left: 1px solid var(--line);
-  padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px));
-  padding-left: 18px; padding-right: max(18px, env(safe-area-inset-right, 0px)); display: grid; gap: 14px; align-content: start; }
+.log { font-family: var(--font-mono); font-size: .74rem; color: var(--muted); white-space: pre-wrap; word-break: break-word; max-height: 160px; overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
 .timeline { display: grid; gap: 8px; }
-.tl { display: grid; grid-template-columns: 90px minmax(0, 1fr) auto; gap: 8px; padding: 8px 10px; border-radius: 8px; background: var(--raise); font-size: .86rem; }
-.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 999px; font-size: .85rem; font-weight: 600; z-index: 40; max-width: calc(100% - 32px); }
-footer { font-size: .78rem; color: var(--muted); display: grid; gap: 4px; }
-a { color: var(--accent); }
-@media (max-width: 560px) { .act { grid-template-columns: minmax(0, 1fr); } .act .ctl { justify-content: flex-start; } .tl { grid-template-columns: 1fr; } }
-@media (prefers-reduced-motion: no-preference) { .bar > i { transition: width .3s ease; } }
+.tl { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 8px; padding: 9px 11px; border-radius: 9px; background: var(--surface); border: 1px solid var(--line); font-size: .86rem; }
+@media (max-width: 560px) { .tl { grid-template-columns: 1fr; } }
+.card { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 14px; display: grid; gap: 8px; min-width: 0; align-content: start; }
+
+/* CONNECTIONS */
+.pipeline { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, .8fr) auto minmax(0, 1fr); gap: 12px; align-items: center; }
+.pipeline .col { display: grid; gap: 8px; min-width: 0; }
+.pipeline .arrow { color: var(--muted); font-size: 1.4rem; font-weight: 700; }
+.conn { border: 1px solid var(--line); border-radius: 11px; background: var(--surface); padding: 10px 12px; display: grid; gap: 4px; min-width: 0; }
+.conn .h { display: flex; gap: 8px; align-items: center; font-weight: 700; font-size: .88rem; }
+.conn .d { font-size: .77rem; color: var(--muted); }
+.core { border-radius: 14px; background: var(--nav); color: var(--nav-ink); padding: 16px; display: grid; gap: 6px; text-align: center; }
+.core b { color: var(--nav-hi); font-family: var(--font-display); font-size: 1.05rem; }
+.core .num { color: var(--nav-hi); }
+@media (max-width: 860px) { .pipeline { grid-template-columns: minmax(0, 1fr); } .pipeline .arrow { transform: rotate(90deg); justify-self: center; } }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 999px; font-size: .86rem; font-weight: 600; z-index: 40; max-width: calc(100% - 32px); }
+footer { font-size: .78rem; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .bar > i { transition: width .3s ease; } .move, .node { transition: border-color .15s ease; } }
 </style>
 
-<div class="top"><div class="top-in">
-  <div class="brandrow"><span class="brand">Comfort Fresh CDP<small>$100k / month north star</small></span><div class="chips" id="chips"></div></div>
-  <nav class="tabs" aria-label="Sections">
-    <a href="#today" data-v="today">Today</a><a href="#customers" data-v="customers">Customers</a><a href="#act" data-v="act">Act</a>
-    <a href="#revenue" data-v="revenue">Revenue &amp; Profit</a><a href="#plan" data-v="plan">Plan</a><a href="#data" data-v="data">Data</a>
+<div class="app">
+<aside class="side">
+  <div class="logo"><b>Comfort Fresh CDP</b><span>Grow to $100k / month</span></div>
+  <nav class="menu" aria-label="Sections">
+    <div class="grp"><span>Act</span><a href="#home" data-v="home">Home <em class="badge hot" id="nb-home" hidden></em></a><a href="#journeys" data-v="journeys">Journeys</a><a href="#audiences" data-v="audiences">Audiences <em class="badge" id="nb-aud" hidden></em></a></div>
+    <div class="grp"><span>Know</span><a href="#profiles" data-v="profiles">Profiles <em class="badge" id="nb-prof" hidden></em></a><a href="#insights" data-v="insights">Insights</a></div>
+    <div class="grp"><span>Data</span><a href="#connections" data-v="connections">Connections <em class="badge hot" id="nb-conn" hidden></em></a></div>
   </nav>
-</div></div>
+  <div class="side-foot"><span>Rules the app enforces</span><span><b>Sy OK</b> before any send · <b>≤3</b> emails / 30 days · subscribed only · no Omnisend + Gmail same week · CAC target <b>$70</b> · Wool Wave C on <b>HOLD</b></span></div>
+</aside>
+<main><div class="main-in">
+  <div class="statusbar" id="chips"></div>
 
-<div class="wrap">
-  <div class="guard" role="note">
-    <span><b>No send</b>, <b>no Shopify change</b>, no budget step above $8k/mo without Sy's OK</span>
-    <span>≤3 marketing emails / 30 days · never Omnisend + Gmail marketing the same week · subscribed contacts only</span>
-    <span>CAC planned at <b>$70</b>: first order ≈ break-even, profit from repeat orders</span>
-    <span>Wool Wave C: <b>HOLD</b></span>
-  </div>
-
-  <!-- TODAY -->
-  <section class="view" id="v-today" aria-label="Today">
-    <div class="alerts" id="alerts"><div class="empty">Loading the board…</div></div>
-    <div class="grid3">
-      <div class="panel score" id="sc-month"><span class="eyebrow">This month</span><div class="empty">Loading…</div></div>
-      <div class="panel score" id="sc-run"><span class="eyebrow">Run-rate vs $100k</span><div class="empty">Loading…</div></div>
-      <div class="panel score" id="sc-next"><span class="eyebrow">Plan + profit engine</span><div class="empty">Loading…</div></div>
-    </div>
-    <section class="panel"><div class="panel-head"><h2>The three gates</h2><span class="small muted">All three must hold to reach $100k</span></div><div class="grid3" id="gates"></div></section>
-    <section class="panel">
-      <div class="panel-head"><h2>Action board</h2>
-        <div class="btns"><div class="seg" id="a-tabs" role="group" aria-label="Filter actions"><button type="button" data-f="week" aria-pressed="true">Next 7 days</button><button type="button" data-f="open" aria-pressed="false">All open</button><button type="button" data-f="sy" aria-pressed="false">Waiting on Sy</button><button type="button" data-f="done" aria-pressed="false">Done</button></div>
-        <button class="btn" type="button" data-export="actions-csv">CSV</button></div></div>
-      <div class="acts" id="acts"><div class="empty">Loading actions…</div></div>
+  <!-- HOME -->
+  <section class="view" id="v-home" aria-label="Home">
+    <div class="phead"><div><span class="eyebrow" id="h-date"></span><h1>Do these next to grow</h1><p>Ranked by deadline and dollars. Each move runs end to end from here: build the list, sync it to Omnisend, draft, test, get Sy's OK, send.</p></div></div>
+    <div class="panel ns" id="ns"><div><div class="empty">Loading the board…</div></div><div></div></div>
+    <div class="moves" id="moves"></div>
+    <section class="panel"><div class="panel-head"><h2>Growth levers</h2><span class="eq" id="eq"></span></div><div class="levers" id="levers"></div></section>
+    <section class="panel" id="inbox-p"><div class="panel-head"><h2>Needs attention</h2><span class="small muted">Approvals, overdue work and stale data</span></div><div class="inbox" id="inbox"></div></section>
+    <details class="panel fold" id="later-p"><summary><h2>Up next</h2><span class="small muted" id="later-n"></span></summary><div class="moves" id="later"></div></details>
+    <details class="panel fold" id="tasks-p"><summary><h2>Team tasks</h2><span class="small muted">Everything on the board, with owners</span></summary>
+      <div class="panel-head"><div class="seg" id="a-tabs" role="group" aria-label="Filter tasks"><button type="button" data-f="week" aria-pressed="true">Next 7 days</button><button type="button" data-f="open" aria-pressed="false">All open</button><button type="button" data-f="sy" aria-pressed="false">Waiting on Sy</button><button type="button" data-f="done" aria-pressed="false">Done</button></div><button class="btn" type="button" data-export="actions-csv">CSV</button></div>
+      <div class="acts" id="acts"></div>
       <form class="row" id="a-form" hidden>
-        <label style="flex:1 1 240px">New action<input id="a-title" required maxlength="160" placeholder="What has to happen"></label>
+        <label style="flex:1 1 240px">New task<input id="a-title" required maxlength="160" placeholder="What has to happen"></label>
         <label>Owner<select id="a-owner"><option>CF Retention</option><option>CF Meta Ads</option><option>CoS</option><option>CF CS</option><option>Sy</option></select></label>
         <label>Due<input id="a-due" type="date" required></label>
         <label class="check"><input id="a-sy" type="checkbox"> Needs Sy OK</label>
-        <button class="btn primary" type="submit">Add</button>
+        <button class="btn primary" type="submit">Add task</button>
       </form>
-    </section>
-    <div class="grid2">
-      <section class="panel">
-        <div class="panel-head"><h2>Meta daily log</h2><span class="small muted">CAC = spend ÷ new customers in Shopify</span></div>
-        <div id="m-verdict" class="verdict unk">No Meta numbers yet.</div>
-        <form class="row" id="m-form" hidden>
-          <label>Day<input id="m-date" type="date" required></label>
-          <label>Spend $<input id="m-spend" type="number" min="0" step="0.01" required></label>
-          <label>Meta purchases<input id="m-purch" type="number" min="0" step="1" required></label>
-          <label>Purchase value $<input id="m-val" type="number" min="0" step="0.01"></label>
-          <label>New customers<input id="m-new" type="number" min="0" step="1" placeholder="auto"></label>
-          <button class="btn primary" type="submit">Save day</button>
-        </form>
-        <p class="small muted">Leave "New customers" empty to use Shopify first orders on that day from the CDP. Bulk upload an Ads Manager export on the Data tab.</p>
-        <div class="scroll"><table id="m-table"></table></div>
-      </section>
-      <section class="panel">
-        <div class="panel-head"><h2>Email sends log</h2><span class="small muted">Omnisend sends from the Act tab log here automatically</span></div>
-        <form class="row" id="s-form" hidden>
-          <label style="flex:1 1 180px">Who<select id="s-seg"></select></label>
-          <label>Date<input id="s-date" type="date" required></label>
-          <label>Channel<select id="s-ch"><option>Omnisend</option><option>Gmail 1:1</option></select></label>
-          <label style="flex:1 1 160px">Email<input id="s-name" required maxlength="120" placeholder="e.g. BFCM ends Monday"></label>
-          <label class="check"><input id="s-ok" type="checkbox" required> Sy approved</label>
-          <button class="btn primary" type="submit">Check + log</button>
-        </form>
-        <div id="s-check" class="small"></div>
-        <div class="scroll"><table id="s-table"></table></div>
-      </section>
-    </div>
-    <section class="panel"><div class="panel-head"><h2>Plan vs actual</h2><div class="legend"><span><i class="sw" style="background:var(--actual)"></i>Actual</span><span><i class="sw" style="background:var(--live)"></i>This month</span><span><i class="sw" style="background:var(--plan)"></i>Plan</span></div></div><div id="chart"></div></section>
+    </details>
   </section>
 
-  <!-- CUSTOMERS -->
-  <section class="view" id="v-customers" aria-label="Customers" hidden>
+  <!-- JOURNEYS -->
+  <section class="view" id="v-journeys" aria-label="Journeys" hidden>
+    <div class="phead"><div><span class="eyebrow">Lifecycle</span><h1>Where every customer is right now</h1><p>Customers move left to right as days pass since their last order. Each stage is an audience with its own offer and timing. Tap a stage to work it.</p></div><div class="legend"><span><span class="dot ok"></span> campaign sent</span><span><span class="dot warn"></span> in progress</span><span class="chip acc">Do now</span></div></div>
+    <div class="lanes" id="lanes"></div>
+  </section>
+
+  <!-- AUDIENCES -->
+  <section class="view" id="v-audiences" aria-label="Audiences" hidden>
+    <div class="phead"><div><span class="eyebrow">Engage</span><h1>Audiences</h1><p>Every customer sits in exactly one audience, picked by the first rule they match, top to bottom. Open one to see who is in it, the offer, the schedule, and to activate it in Omnisend.</p></div>
+      <div class="btns"><span class="small muted" id="omni-status">Omnisend: not checked yet</span><button class="btn" type="button" data-consent="1">Sync consent from Omnisend</button></div></div>
+    <p class="small muted" id="consent-note"></p>
+    <section class="panel"><div class="scroll"><table id="aud-table"></table></div></section>
+    <section class="panel"><div class="panel-head"><h2>Campaign history</h2><button class="btn" type="button" data-export="campaigns-csv">CSV</button></div><div class="scroll"><table id="camp-table"></table></div></section>
+  </section>
+
+  <!-- PROFILES -->
+  <section class="view" id="v-profiles" aria-label="Profiles" hidden>
+    <div class="phead"><div><span class="eyebrow">Unify</span><h1>Profiles</h1><p>One profile per email address, with every order from first to latest, lifetime value, and the next product to offer.</p></div>
+      <div class="btns"><button class="btn" type="button" data-export="cust-csv">CSV</button><button class="btn" type="button" data-export="cust-xlsx">Excel</button><button class="btn" type="button" data-export="cust-pdf">PDF</button></div></div>
     <div class="tiles" id="c-tiles"></div>
-    <section class="panel">
-      <div class="panel-head"><h2>LTV by first-order month</h2><span class="small muted">Net revenue after discounts and refunds; profit after product, shipping and $70 CAC on new customers</span></div>
-      <div class="scroll"><table id="c-cohorts"></table></div>
-    </section>
     <section class="panel" id="c-list">
-      <div class="panel-head"><h2>Every customer</h2><div class="btns"><button class="btn" type="button" data-export="cust-csv">CSV</button><button class="btn" type="button" data-export="cust-xlsx">Excel</button><button class="btn" type="button" data-export="cust-pdf">PDF</button></div></div>
       <div class="row">
-        <label style="flex:1 1 200px">Search<input id="c-q" placeholder="Name, email or order #"></label>
-        <label>Group<select id="c-seg"><option value="">All groups</option></select></label>
+        <label style="flex:1 1 220px">Search<input id="c-q" placeholder="Name, email or order #"></label>
+        <label>Audience<select id="c-seg"><option value="">All audiences</option></select></label>
         <label>Sock size<select id="c-size"><option value="">All sizes</option><option>13-15</option><option>10-13</option><option>9-11</option></select></label>
         <label>Email consent<select id="c-sub"><option value="">Any</option><option value="subscribed">Subscribed</option><option value="unsubscribed">Unsubscribed</option><option value="not subscribed">Not subscribed</option></select></label>
         <label>Orders<select id="c-ord"><option value="">Any</option><option value="1">1 order</option><option value="2">2+ orders</option></select></label>
@@ -237,78 +325,96 @@ a { color: var(--accent); }
     </section>
   </section>
 
-  <!-- ACT -->
-  <section class="view" id="v-act" aria-label="Act" hidden>
-    <section class="panel">
-      <div class="panel-head"><h2>Who to work this week</h2><div class="btns"><span class="small muted" id="omni-status">Omnisend: not checked yet</span><button class="btn" type="button" data-consent="1">Sync consent from Omnisend</button></div></div>
-      <p class="small muted" id="consent-note"></p>
-      <p class="small muted">Each group runs the same path: sync the list to Omnisend as a tag → build a segment of those tagged contacts who are <b>subscribed</b> → create a draft from your template → send yourself a test → Sy approves → send or schedule. Sends log to the Today tab and count toward the 3-per-30-days cap.</p>
-      <div class="grid2" id="act-cards"><div class="empty">Loading customers…</div></div>
-    </section>
-    <section class="panel">
-      <div class="panel-head"><h2>Campaign history</h2><button class="btn" type="button" data-export="campaigns-csv">CSV</button></div>
-      <div class="scroll"><table id="camp-table"></table></div>
-    </section>
-  </section>
-
-  <!-- REVENUE -->
-  <section class="view" id="v-revenue" aria-label="Revenue and profit" hidden>
-    <div class="row">
-      <div><span class="eyebrow">Period</span><div class="seg" id="r-period"></div></div>
-      <div><span class="eyebrow">Media</span><div class="seg" id="r-scen"></div></div>
-      <div class="btns" style="margin-left:auto"><button class="btn" type="button" data-export="pnl-pdf">PDF</button><button class="btn" type="button" data-export="pnl-xlsx">Excel</button></div>
+  <!-- INSIGHTS -->
+  <section class="view" id="v-insights" aria-label="Insights" hidden>
+    <div class="phead"><div><span class="eyebrow">Measure</span><h1>Insights</h1><p>Revenue and profit, the path to $100k a month, and lifetime value by when customers first bought.</p></div>
+      <div class="seg" id="ins-tabs" role="group" aria-label="Insight"><button type="button" data-ins="revenue" aria-pressed="true">Revenue &amp; profit</button><button type="button" data-ins="plan" aria-pressed="false">Path to $100k</button><button type="button" data-ins="ltv" aria-pressed="false">LTV cohorts</button></div></div>
+    <div id="ins-revenue" class="view">
+      <div class="row">
+        <div><span class="eyebrow">Period</span><div class="seg" id="r-period"></div></div>
+        <div><span class="eyebrow">Media</span><div class="seg" id="r-scen"></div></div>
+        <div class="btns" style="margin-left:auto"><button class="btn" type="button" data-export="pnl-pdf">PDF</button><button class="btn" type="button" data-export="pnl-xlsx">Excel</button></div>
+      </div>
+      <div class="tiles" id="r-kpis"></div>
+      <div class="grid2">
+        <section class="panel"><div class="panel-head"><h2>Modeled P&amp;L</h2><span class="small muted" id="r-range"></span></div>
+          <div class="scroll"><table id="r-pnl"></table></div><div class="verdict unk" id="r-verdict"></div><div class="scroll"><table id="r-split"></table></div><div class="scroll"><table id="r-scens"></table></div></section>
+        <div class="view">
+          <section class="panel"><div class="panel-head"><h2>Monthly sales</h2><div class="legend"><span><i class="sw" style="background:var(--actual)"></i>First orders</span><span><i class="sw" style="background:var(--rep)"></i>Repeat orders</span></div></div><div id="r-trend"></div></section>
+          <section class="panel"><div class="panel-head"><h2>Plan vs actual</h2><div class="legend"><span><i class="sw" style="background:var(--actual)"></i>Actual</span><span><i class="sw" style="background:var(--live)"></i>This month</span><span><i class="sw" style="background:var(--plan)"></i>Plan</span></div></div><div id="chart"></div></section>
+        </div>
+      </div>
     </div>
-    <div class="tiles" id="r-kpis"></div>
-    <div class="grid2">
-      <section class="panel"><div class="panel-head"><h2>Modeled P&amp;L</h2><span class="small muted" id="r-range"></span></div>
-        <div class="scroll"><table id="r-pnl"></table></div><div class="verdict unk" id="r-verdict"></div><div class="scroll"><table id="r-split"></table></div><div class="scroll"><table id="r-scens"></table></div></section>
-      <section class="panel"><div class="panel-head"><h2>Monthly sales</h2><div class="legend"><span><i class="sw" style="background:var(--actual)"></i>First orders</span><span><i class="sw" style="background:var(--rep)"></i>Repeat orders</span></div></div><div id="r-trend"></div></section>
+    <div id="ins-plan" class="view" hidden>
+      <section class="panel"><div class="panel-head"><h2 id="p-head">The path to $100k / month</h2><button class="btn" type="button" data-export="plan-xlsx">Excel</button></div><div class="tiles" id="p-need"></div></section>
+      <section class="panel"><div class="panel-head"><h2>Month by month</h2><span class="small muted">MODELED · first orders break even at $70 CAC; repeat orders carry the profit</span></div><div class="scroll"><table id="p-months"></table></div></section>
+      <section class="panel"><div class="panel-head"><h2>Strategic moves</h2></div><div class="acts" id="p-moves"></div></section>
+      <section class="panel"><div class="panel-head"><h2>What the order history says</h2></div><div class="grid2" id="p-finds"></div></section>
+    </div>
+    <div id="ins-ltv" class="view" hidden>
+      <section class="panel"><div class="panel-head"><h2>LTV by first-order month</h2><span class="small muted">Net revenue after discounts and refunds; profit after product, shipping and $70 CAC</span></div><div class="scroll"><table id="c-cohorts"></table></div></section>
     </div>
   </section>
 
-  <!-- PLAN -->
-  <section class="view" id="v-plan" aria-label="Plan" hidden>
-    <section class="panel"><div class="panel-head"><h2 id="p-head">The path to $100k / month</h2><button class="btn" type="button" data-export="plan-xlsx">Excel</button></div><div class="tiles" id="p-need"></div></section>
-    <section class="panel"><div class="panel-head"><h2>Month by month</h2><span class="small muted">MODELED · first orders break even at $70 CAC; repeat orders carry the profit</span></div><div class="scroll"><table id="p-months"></table></div></section>
-    <section class="panel"><div class="panel-head"><h2>Ranked moves</h2></div><div class="acts" id="p-moves"></div></section>
-    <section class="panel"><div class="panel-head"><h2>What the order history says</h2></div><div class="grid3" id="p-finds"></div></section>
-  </section>
-
-  <!-- DATA -->
-  <section class="view" id="v-data" aria-label="Data" hidden>
-    <section class="panel"><div class="panel-head"><h2>Connections</h2></div><div class="scroll"><table id="d-conn"></table></div></section>
+  <!-- CONNECTIONS -->
+  <section class="view" id="v-connections" aria-label="Connections" hidden>
+    <div class="phead"><div><span class="eyebrow">Connections</span><h1>Sources and destinations</h1><p>Data flows in from Shopify, Meta and Omnisend, is unified by email into profiles and audiences, and flows out to Omnisend, Gmail and files.</p></div></div>
+    <section class="panel"><div class="pipeline" id="pipeline"></div></section>
     <div class="grid2">
-      <section class="panel">
-        <div class="panel-head"><h2>Upload Shopify orders</h2><span class="small muted">CSV or Excel · order export</span></div>
-        <div class="btns"><button class="btn primary" type="button" data-pull="1">Pull new orders from Shopify</button><span class="small muted">Live, through your Shopify connector (Comfort Fresh only).</span></div>
-        <p class="small muted">Or upload a file. Accepts the one-row-per-order export or Shopify's standard Orders export. New orders merge into each customer by email; existing orders are skipped. Cancelled and unpaid orders are ignored.</p>
+      <section class="panel" id="sec-orders">
+        <div class="panel-head"><h2>Shopify orders</h2><span class="small muted">Comfort Fresh store only</span></div>
+        <div class="btns"><button class="btn primary" type="button" data-pull="1">Pull new orders from Shopify</button></div>
+        <p class="small muted">Or upload the order export (CSV or Excel). New orders merge into each profile by email; orders already in the CDP are skipped; cancelled and unpaid orders are ignored.</p>
         <input type="file" id="d-orders" accept=".csv,.xlsx,.xls">
         <div id="d-orders-out" class="small"></div>
       </section>
-      <section class="panel">
-        <div class="panel-head"><h2>Upload Meta Ads export</h2><span class="small muted">Ads Manager · CSV or Excel</span></div>
-        <p class="small muted">With a Day breakdown each day becomes a row in the Meta log; without it the report's period is logged as one entry. New customers come from Shopify first orders in the CDP for the same dates.</p>
+      <section class="panel" id="sec-meta">
+        <div class="panel-head"><h2>Meta Ads</h2><span class="small muted">CAC = spend ÷ new customers in Shopify</span></div>
+        <div id="m-verdict" class="verdict unk">No Meta numbers yet.</div>
+        <form class="row" id="m-form" hidden>
+          <label>Day<input id="m-date" type="date" required></label>
+          <label>Spend $<input id="m-spend" type="number" min="0" step="0.01" required></label>
+          <label>Meta purchases<input id="m-purch" type="number" min="0" step="1" required></label>
+          <label>Purchase value $<input id="m-val" type="number" min="0" step="0.01"></label>
+          <label>New customers<input id="m-new" type="number" min="0" step="1" placeholder="auto"></label>
+          <button class="btn primary" type="submit">Log day</button>
+        </form>
+        <p class="small muted">Or upload an Ads Manager export (CSV or Excel). Leave "New customers" empty to count Shopify first orders that day.</p>
         <input type="file" id="d-meta" accept=".csv,.xlsx,.xls">
         <div id="d-meta-out" class="small"></div>
+        <div class="scroll"><table id="m-table"></table></div>
       </section>
     </div>
-    <section class="panel"><div class="panel-head"><h2>Exports</h2></div>
+    <section class="panel" id="sec-sends">
+      <div class="panel-head"><h2>Email send log</h2><span class="small muted">Omnisend sends log here automatically. Log Gmail or manual sends so the caps stay right.</span></div>
+      <form class="row" id="s-form" hidden>
+        <label style="flex:1 1 180px">Audience<select id="s-seg"></select></label>
+        <label>Date<input id="s-date" type="date" required></label>
+        <label>Channel<select id="s-ch"><option>Omnisend</option><option>Gmail 1:1</option></select></label>
+        <label style="flex:1 1 160px">Email<input id="s-name" required maxlength="120" placeholder="e.g. BFCM ends Monday"></label>
+        <label class="check"><input id="s-ok" type="checkbox" required> Sy approved</label>
+        <button class="btn primary" type="submit">Check + log</button>
+      </form>
+      <div id="s-check" class="small"></div>
+      <div class="scroll"><table id="s-table"></table></div>
+    </section>
+    <section class="panel"><div class="panel-head"><h2>Exports</h2><span class="small muted">Customer files contain emails. Keep them inside Comfort Fresh.</span></div>
       <div class="btns">
         <button class="btn primary" type="button" data-export="all-xlsx">Full workbook (Excel)</button>
-        <button class="btn" type="button" data-export="cust-csv">Customers CSV</button>
+        <button class="btn" type="button" data-export="cust-csv">Profiles CSV</button>
         <button class="btn" type="button" data-export="orders-csv">Orders CSV</button>
         <button class="btn" type="button" data-export="pnl-pdf">P&amp;L PDF</button>
-        <button class="btn" type="button" data-export="actions-csv">Actions CSV</button>
+        <button class="btn" type="button" data-export="actions-csv">Tasks CSV</button>
         <button class="btn" type="button" data-export="meta-csv">Meta log CSV</button>
       </div>
-      <p class="small muted">Customer files contain emails. Keep them inside Comfort Fresh.</p>
     </section>
     <section class="panel"><div class="panel-head"><h2>Import history</h2></div><div class="scroll"><table id="d-imports"></table></div></section>
   </section>
 
-  <footer><span id="foot">Data: Shopify order history in the CDP database. Forward months, media and net are MODELED.</span></footer>
+  <footer id="foot">Numbers marked ACTUAL come from Shopify orders and logged Meta spend. MODELED numbers use the $70 CAC plan, $0.85 per pair, $7.50 shipping per order.</footer>
+</div></main>
 </div>
-<div class="drawer" id="drawer" hidden><div id="drawer-in" role="dialog" aria-modal="true" aria-label="Customer"></div></div>
+<div class="drawer" id="drawer" hidden><div id="drawer-in" role="dialog" aria-modal="true" aria-label="Details"></div></div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -325,7 +431,7 @@ const SEG_LABEL = { recent: "Just ordered (0–6 days)", service: "Refund, never
 const TEMPLATE_HINT = { wave_a: "Wave A", dormant: "COMEBACK15" };
 
 // ============================================================== state + utils
-const S = { db: null, user: null, me: null, canEdit: false, canWrite: null, names: {}, view: "today",
+const S = { db: null, user: null, me: null, canEdit: false, canWrite: null, names: {}, view: "", ins: "revenue", drawer: null,
   shards: {}, cust: [], orders: [], calc: null, sb: null, mag: null, consent: null, actions: [], meta: [], sends: [], camps: [], imports: [],
   live: null, liveState: "pending", mcp: null, omni: { primed: {}, brand: null, templates: null }, filter: "week",
   rPeriod: "30d", rScen: "cac70", cPage: 0, pendingImport: null, form: {}, snap: null, dbSnap: null };
@@ -490,7 +596,7 @@ function custAgg() {
 function buildSnapshot() {
   const { asOf, periods, trend, last30 } = S.calc, segs = {};
   Object.keys(S.calc.segs).forEach((k) => (segs[k] = { n: segN(k), sub: segSub(k) }));
-  return { v: 1, at: nowIso(), asOf, sig: snapSig(), calc: { asOf, periods, trend, last30 }, segs, cust: custAgg(), consent: S.consent ? { at: S.consent.at, sub: S.consentSub.size } : null };
+  return { v: 1, at: nowIso(), asOf, sig: snapSig(), repAov: repAov(), calc: { asOf, periods, trend, last30 }, segs, cust: custAgg(), consent: S.consent ? { at: S.consent.at, sub: S.consentSub.size } : null };
 }
 const snapSig = () => [S.calc.asOf, S.orders.length, S.meta.length, S.meta.reduce((a, r) => a + (+r.spend || 0), 0).toFixed(2), S.consent ? S.consent.at : "", S.mag ? S.mag.as_of : ""].join("|");
 let snapT;
@@ -534,34 +640,7 @@ function capCheck(seg, date, channel) {
 }
 function segLabel(k) { return k === "all" ? "Everyone subscribed (BFCM / holiday)" : (S.mag && S.mag.segment_meta[k] ? S.mag.segment_meta[k].label : SEG_LABEL[k] || k); }
 
-// ============================================================== routing
-const VIEWS = ["today", "customers", "act", "revenue", "plan", "data"];
-function route() {
-  const h = (location.hash || "").replace("#", "");
-  S.view = VIEWS.includes(h) ? h : "today";
-  VIEWS.forEach((v) => ($("v-" + v).hidden = v !== S.view));
-  document.querySelectorAll("nav.tabs a").forEach((a) => (a.dataset.v === S.view ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
-  render();
-}
-window.addEventListener("hashchange", route);
-
-// ============================================================== render: shell
-function render() {
-  if (S.dirty) { compute(); S.dirty = false; }
-  renderChips();
-  ({ today: renderToday, customers: renderCustomers, act: renderAct, revenue: renderRevenue, plan: renderPlan, data: renderData })[S.view]();
-}
-function renderChips() {
-  const c = [`<span class="chip acc">Shop lock · Comfort Fresh</span>`];
-  if (S.calc) c.push(`<span class="chip">Orders through ${esc(S.calc.asOf)}</span>`);
-  c.push(S.liveState === "live" ? `<span class="chip ok">Shopify live</span>` : `<span class="chip">Shopify live: ${S.liveState === "pending" ? "connecting…" : "off"}</span>`);
-  if (S.snap) c.push(`<span class="chip warn">Presentation view · totals as of ${esc(S.snap.asOf)}</span>`);
-  if (S.db === false && !S.snap) c.push(`<span class="chip warn">Sign in to claude.ai to use the CDP</span>`);
-  else if (S.canWrite === false) c.push(`<span class="chip warn">Read-only</span>`);
-  $("chips").innerHTML = c.join("");
-}
-
-// ============================================================== TODAY
+// ============================================================== shared renderers
 function monthNow() {
   const t = today(), m = t.slice(0, 7), day = +t.slice(8, 10);
   if (S.live && S.live.month === m) return { m, sales: S.live.sales, day, src: "live" };
@@ -569,62 +648,6 @@ function monthNow() {
   return { m, sales: null, day, src: "none" };
 }
 const planFor = (m) => (S.sb ? S.sb.plan_months.find((p) => p.month === m) : null);
-function renderToday() {
-  const t = today();
-  // alerts
-  const out = [];
-  if (!S.sb || !S.calc) { $("alerts").innerHTML = `<div class="empty">${S.db === false ? "Open this page signed in to claude.ai to load the CDP." : "Loading the board…"}</div>`; }
-  else {
-    const age = daysBetween(S.calc.asOf, t);
-    if (age >= 1) out.push(["warn", `Customer orders in the CDP end ${S.calc.asOf}. ${S.canEdit ? `<button class="btn" type="button" data-pull="1">Pull new orders from Shopify</button>` : "An Editor can pull new orders from Shopify on the Data tab."}`]);
-    const overdue = S.actions.filter((a) => a.status !== "done" && a.due < t);
-    if (overdue.length) out.push(["bad", `${overdue.length} action${overdue.length > 1 ? "s" : ""} overdue: ${overdue.slice(0, 3).map((a) => esc(a.title)).join(" · ")}${overdue.length > 3 ? " …" : ""}`]);
-    const sy = S.actions.filter((a) => a.needs_sy && !a.sy_ok && a.status !== "done" && a.due <= addDays(t, 7));
-    if (sy.length) out.push(["warn", `${sy.length} waiting on Sy's OK this week: ${sy.slice(0, 3).map((a) => esc(a.title)).join(" · ")}`]);
-    const syC = S.camps.filter((c) => c.status === "tested" || c.status === "draft");
-    if (syC.length) out.push(["warn", `${syC.length} Omnisend draft${syC.length > 1 ? "s" : ""} waiting for test / Sy OK on the Act tab.`]);
-    if (!S.meta.some((r) => r.date === addDays(t, -1) || (r.start && r.start <= addDays(t, -1) && r.date >= addDays(t, -1)))) out.push(["warn", `Meta numbers for ${addDays(t, -1)} not logged yet.`]);
-    const v = metaVerdict(); if (v.cls === "bad") out.push(["bad", esc(v.text)]);
-    const mn = monthNow(), plan = planFor(mn.m);
-    if (mn.sales != null && plan) { const pace = mn.sales / Math.max(mn.day, 1) * daysInMonth(mn.m); if (pace < plan.revenue_usd * 0.9) out.push(["bad", `Month pacing ${usd(pace)} vs plan ${usd(plan.revenue_usd)}.`]); }
-    if (S.snap) out.unshift(["ok", `Presentation view: business totals as of ${esc(S.snap.asOf)} (refreshed ${esc(S.snap.at.slice(0, 16).replace("T", " "))} UTC). Customer names, emails and actions are only visible to invited team members in claude.ai.`]);
-    if (!out.length) out.push(["ok", "Nothing on fire. Work the board."]);
-    $("alerts").innerHTML = out.map(([c, x]) => `<div class="alert ${c}"><span class="dot"></span><span>${x}</span></div>`).join("");
-  }
-  if (S.sb && S.calc) renderScore();
-  renderGates(); renderActions(); renderMeta(); renderSends(); renderPlanChart();
-}
-function renderScore() {
-  const mn = monthNow(), dim = daysInMonth(mn.m), plan = planFor(mn.m), head = (x) => `<span class="eyebrow">${x}</span>`;
-  if (mn.sales != null) {
-    const pace = mn.sales / Math.max(mn.day, 1) * dim, target = plan ? plan.revenue_usd : NS;
-    $("sc-month").innerHTML = head(`${monLabel(mn.m)} · ${mn.src === "live" ? "live from Shopify" : "CDP orders"}`) + `<div class="big">${usd(mn.sales)}</div>` +
-      `<div class="bar" aria-hidden="true"><i style="width:${Math.min(100, mn.sales / target * 100).toFixed(1)}%"></i><b style="left:${Math.min(100, mn.day / dim * 100).toFixed(1)}%"></b></div>` +
-      `<div class="kv"><span>Pacing to</span><span class="num">${usd(pace)}</span></div><div class="kv"><span>${plan ? "Plan this month" : "North star"}</span><span class="num">${usd(target)}</span></div>` +
-      `<div class="kv"><span>Needed per day from here</span><span class="num">${usd(Math.max(target - mn.sales, 0) / Math.max(dim - mn.day, 1))}</span></div>`;
-  } else $("sc-month").innerHTML = head(monLabel(mn.m)) + `<div class="empty">No ${monLabel(mn.m)} orders in the CDP yet. Upload this month's Shopify export on the Data tab.</div>`;
-  const l = S.calc.last30, run = l.revenue / 30 * 30.44;
-  $("sc-run").innerHTML = head("30-day run-rate vs $100k") + `<div class="big">${usd(run)}</div><div class="bar" aria-hidden="true"><i style="width:${Math.min(100, run / NS * 100).toFixed(1)}%"></i></div>` +
-    `<div class="kv"><span>Gap</span><span class="num neg">${usd(Math.max(NS - run, 0))}/mo</span></div><div class="kv"><span>New customers / 30d</span><span class="num">${l.newc}</span></div><div class="kv"><span>Repeat orders / 30d</span><span class="num">${l.rep}</span></div>`;
-  const hit = S.sb.plan_months.find((p) => p.month === S.sb.hits_target), next = S.sb.plan_months.find((p) => p.month > mn.m) || S.sb.plan_months[0], E = S.sb.economics || {};
-  $("sc-next").innerHTML = head("Plan + profit engine") + `<div class="big">${hit ? monLabel(hit.month) : "–"}</div><p class="small muted">Modeled month the business reaches $100k if the gates hold.</p>` +
-    (next ? `<div class="kv"><span>${monLabel(next.month)} target</span><span class="num">${usd(next.revenue_usd)}</span></div><div class="kv"><span>Meta at $${CAC} CAC</span><span class="num">${usd(next.media_usd)}</span></div>` : "") +
-    `<div class="kv"><span>Repeat orders / 30d now</span><span class="num">${l.rep}</span></div><div class="kv"><span>Needed at $100k for 15% net</span><span class="num">${hit ? hit.repeat_orders_needed_15pct : "–"}</span></div>` +
-    `<div class="kv"><span>Profit per repeat order</span><span class="num">${usd(E.repeat_profit_per_order_usd || 0)}</span></div>`;
-}
-function renderGates() {
-  if (!S.sb || !S.calc) { $("gates").innerHTML = ""; return; }
-  const g = S.sb.gates, w = metaVerdict().w7;
-  const g1 = w.rows ? (w.cac != null && w.cac <= CAC ? "ok" : w.cac != null && w.cac <= CAC_CUT ? "warn" : "bad") : "unk";
-  const aov = S.calc.last30.firstAov, g2 = aov >= g.target_first_aov_usd ? "ok" : aov >= g.target_first_aov_usd * 0.85 ? "warn" : "bad";
-  const m1 = S.mag ? S.mag.findings.repeat_hazard_by_month[0] : g.second_order_month1_now, g3 = m1 >= 0.15 ? "ok" : "warn";
-  const L = { ok: "Holding", warn: "At risk", bad: "Failing", unk: "Not measured" };
-  $("gates").innerHTML = [
-    [g1, `CAC ≤ $${CAC}`, w.rows ? (w.cac != null ? usd(w.cac, 2) : "no new customers") : "–", w.rows ? `Last 7 days logged: ${usd(w.spend)} ÷ ${w.newc} new customers. Above $${CAC_CUT} every first order loses money.` : "Log Meta spend daily or upload an Ads Manager export."],
-    [g2, `First-order AOV ≥ $${g.target_first_aov_usd}`, usd(aov, 2), "New customers in the last 30 days of CDP orders. Keep 18/24-pair bundles as the default offer."],
-    [g3, "Month-1 reorder ≥ 15%", pct(m1, 1), "Repeat orders are the profit. The day 7–30 post-purchase flow moves this."],
-  ].map(([c, h, v, x]) => `<div class="gate"><span class="state ${c}">${L[c]}</span><h3>${esc(h)}</h3><span class="v">${v}</span><p class="small muted">${esc(x)}</p></div>`).join("");
-}
 function renderActions() {
   const t = today(), f = S.filter;
   document.querySelectorAll("#a-tabs button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.f === f)));
@@ -700,7 +723,7 @@ function renderCustomers() {
   $("c-pager").innerHTML = pages > 1 ? `<button class="btn" type="button" data-pg="-1" ${S.cPage === 0 ? "disabled" : ""}>Previous</button><span class="small muted">Page ${S.cPage + 1} of ${pages}</span><button class="btn" type="button" data-pg="1" ${S.cPage >= pages - 1 ? "disabled" : ""}>Next</button>` : "";
 }
 function openCustomer(email) {
-  const c = S.cust.find((x) => x.e === email); if (!c) return;
+  const c = S.cust.find((x) => x.e === email); if (!c) return; S.drawer = { type: "cust" };
   const camps = S.camps.filter((k) => k.segment === c.seg);
   $("drawer-in").innerHTML = `<div class="panel-head"><h2>${esc(c.name)}</h2><button class="btn" type="button" data-close>Close</button></div>
     <p class="small muted">${esc(c.e)} · sock size ${esc(c.size || "unknown")}${c.bigFeet ? " · large feet" : ""}${c.household ? " · buys for a household" : ""}</p>
@@ -716,27 +739,6 @@ function openCustomer(email) {
 const DONE = ["sent", "scheduled", "canceled"];
 function campFor(seg) { return S.camps.filter((c) => c.segment === seg && c.kind !== "gmail").sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))[0] || null; }
 function activeCamp(seg) { const c = campFor(seg); return c && !DONE.includes(c.status) ? c : null; }
-function renderAct() {
-  if (!S.calc) return;
-  const sn = S.snap, consentAt = sn ? sn.consent && sn.consent.at : S.consent && S.consent.at, subN = sn ? sn.consent && sn.consent.sub : S.consentSub.size, custN = sn ? sn.cust.n : S.cust.length;
-  $("consent-note").textContent = sn ? `Presentation view: group sizes as of ${sn.asOf}. Lists and Omnisend actions are only available to invited team members in claude.ai.` : consentAt ? `Consent synced ${consentAt.slice(0, 16).replace("T", " ")}: ${int(subN)} of ${int(custN)} customers are subscribed to email.` : "Consent not synced yet. Sync it so lists and Gmail notes only include subscribed customers.";
-  $("omni-status").parentElement.hidden = !!sn;
-  const keys = SEG_ORDER.filter((k) => !["recent", "other"].includes(k) && segN(k));
-  $("act-cards").innerHTML = keys.map((k) => {
-    const meta = S.mag ? S.mag.segment_meta[k] || {} : {}, base = S.mag ? S.mag.segment_baselines[k] : null, camp = campFor(k);
-    const open = S.openCard === k;
-    return `<article class="card" id="card-${k}"><div class="panel-head"><h3>${esc(segLabel(k))}</h3><span class="num">${int(segN(k))} buyers${(sn ? sn.consent : S.consent) ? ` · <span class="pos">${int(segSub(k))} subscribed</span>` : ""}</span></div>
-      <p class="small">${esc(meta.offer || "")}</p><p class="small muted">${esc(meta.when || "")}${base && base.reorder_rate != null ? ` · measured 90-day reorder ${pct(base.reorder_rate, 1)}${base.small_sample ? " (small sample)" : ""}` : ""}</p>
-      ${camp ? `<p class="small">Latest: <b>${esc(camp.name)}</b> · <span class="chip ${camp.status === "sent" || camp.status === "scheduled" ? "ok" : "warn"}">${esc(camp.status)}</span></p>` : ""}
-      ${sn ? "" : `<div class="btns"><button class="btn primary" type="button" data-launch="${k}">${open ? "Hide steps" : activeCamp(k) ? "Continue" : "Launch in Omnisend"}</button>
-        <button class="btn" type="button" data-export="seg-csv" data-seg="${k}">List CSV</button><button class="btn" type="button" data-export="seg-xlsx" data-seg="${k}">Excel</button>
-        ${["vip_lapsed", "service", "vip_active"].includes(k) ? `<button class="btn" type="button" data-gmail="${k}">Draft Gmail notes</button>` : ""}</div>`}
-      ${open && !sn ? flowHtml(k, activeCamp(k)) : ""}</article>`;
-  }).join("") || `<div class="empty">No customers loaded.</div>`;
-  const rows = S.camps.slice().sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
-  $("camp-table").innerHTML = rows.length ? `<thead><tr><th>Created</th><th>Group</th><th>Campaign</th><th class="r">Listed</th><th>Status</th><th>Sy OK</th><th>Omnisend</th></tr></thead><tbody>` +
-    rows.map((c) => `<tr><td class="num">${esc((c.created_at || "").slice(0, 10))}</td><td>${esc(segLabel(c.segment))}</td><td>${esc(c.name)}</td><td class="r num">${int(c.listed || 0)}</td><td>${esc(c.status)}</td><td>${c.sy_ok ? esc(who(c.sy_ok_by) || "yes") : "–"}</td><td>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">Open</a>` : "–"}</td></tr>`).join("") + `</tbody>` : `<tbody><tr><td class="muted">No campaigns yet. Launch one from a group above.</td></tr></tbody>`;
-}
 function flowHtml(k, c) {
   const st = c ? c.status : "new", order = ["new", "tagged", "segment", "draft", "tested", "approved", "sent"], at = order.indexOf(st === "scheduled" ? "sent" : st);
   const stepCls = (i) => (at >= i ? "done" : at === i - 1 ? "next" : "");
@@ -976,15 +978,321 @@ function renderPlan() {
     .map(([v, t]) => `<div class="card"><span class="num" style="font-size:1.3rem;font-weight:600">${esc(v)}</span><p class="small">${esc(t)}</p></div>`).join("");
 }
 
-// ============================================================== DATA
-function renderData() {
-  const conn = [["Shopify (live month-to-date)", S.liveState === "live" ? "Live" : "Off", S.liveState === "live" ? "ok" : "warn", `Reads month-to-date sales through your Shopify connector, only for ${SHOP}. Order history comes from uploads below.`],
-    ["Omnisend", S.omni.brand ? "Connected · Comfort-fresh.com" : "Checked on first action", S.omni.brand ? "ok" : "", "Tags, segments, drafts, tests and sends from the Act tab, through your Omnisend connector."],
-    ["Omnisend consent", S.consent ? `Synced ${S.consent.at.slice(0, 10)}` : "Not synced", S.consent ? "ok" : "warn", "Subscribed / unsubscribed status for every customer. Editors: use the Sync button on the Act tab."],
-    ["Gmail", "On first use", "", "Creates drafts for VIP / refund notes. Never sends."],
-    ["Meta Ads", S.meta.length ? `${S.meta.length} log entries` : "Upload", S.meta.length ? "ok" : "warn", "Upload Ads Manager exports below, or log daily on Today. Live pull comes once Supermetrics or Adspirer is connected."]];
-  $("d-conn").innerHTML = `<thead><tr><th>Source</th><th>Status</th><th>What it does</th></tr></thead><tbody>` + conn.map(([a, b, c, d]) => `<tr><td><b>${a}</b></td><td><span class="chip ${c}">${esc(b)}</span></td><td class="small">${esc(d)}</td></tr>`).join("") + `</tbody>`;
-  $("d-imports").innerHTML = S.imports.length ? `<thead><tr><th>When</th><th>File</th><th>Kind</th><th>Result</th><th>By</th></tr></thead><tbody>` + S.imports.slice().sort((a, b) => b.at.localeCompare(a.at)).map((i) => `<tr><td class="num">${esc(i.at.slice(0, 16).replace("T", " "))}</td><td>${esc(i.file)}</td><td>${esc(i.kind)}</td><td class="small">${esc(i.result)}</td><td class="small">${esc(who(i.by))}</td></tr>`).join("") + `</tbody>` : `<tbody><tr><td class="muted">No uploads yet.</td></tr></tbody>`;
+// ============================================================== routing
+const VIEWS = ["home", "journeys", "audiences", "profiles", "insights", "connections"];
+const OLD_VIEWS = { today: "home", customers: "profiles", act: "audiences", revenue: "insights", plan: "insights", data: "connections" };
+function route() {
+  let h = (location.hash || "").replace("#", "");
+  if (OLD_VIEWS[h]) { if (h === "plan") S.ins = "plan"; h = OLD_VIEWS[h]; }
+  const v = VIEWS.includes(h) ? h : "home", changed = v !== S.view;
+  S.view = v;
+  VIEWS.forEach((x) => ($("v-" + x).hidden = x !== v));
+  document.querySelectorAll("nav.menu a").forEach((a) => (a.dataset.v === v ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
+  if (changed) window.scrollTo(0, 0);
+  render();
+}
+window.addEventListener("hashchange", route);
+
+// ============================================================== render: shell
+const canAct = () => !!S.db && S.canWrite !== false && !S.snap;
+const fmtD = (iso) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+function render() {
+  if (S.dirty) { S._repAov = null; S._moves = null; compute(); S.dirty = false; }
+  S._moves = null;
+  renderChips(); renderBadges();
+  ({ home: renderHome, journeys: renderJourneys, audiences: renderAudiences, profiles: renderCustomers, insights: renderInsights, connections: renderConnections })[S.view]();
+  if (!$("drawer").hidden && S.drawer && S.drawer.type === "aud") drawAudience(S.drawer.k);
+}
+const renderAct = () => render();
+function renderChips() {
+  const c = [];
+  if (S.calc) c.push(`<span class="chip">Orders through ${esc(fmtD(S.calc.asOf))}</span>`);
+  c.push(S.liveState === "live" ? `<span class="chip ok"><span class="dot ok"></span>Shopify live</span>` : `<span class="chip"><span class="dot"></span>Shopify live: ${S.liveState === "pending" ? "connecting…" : "off"}</span>`);
+  if (S.snap) c.push(`<span class="chip warn">Presentation view · totals as of ${esc(fmtD(S.snap.asOf))}</span>`);
+  else if (S.db === false) c.push(`<span class="chip warn">Sign in to claude.ai to use the CDP</span>`);
+  else if (S.canWrite === false) c.push(`<span class="chip warn">Read-only</span>`);
+  else if (S.db) c.push(`<span class="chip acc">${S.canEdit ? "Editor · can approve" : "Team member"}</span>`);
+  $("chips").innerHTML = c.join("");
+}
+function renderBadges() {
+  const set = (id, n) => { const el = $(id); el.hidden = !n; el.textContent = n; };
+  const mv = S.calc ? moves().slice(0, 4).filter((m) => m.due <= today()).length : 0;
+  set("nb-home", mv);
+  set("nb-aud", S.calc ? SEG_ORDER.filter((k) => segN(k)).length : 0);
+  set("nb-prof", S.snap ? S.snap.cust.n : S.cust.length);
+  set("nb-conn", dataIssues().length);
+}
+
+// ============================================================== moves (the ranked "do next" list)
+const LIFT = 1.5;
+const GMAIL_SEG = ["vip_lapsed", "service"];
+const MOVE_TITLE = { service: "Win back refunded customers with a free right-size pair", vip_lapsed: "Send personal notes to VIPs gone quiet",
+  vip_active: "Invite active VIPs to the Fresh Club", second_order: "Turn first-time buyers into second orders (day 7–27)", wave_a: "Send Wave A: Club Starter, 6 pairs for $49",
+  household: "Offer the family bundle to household buyers", bundle_clock: "Restock reminder for bundle buyers", large_feet: "Large-feet email (sock size 13–15) for World Diabetes Day",
+  ladder: "Cross-sell the complementary style to one-order buyers", repeat_lapsed: "Upgrade 2-order customers to the 18-pair bundle", dormant: "C90 win-back with COMEBACK15, one send" };
+const LEVER_OF = { service: "repeat", vip_lapsed: "repeat", vip_active: "repeat", second_order: "repeat", wave_a: "repeat", household: "aov", bundle_clock: "repeat", large_feet: "repeat", ladder: "repeat", repeat_lapsed: "aov", dormant: "repeat" };
+const TASK_SEG = [[/post-purchase flow/i, "second_order"], [/Wave A/i, "wave_a"], [/VIPs? gone quiet/i, "vip_lapsed"], [/C90/i, "dormant"], [/Refund recovery/i, "service"]];
+const taskSeg = (a) => (TASK_SEG.find(([re]) => re.test(a.title || "")) || [])[1] || null;
+const leverOfTask = (a) => (/bundle/i.test(a.title) ? "aov" : /creative|scale|budget step/i.test(a.title) ? "new" : /meta|ad set/i.test(a.title) ? "cac" : null);
+const STEP_LABEL = ["Sync list to Omnisend", "Build the subscribed segment", "Create the email draft", "Send yourself a test", "Approve (Sy)", "Send or schedule"];
+const STEP_KEY = ["tag", "segment", "draft", "test", "approve", "send"];
+const STAGES = ["new", "tagged", "segment", "draft", "tested", "approved", "sent"];
+const stageIdx = (c) => (c ? Math.max(0, STAGES.indexOf(c.status === "scheduled" ? "sent" : c.status)) : 0);
+function repAov() {
+  if (S._repAov != null) return S._repAov;
+  if (S.snap && S.snap.repAov) return S.snap.repAov;
+  const xs = S.calc ? S.orders.filter((o) => (o.seq || 1) > 1 && o.d >= addDays(S.calc.asOf, -179)) : [];
+  return (S._repAov = xs.length >= 10 ? xs.reduce((a, o) => a + o.g, 0) / xs.length : (S.mag && S.mag.findings.last30.repeat_aov_usd) || 70);
+}
+function audValue(k) {
+  const base = S.mag && S.mag.segment_baselines[k], consent = S.snap ? !!S.snap.consent : !!S.consent, reach = consent ? segSub(k) : segN(k);
+  const opp = k === "dormant" && S.mag ? S.mag.opportunities.find((o) => /C90/.test(o.name)) : null;
+  if (opp && opp.impact_usd) return { usd: opp.impact_usd, reach, consent, how: `Money Magnet estimate for this send: ${opp.impact}` };
+  const m1 = S.mag ? S.mag.findings.repeat_hazard_by_month[0] : 0.1;
+  const measured = base && base.reorder_rate && !base.small_sample ? base.reorder_rate : null, rate = measured ?? m1;
+  return { usd: reach * rate * LIFT * repAov(), reach, consent, rate,
+    how: `${int(reach)} ${consent ? "subscribed" : "people (consent not synced yet)"} × ${pct(rate, 1)} ${measured != null ? "measured 90-day reorder rate" : "month-1 reorder rate (audience too small to measure)"} × ${LIFT} campaign lift × ${usd(repAov(), 2)} average repeat order` };
+}
+function nextSend(k) {
+  const t = today(), m = S.mag && S.mag.segment_meta[k], last = campFor(k);
+  const sent = last && ["sent", "scheduled"].includes(last.status) ? last.send_date || (last.sent_at || "").slice(0, 10) : null;
+  if (k === "second_order" || k === "service") {
+    if (sent && daysBetween(sent, t) < 7) return { date: addDays(sent, 7), label: "weekly batch" };
+    return { date: t, label: k === "service" ? "this week" : "rolling: day 10 after each first order" };
+  }
+  const ds = ((m && m.schedule && m.schedule.sends) || []).filter((s) => s.date >= t && (!sent || s.date > sent));
+  return ds.length ? { date: ds[0].date, label: ds[0].name } : null;
+}
+function moves() {
+  if (S._moves) return S._moves;
+  const t = today(), wk = addDays(t, 7), out = [];
+  if (!S.calc) return (S._moves = out);
+  const open = S.actions.filter((a) => a.status !== "done");
+  const v = metaVerdict(), w = v.w7, logged = S.actions.some((a) => a.lane === "gate" && a.status === "done" && (a.due || "") >= addDays(t, -6));
+  if (w.rows && (w.cac == null || w.cac > CAC) && !logged) {
+    const perDay = w.spend / Math.max(w.days, 1), over = w.cac == null ? perDay * 30.44 : Math.max(0, (w.cac - CAC) * (w.newc / Math.max(w.days, 1)) * 30.44);
+    out.push({ id: "gate-cac", kind: "gate", due: t, title: v.cls === "bad" ? "Cut Meta one budget step" : "Hold the Meta budget", why: v.text, value: over, basis: "ACTUAL", vlabel: "a month spent above the $70 CAC target", lever: "cac" });
+  }
+  for (const k of SEG_ORDER) {
+    if (k === "recent" || k === "other" || !segN(k)) continue;
+    const ns = nextSend(k); if (!ns) continue;
+    const meta = (S.mag && S.mag.segment_meta[k]) || {}, val = audValue(k);
+    const linked = open.filter((a) => taskSeg(a) === k).sort((a, b) => (a.due || "").localeCompare(b.due || "")), prep = linked[0] && linked[0].due && linked[0].due < ns.date ? linked[0] : null;
+    out.push({ id: "aud-" + k, kind: GMAIL_SEG.includes(k) ? "gmail" : "aud", k, due: prep ? prep.due : ns.date, dueLabel: prep ? `Prep due ${fmtD(prep.due)}: ${prep.title} · send ${fmtD(ns.date)}` : ns.label, title: MOVE_TITLE[k] || segLabel(k), why: meta.offer || "",
+      value: val.usd, basis: "MODELED", vlabel: "expected", val, linked, lever: LEVER_OF[k] });
+  }
+  for (const a of open) if (!taskSeg(a) && (a.due || "") <= wk) out.push({ id: "task-" + a.id, kind: "task", a, due: a.due, title: a.title, why: a.note || "", value: a.impact_usd || null, basis: "MODELED", vlabel: "impact", lever: leverOfTask(a) });
+  const bucket = (m) => (m.due < t ? 0 : m.due <= wk ? 1 : 2);
+  return (S._moves = out.sort((x, y) => bucket(x) - bucket(y) || (y.value || 0) - (x.value || 0) || (x.due || "").localeCompare(y.due || "")));
+}
+function trackHtml(idx) {
+  return `<div class="track" aria-label="Step ${Math.min(idx + 1, 6)} of 6">${STEP_KEY.map((_, i) => `<i class="${i < idx ? "done" : i === idx ? "now" : ""}"></i>`).join("")}<span>${idx >= 6 ? "Sent" : `Step ${idx + 1} of 6 · ${STEP_LABEL[idx]}`}</span></div>`;
+}
+function moveCta(m) {
+  const act = canAct(), det = (k) => `<button class="btn ghost" type="button" data-aud="${k}">Details</button>`;
+  if (m.kind === "gate") return act ? `<button class="btn primary" type="button" data-gate="1">I changed the budget: log it</button><a class="btn ghost" href="#connections" data-goto="sec-meta">Meta log</a>` : `<a class="btn" href="#connections">See the Meta log</a>`;
+  if (m.kind === "task") {
+    const a = m.a; if (!act) return `<span class="chip">${esc(a.status)}</span>`;
+    if (a.needs_sy && !a.sy_ok) return S.canEdit ? `<button class="btn sy" type="button" data-sy="${esc(a.id)}">Approve (Sy)</button>` : `<span class="chip warn">Waiting on Sy</span>`;
+    return `<button class="btn primary" type="button" data-done="${esc(a.id)}">Mark done</button>`;
+  }
+  if (!act) return `<button class="btn" type="button" data-aud="${m.k}">View audience</button>`;
+  if (m.kind === "gmail") {
+    if (!S.consent) return S.canEdit ? `<button class="btn primary" type="button" data-consent="1">Sync consent first</button>${det(m.k)}` : `<span class="chip warn">An Editor must sync consent</span>${det(m.k)}`;
+    return `<button class="btn primary" type="button" data-gmail="${m.k}">Draft the next 25 Gmail notes</button>${det(m.k)}`;
+  }
+  const i = stageIdx(activeCamp(m.k)); const s = STEP_KEY[i];
+  if (i >= 6) return `<span class="chip ok">Sent</span>${det(m.k)}`;
+  if (s === "tag" || s === "segment" || (s === "approve" && S.canEdit)) return `<button class="btn primary" type="button" data-step="${s}" data-seg="${m.k}" ${S.busy ? "disabled" : ""}>${STEP_LABEL[i]}</button>${det(m.k)}`;
+  if (s === "approve") return `<span class="chip warn">Waiting on Sy</span>${det(m.k)}`;
+  return `<button class="btn primary" type="button" data-aud="${m.k}" data-focus="${s}">${STEP_LABEL[i]}</button>`;
+}
+function moveHtml(m, i, later) {
+  const t = today(), facts = [];
+  facts.push(m.due < t ? `<span class="chip bad">Overdue since ${fmtD(m.due)}</span>` : m.due === t ? `<span class="chip warn">Due today</span>` : `<span class="chip">Due ${fmtD(m.due)} · in ${daysBetween(t, m.due)} days</span>`);
+  if (m.value) facts.push(`<span><span class="val">${usd(m.value)}</span> ${esc(m.vlabel)} <span class="basis ${m.basis}">${m.basis}</span></span>`);
+  let track = "";
+  if (m.kind === "aud" || m.kind === "gmail") {
+    facts.push(`<span>${int(segN(m.k))} people${m.val.consent ? ` · <b class="pos">${int(segSub(m.k))} subscribed</b>` : ""}</span>`);
+    const a = m.linked[0]; if (a) facts.push(`<span class="chip ${a.needs_sy && !a.sy_ok ? "warn" : ""}">${a.needs_sy && !a.sy_ok ? "Needs Sy OK · " : ""}${esc(a.owner)}</span>`);
+    if (m.kind === "aud") track = trackHtml(stageIdx(activeCamp(m.k)));
+    else { const done = S.camps.filter((c) => c.kind === "gmail" && c.segment === m.k).reduce((s, c) => s + (c.listed || 0), 0); track = `<div class="track"><span style="margin:0">${int(done)} Gmail drafts made${S.consent ? ` of ${int(segSub(m.k))} subscribed` : ""} · drafts only, you send from Gmail</span></div>`; }
+  } else if (m.kind === "task") facts.push(`<span class="chip">${esc(m.a.owner)}</span>`);
+  return `<article class="move ${later ? "later" : ""}" id="mv-${esc(m.id)}"><span class="rank">${i + 1}</span>
+    <div class="body"><span class="title">${esc(m.title)}</span>${m.why ? `<span class="why">${esc(m.why)}</span>` : ""}<div class="facts">${facts.join("")}</div>${track}</div>
+    <div class="cta"><div class="btns">${moveCta(m)}</div>${m.dueLabel ? `<span class="small muted">${esc(m.dueLabel)}</span>` : ""}</div></article>`;
+}
+
+// ============================================================== HOME
+function renderHome() {
+  $("h-date").textContent = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) + (S.calc ? ` · orders through ${fmtD(S.calc.asOf)}` : "");
+  if (!S.calc || !S.sb) {
+    $("ns").innerHTML = `<div><div class="empty">${S.db === false ? "Open this page signed in to claude.ai to load the CDP." : "Loading the board…"}</div></div><div></div>`;
+    ["moves", "levers", "inbox", "later", "eq"].forEach((id) => ($(id).innerHTML = "")); return;
+  }
+  // north star
+  const mn = monthNow(), dim = daysInMonth(mn.m), plan = planFor(mn.m), target = plan ? plan.revenue_usd : NS, l = S.calc.last30, run = l.revenue / 30 * 30.44;
+  const pace = mn.sales != null ? mn.sales / Math.max(mn.day, 1) * dim : null, behind = pace != null && pace < target * 0.9;
+  const hit = S.sb.plan_months.find((p) => p.month === S.sb.hits_target);
+  const monthName = new Date(mn.m + "-15T12:00:00Z").toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+  $("ns").innerHTML = `<div><span class="eyebrow">${monthName} · ${mn.src === "live" ? "live from Shopify" : "orders in the CDP"}</span>` +
+    (mn.sales != null ? `<div class="big">${usd(mn.sales)} <small>of ${usd(target)} ${plan ? "plan" : "north star"}</small></div>
+      <div class="bar ${behind ? "warn" : ""}" aria-hidden="true"><i style="width:${Math.min(100, mn.sales / target * 100).toFixed(1)}%"></i><b style="left:${Math.min(100, mn.day / dim * 100).toFixed(1)}%"></b></div>
+      <div class="kv"><span>Pacing to</span><span class="num ${behind ? "neg" : "pos"}">${usd(pace)}</span></div><div class="kv"><span>Needed per day from here</span><span class="num">${usd(Math.max(target - mn.sales, 0) / Math.max(dim - mn.day, 1))}</span></div>` :
+      `<div class="empty">No ${monthName} orders yet. Pull them from Shopify on Connections.</div>`) + `</div>
+    <div><span class="eyebrow">North star · $100k a month</span><div class="big">${usd(run)} <small>/ mo run-rate</small></div>
+      <div class="bar" aria-hidden="true"><i style="width:${Math.min(100, run / NS * 100).toFixed(1)}%"></i></div>
+      <div class="kv"><span>Gap to $100k</span><span class="num neg">${usd(Math.max(NS - run, 0))}/mo</span></div>
+      <div class="kv"><span>Modeled month we reach it</span><span class="num">${hit ? monLabel(hit.month) : "–"}</span></div></div>`;
+  // moves
+  const all = moves(), top = all.slice(0, 4), rest = all.slice(4);
+  $("moves").innerHTML = top.length ? top.map((m, i) => moveHtml(m, i)).join("") : `<div class="empty">Nothing due. Check Journeys for the next audience to work.</div>`;
+  $("later").innerHTML = rest.map((m, i) => moveHtml(m, i + 4, true)).join("") || `<div class="empty">Nothing else queued.</div>`;
+  $("later-n").textContent = `${rest.length} more, by date and value`;
+  // levers
+  const w = metaVerdict().w7, g = S.sb.gates || {}, nextPlan = plan || S.sb.plan_months[0];
+  const st = (r) => (r >= 1 ? "ok" : r >= 0.8 ? "warn" : "bad");
+  const L = [
+    { id: "new", label: "New customers · 30 days", v: int(l.newc), tgt: nextPlan ? `${monLabel(nextPlan.month)} plan needs ${int(nextPlan.new_customers)}` : "", r: nextPlan ? l.newc / nextPlan.new_customers : 1 },
+    { id: "cac", label: "CAC · last 7 days", v: w.rows ? (w.cac != null ? usd(w.cac, 2) : "no new customers") : "not logged", tgt: `Target $${CAC} · cut above $${CAC_CUT}`, r: w.rows ? (w.cac == null ? 0 : w.cac <= CAC ? 1 : w.cac <= CAC_CUT ? 0.85 : 0) : null },
+    { id: "aov", label: "First-order AOV · 30 days", v: usd(l.firstAov, 2), tgt: `Target $${g.target_first_aov_usd || 90}: lead with 18/24-pair bundles`, r: l.firstAov / (g.target_first_aov_usd || 90) },
+    { id: "repeat", label: "Repeat orders · 30 days", v: int(l.rep), tgt: nextPlan ? `${int(nextPlan.repeat_orders_needed_15pct)} needed for 15% net in ${monLabel(nextPlan.month)}` : "", r: nextPlan ? l.rep / nextPlan.repeat_orders_needed_15pct : 1 },
+  ];
+  $("levers").innerHTML = L.map((x) => { const s = x.r == null ? "" : st(x.r), mv = all.findIndex((m) => m.lever === x.id);
+    return `<div class="lever ${s}"><span class="eyebrow">${x.label}</span><span class="v">${x.v}</span>${x.r != null ? `<div class="bar ${s === "ok" ? "" : s}" aria-hidden="true"><i style="width:${Math.min(100, Math.max(x.r, 0.02) * 100).toFixed(1)}%"></i></div>` : ""}<span class="t">${esc(x.tgt)}</span>
+      ${s && s !== "ok" ? `<span class="chip ${s}" style="justify-self:start">${s === "bad" ? "Off track" : "At risk"}</span>` : s ? `<span class="chip ok" style="justify-self:start">On track</span>` : `<span class="chip" style="justify-self:start">Not measured</span>`}
+      ${mv >= 0 ? `<button class="fix" type="button" data-gomove="${esc(all[mv].id)}">Fix it: move #${mv + 1} →</button>` : ""}</div>`; }).join("");
+  $("eq").innerHTML = `30-day sales <b>${usd(l.revenue)}</b> = <b>${int(l.newc)}</b> new × <b>${usd(l.firstAov)}</b> + <b>${int(l.rep)}</b> repeat orders`;
+  // inbox
+  const items = inboxItems();
+  $("inbox").innerHTML = items.length ? items.map(([c, txt, btn]) => `<div class="it"><span class="dot ${c}"></span><span>${txt}</span>${btn || ""}</div>`).join("") : `<div class="it"><span class="dot ok"></span><span>All clear. Work the moves above.</span></div>`;
+  renderActions();
+}
+function dataIssues() {
+  const out = [], t = today();
+  if (!S.calc || S.snap) return out;
+  if (S.orders.length && daysBetween(S.calc.asOf, t) >= 2) out.push(["warn", `Orders in the CDP end ${fmtD(S.calc.asOf)}.`, S.canEdit ? `<button class="btn" type="button" data-pull="1">Pull from Shopify</button>` : ""]);
+  if (!S.orders.length && S.db) out.push(["bad", "No customer orders loaded yet.", S.canEdit ? `<button class="btn primary" type="button" data-pull="1">Pull from Shopify</button>` : ""]);
+  if (!S.meta.some((r) => r.date >= addDays(t, -2))) out.push(["warn", `Meta spend not logged since ${S.meta.length ? fmtD(S.meta.map((r) => r.date).sort().at(-1)) : "ever"}. CAC can't be judged without it.`, `<a class="btn" href="#connections" data-goto="sec-meta">Log Meta</a>`]);
+  if (!S.consent && S.orders.length) out.push(["warn", "Email consent not synced from Omnisend, so audience sizes include people who can't be emailed.", S.canEdit ? `<button class="btn" type="button" data-consent="1">Sync consent</button>` : ""]);
+  return out;
+}
+function inboxItems() {
+  const t = today(), out = [], act = canAct();
+  S.camps.filter((c) => c.kind !== "gmail" && c.status === "tested").forEach((c) => out.push(["warn", `<b>${esc(segLabel(c.segment))}</b>: test sent, waiting on Sy's OK.`, `<button class="btn" type="button" data-aud="${esc(c.segment)}">Open</button>`]));
+  S.camps.filter((c) => c.kind !== "gmail" && c.status === "approved").forEach((c) => out.push(["warn", `<b>${esc(segLabel(c.segment))}</b>: approved, ready to send.`, `<button class="btn" type="button" data-aud="${esc(c.segment)}">Open</button>`]));
+  S.actions.filter((a) => a.needs_sy && !a.sy_ok && a.status !== "done" && (a.due || "") <= addDays(t, 7)).forEach((a) => out.push(["warn", `Sy's OK needed by ${fmtD(a.due)}: ${esc(a.title)}`, act && S.canEdit ? `<button class="btn sy" type="button" data-sy="${esc(a.id)}">Approve</button>` : ""]));
+  S.actions.filter((a) => a.status !== "done" && (a.due || "9") < t).forEach((a) => out.push(["bad", `Overdue since ${fmtD(a.due)}: ${esc(a.title)} · ${esc(a.owner)}`, act ? `<button class="btn" type="button" data-done="${esc(a.id)}">Mark done</button>` : ""]));
+  return out.concat(dataIssues());
+}
+
+// ============================================================== JOURNEYS
+const JLABEL = { recent: "Just ordered", second_order: "Second-order window", wave_a: "Wave A", ladder: "One order, 46–119 days", large_feet: "Large feet (13–15)", dormant: "Dormant (C90)",
+  repeat_lapsed: "2 orders, gone quiet", vip_active: "VIP active", vip_lapsed: "VIP gone quiet", service: "Refund, never came back", household: "Household buyers", bundle_clock: "Bundle on the sock clock", other: "Everyone else" };
+const JDAYS = { recent: "day 0–6 since last order", second_order: "day 7–27", wave_a: "day 28–45", ladder: "day 46–119", large_feet: "day 46–119, sock size 13–15", dormant: "day 120+",
+  repeat_lapsed: "2 orders, 60+ days", vip_active: "3+ orders, under 60 days", vip_lapsed: "3+ orders, 60+ days", service: "refunded, 2 orders or fewer", household: "2+ sizes in one order", bundle_clock: "13+ pairs, 60+ days", other: "no rule matched" };
+function nodeHtml(k, hot) {
+  const base = S.mag && S.mag.segment_baselines[k], c = campFor(k), ns = k === "recent" || k === "other" ? null : nextSend(k), consent = S.snap ? !!S.snap.consent : !!S.consent;
+  const status = c ? `<span class="chip ${["sent", "scheduled"].includes(c.status) ? "ok" : "warn"}"><span class="dot ${["sent", "scheduled"].includes(c.status) ? "ok" : "warn"}"></span>${esc(c.status)}</span>` : "";
+  return `<button type="button" class="node ${hot.has(k) ? "hot" : ""} ${k === "recent" || k === "other" ? "quiet" : ""}" data-aud="${k}">
+    <span class="nm">${esc(JLABEL[k] || k)}</span><span class="sb">${esc(JDAYS[k] || "")}</span><span class="ct">${int(segN(k))}</span>
+    <span class="sb">${consent ? `${int(segSub(k))} subscribed · ` : ""}${base && base.reorder_rate != null ? `${pct(base.reorder_rate, 1)} reorder in 90d${base.small_sample ? "*" : ""}` : ""}</span>
+    <span class="st">${hot.has(k) ? `<span class="chip acc">Do now</span>` : ""}${status}${ns ? `<span class="chip">Next ${fmtD(ns.date)}</span>` : k === "recent" ? `<span class="chip">Order + care emails</span>` : ""}</span></button>`;
+}
+function renderJourneys() {
+  if (!S.calc) { $("lanes").innerHTML = `<div class="empty">Loading…</div>`; return; }
+  const hot = new Set(moves().slice(0, 4).filter((m) => m.k).map((m) => m.k)), F = S.mag ? S.mag.findings : null;
+  const lane = (title, sub, keys, linked) => `<section class="panel lane"><div class="panel-head"><h2>${title}</h2><span class="small muted">${sub}</span></div><div class="flow ${linked ? "" : "free"}">${keys.map((k) => Array.isArray(k) ? `<div class="stack">${k.map((x) => nodeHtml(x, hot)).join("")}</div>` : nodeHtml(k, hot)).join("")}</div></section>`;
+  $("lanes").innerHTML =
+    lane("First-time buyers", F ? `Median ${F.gap_to_2nd_days.median} days to a second order · ${pct(F.repeat_hazard_by_month[0], 1)} reorder in month 1. Every step right is harder to win back.` : "", ["recent", "second_order", "wave_a", ["ladder", "large_feet"], "dormant"], true) +
+    lane("Repeat buyers", "Where the profit is: about $53 per repeat order after product and shipping.", ["vip_active", "vip_lapsed", "repeat_lapsed"], true) +
+    lane("Special handling", "Matched before the day-based stages above.", ["service", "household", "bundle_clock", "other"], false) +
+    `<p class="small muted">* audience under 15 people when measured, so the rate is noisy. Stages use the first rule each customer matches, so every customer appears once.</p>`;
+}
+
+// ============================================================== AUDIENCES
+const SEG_RULE = { recent: ["last order 0–6 days ago"], service: ["has a refunded order", "no order after the refund", "2 lifetime orders or fewer"], vip_lapsed: ["3+ lifetime orders", "last order 60+ days ago"],
+  vip_active: ["3+ lifetime orders", "last order under 60 days ago"], second_order: ["1 lifetime order", "last order 7–27 days ago"], wave_a: ["1 lifetime order", "last order 28–45 days ago"],
+  household: ["bought 2+ sock sizes in one order"], bundle_clock: ["last order had 13+ pairs", "last order 60+ days ago"], large_feet: ["mostly buys sock size 13–15", "1 lifetime order", "last order 46–119 days ago"],
+  ladder: ["1 lifetime order", "last order 46–119 days ago"], repeat_lapsed: ["2 lifetime orders", "last order 60+ days ago"], dormant: ["1 lifetime order", "last order 120+ days ago"], other: ["matches none of the rules above"] };
+function pipeHtml(k) {
+  if (GMAIL_SEG.includes(k)) { const n = S.camps.filter((c) => c.kind === "gmail" && c.segment === k).reduce((s, c) => s + (c.listed || 0), 0); return `<span class="small">${n ? `${int(n)} Gmail drafts` : "Gmail 1:1"}</span>`; }
+  if (k === "recent" || k === "other") return `<span class="small muted">${k === "recent" ? "Transactional only" : "BFCM / holiday only"}</span>`;
+  const i = stageIdx(activeCamp(k)), last = campFor(k);
+  return `<span class="pipe" aria-hidden="true">${STEP_KEY.map((_, j) => `<i class="${j < i ? "done" : j === i ? "now" : ""}"></i>`).join("")}</span> <span class="small">${i === 0 ? (last && ["sent", "scheduled"].includes(last.status) ? "Last: " + esc(last.status) : "Not started") : i >= 6 ? "Sent" : esc(STEP_LABEL[i])}</span>`;
+}
+function renderAudiences() {
+  if (!S.calc) return;
+  const sn = S.snap, consentAt = sn ? sn.consent && sn.consent.at : S.consent && S.consent.at, subN = sn ? sn.consent && sn.consent.sub : S.consentSub.size, custN = sn ? sn.cust.n : S.cust.length;
+  $("omni-status").parentElement.hidden = !canAct();
+  $("consent-note").textContent = sn ? `Presentation view: audience sizes as of ${fmtD(sn.asOf)}. Activation is available to invited team members in claude.ai.` : consentAt ? `Consent synced ${consentAt.slice(0, 16).replace("T", " ")}: ${int(subN)} of ${int(custN)} customers can be emailed.` : "Consent isn't synced yet, so sizes include people who can't be emailed. Omnisend still only sends to subscribed contacts.";
+  const consent = sn ? !!sn.consent : !!S.consent, hot = new Set(moves().slice(0, 4).filter((m) => m.k).map((m) => m.k));
+  $("aud-table").innerHTML = `<thead><tr><th>Audience</th><th class="r">People</th><th class="r">Subscribed</th><th class="r">90-day reorder</th><th>Next send</th><th class="r">Expected</th><th>Activation</th></tr></thead><tbody>` +
+    SEG_ORDER.filter((k) => segN(k)).map((k) => { const base = S.mag && S.mag.segment_baselines[k], ns = k === "recent" || k === "other" ? null : nextSend(k), v = k === "recent" || k === "other" ? null : audValue(k);
+      return `<tr class="click" data-aud="${k}" tabindex="0"><td><b>${esc(segLabel(k))}</b>${hot.has(k) ? ` <span class="chip acc">Do now</span>` : ""}<br><span class="small muted">${esc((SEG_RULE[k] || []).join(" · "))}</span></td>
+        <td class="r num">${int(segN(k))}</td><td class="r num">${consent ? int(segSub(k)) : "–"}</td><td class="r num">${base && base.reorder_rate != null ? pct(base.reorder_rate, 1) + (base.small_sample ? "*" : "") : "–"}</td>
+        <td class="small">${ns ? `${fmtD(ns.date)}<br><span class="muted">${esc(ns.label)}</span>` : "–"}</td><td class="r num">${v ? usd(v.usd) : "–"}</td><td class="nowrap">${pipeHtml(k)}</td></tr>`; }).join("") + `</tbody>`;
+  const rows = S.camps.slice().sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
+  $("camp-table").innerHTML = rows.length ? `<thead><tr><th>Created</th><th>Audience</th><th>Campaign</th><th class="r">Listed</th><th>Status</th><th>Sy OK</th><th>Omnisend</th></tr></thead><tbody>` +
+    rows.map((c) => `<tr><td class="num">${esc((c.created_at || "").slice(0, 10))}</td><td>${esc(segLabel(c.segment))}</td><td>${esc(c.name)}</td><td class="r num">${int(c.listed || 0)}</td><td>${esc(c.status)}</td><td>${c.sy_ok ? esc(who(c.sy_ok_by) || "yes") : "–"}</td><td>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">Open</a>` : "–"}</td></tr>`).join("") + `</tbody>` : `<tbody><tr><td class="muted">No campaigns yet. Start one from Home or any audience.</td></tr></tbody>`;
+}
+function openAudience(k, focus) {
+  S.drawer = { type: "aud", k }; drawAudience(k); $("drawer").hidden = false;
+  const el = focus && $("drawer-in").querySelector(`[data-step="${focus}"]`); (el || $("drawer-in").querySelector("[data-close]")).focus();
+  if (el) el.scrollIntoView({ block: "center" });
+}
+function drawAudience(k) {
+  const meta = (S.mag && S.mag.segment_meta[k]) || {}, base = S.mag && S.mag.segment_baselines[k], act = canAct(), quiet = k === "recent" || k === "other";
+  const v = quiet ? null : audValue(k), ns = quiet ? null : nextSend(k), consent = S.snap ? !!S.snap.consent : !!S.consent;
+  const people = S.cust.length && S.calc.segs ? (S.calc.segs[k] || []).slice().sort((a, b) => b.ltvNet - a.ltvNet) : [];
+  const sends = ((meta.schedule && meta.schedule.sends) || []).filter((s) => s.date >= today());
+  let activate;
+  if (quiet) activate = `<p class="small muted">${k === "recent" ? "Recent buyers only get order and care emails. They join the second-order window on day 7." : "Only included in BFCM and holiday sends to the whole subscribed list."}</p>`;
+  else if (!act) activate = `<div class="empty">Activation is available to invited team members inside claude.ai.</div>`;
+  else if (GMAIL_SEG.includes(k)) activate = `<div class="card"><b>Personal Gmail notes</b><span class="small muted">Creates up to 25 drafts at a time in your Gmail, subscribed customers only, skipping anyone already drafted. Nothing is sent. Send them from Gmail after Sy's OK, then log the send on Connections so the weekly rule holds.</span>
+      <div class="btns">${S.consent ? `<button class="btn primary" type="button" data-gmail="${k}">Draft the next 25 notes</button>` : S.canEdit ? `<button class="btn primary" type="button" data-consent="1">Sync consent first</button>` : `<span class="chip warn">An Editor must sync consent first</span>`}</div></div>`;
+  else activate = flowHtml(k, activeCamp(k)) + (k === "vip_active" ? `<div class="btns"><button class="btn" type="button" data-gmail="${k}">Or draft personal Gmail notes</button></div>` : "");
+  $("drawer-in").innerHTML = `<div class="dhead"><div><span class="eyebrow">Audience</span><h2>${esc(segLabel(k))}</h2><div class="chips"><span class="chip">${esc(meta.channel || "Omnisend")}</span>${ns ? `<span class="chip">Next send ${fmtD(ns.date)}</span>` : ""}</div></div><button class="btn" type="button" data-close>Close</button></div>
+    <div class="facts2"><div><span class="eyebrow">People</span><span class="v">${int(segN(k))}</span></div><div><span class="eyebrow">Subscribed</span><span class="v">${consent ? int(segSub(k)) : "–"}</span></div>
+      <div><span class="eyebrow">90-day reorder</span><span class="v">${base && base.reorder_rate != null ? pct(base.reorder_rate, 1) : "–"}</span></div><div><span class="eyebrow">Expected <span class="basis MODELED">MODELED</span></span><span class="v">${v ? usd(v.usd) : "–"}</span></div></div>
+    <div class="rule">${(SEG_RULE[k] || []).map((r) => `<span>${esc(r)}</span>`).join("")}</div>
+    ${meta.offer ? `<div class="card"><span class="eyebrow">The play</span><b>${esc(meta.offer)}</b><span class="small">${esc(meta.when || "")}</span>${meta.why ? `<span class="small muted">${esc(meta.why)}</span>` : ""}${v ? `<span class="small muted">Expected = ${esc(v.how)}.</span>` : ""}</div>` : ""}
+    ${sends.length ? `<div class="card"><span class="eyebrow">Planned sends · email cap check</span>${sends.map((s) => { const cc = capCheck(k, s.date, "Omnisend"); return `<div class="kv"><span><span class="num">${fmtD(s.date)}</span> · ${esc(s.name)}</span><span class="chip ${cc.ok ? "ok" : "bad"}">${cc.ok ? `#${cc.worst} in 30 days` : "over the cap"}</span></div>`; }).join("")}</div>` : ""}
+    <h3>Activate</h3>${activate}
+    ${people.length ? `<h3>Top people by lifetime value</h3><div class="scroll"><table><tbody>${people.slice(0, 8).map((c) => `<tr class="click" data-c="${esc(c.e)}" tabindex="0"><td><b>${esc(c.name)}</b><br><span class="small muted">${esc(c.e)}</span></td><td class="r num">${usd(c.ltvNet)}</td><td class="small">${c.consent === "subscribed" ? `<span class="chip ok">SUB</span>` : esc(c.consent)}</td></tr>`).join("")}</tbody></table></div>
+      <div class="btns"><button class="btn" type="button" data-export="seg-csv" data-seg="${k}">Full list CSV</button><button class="btn" type="button" data-export="seg-xlsx" data-seg="${k}">Excel</button><a class="btn ghost" href="#profiles" data-filter-seg="${k}">See all ${int(people.length)} in Profiles</a></div>` : ""}`;
+}
+
+// ============================================================== INSIGHTS
+function renderInsights() {
+  S.ins = S.ins || "revenue";
+  document.querySelectorAll("#ins-tabs button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.ins === S.ins)));
+  ["revenue", "plan", "ltv"].forEach((x) => ($("ins-" + x).hidden = x !== S.ins));
+  if (S.ins === "revenue") { renderRevenue(); renderPlanChart(); }
+  else if (S.ins === "plan") renderPlan();
+  else renderCustomers();
+}
+
+// ============================================================== CONNECTIONS
+function renderConnections() {
+  const t = today(), ed = S.canEdit && canAct();
+  const conn = (state, name, detail, btn) => `<div class="conn"><span class="h"><span class="dot ${state}"></span>${name}</span><span class="d">${detail}</span>${btn ? `<div class="btns">${btn}</div>` : ""}</div>`;
+  const lastMeta = S.meta.map((r) => r.date).sort().at(-1), nOrders = S.snap ? null : S.orders.length;
+  const gm = S.camps.filter((c) => c.kind === "gmail").reduce((s, c) => s + (c.listed || 0), 0), oc = S.camps.filter((c) => c.kind !== "gmail");
+  $("pipeline").innerHTML = `<div class="col"><span class="eyebrow">Sources</span>
+      ${conn(S.calc && daysBetween(S.calc.asOf, t) <= 1 ? "ok" : "warn", "Shopify orders", S.calc ? `${nOrders != null ? int(nOrders) + " orders · " : ""}through ${fmtD(S.calc.asOf)}` : "Not loaded", ed ? `<button class="btn" type="button" data-pull="1">Pull new orders</button>` : "")}
+      ${conn(S.liveState === "live" ? "ok" : "warn", "Shopify live sales", S.liveState === "live" ? `Month to date ${usd(S.live.sales)} · ${int(S.live.orders)} orders` : "Off in this view")}
+      ${conn(lastMeta && lastMeta >= addDays(t, -2) ? "ok" : "warn", "Meta Ads", lastMeta ? `Last logged ${fmtD(lastMeta)} · ${S.meta.length} entries` : "Nothing logged yet", canAct() ? `<a class="btn" href="#connections" data-goto="sec-meta">Log or upload</a>` : "")}
+      ${conn(S.consent ? "ok" : "warn", "Omnisend consent", S.consent ? `Synced ${fmtD(S.consent.at.slice(0, 10))} · ${int(S.consentSub.size)} subscribed` : S.snap && S.snap.consent ? `${int(S.snap.consent.sub)} subscribed` : "Not synced", ed ? `<button class="btn" type="button" data-consent="1">Sync now</button>` : "")}</div>
+    <span class="arrow" aria-hidden="true">→</span>
+    <div class="core"><span class="eyebrow" style="color:inherit">Unified by email</span><b>Comfort Fresh CDP</b><span class="num">${int(S.snap ? S.snap.cust.n : S.cust.length)} profiles</span><span class="num">${S.calc ? SEG_ORDER.filter((k) => segN(k)).length : 0} audiences</span><span class="small">Identity: lowercase email · Comfort Fresh store only</span></div>
+    <span class="arrow" aria-hidden="true">→</span>
+    <div class="col"><span class="eyebrow">Destinations</span>
+      ${conn(S.omni.brand ? "ok" : oc.length ? "ok" : "", "Omnisend", oc.length ? `${oc.length} campaigns · ${oc.filter((c) => ["sent", "scheduled"].includes(c.status)).length} sent or scheduled` : "Tag → segment → draft → test → Sy OK → send")}
+      ${conn(gm ? "ok" : "", "Gmail", gm ? `${int(gm)} personal drafts created` : "Personal notes as drafts, never sent by the app")}
+      ${conn("ok", "Files", "Excel, CSV and PDF exports below")}</div>`;
+  renderMeta(); renderSends();
+  $("d-imports").innerHTML = S.imports.length ? `<thead><tr><th>When</th><th>File</th><th>Kind</th><th>Result</th><th>By</th></tr></thead><tbody>` + S.imports.slice().sort((a, b) => b.at.localeCompare(a.at)).map((i) => `<tr><td class="num">${esc(i.at.slice(0, 16).replace("T", " "))}</td><td>${esc(i.file)}</td><td>${esc(i.kind)}</td><td class="small">${esc(i.result)}</td><td class="small">${esc(who(i.by))}</td></tr>`).join("") + `</tbody>` : `<tbody><tr><td class="muted">No imports yet.</td></tr></tbody>`;
 }
 
 // ============================================================== libraries (lazy, cdnjs)
@@ -1043,7 +1351,7 @@ async function previewOrders(file) {
 async function pullShopify() {
   if (!S.db || !S.canEdit) return toast("Only an Editor can pull orders into the CDP.");
   if (S.liveState !== "live") return toast("Shopify isn't confirmed as Comfort Fresh yet. Check the Shopify connector, then reload.", 5000);
-  const out = $("d-orders-out"); location.hash = "data"; out.textContent = "Pulling orders from Shopify…";
+  const out = $("d-orders-out"); location.hash = "connections"; out.textContent = "Pulling orders from Shopify…";
   try {
     const mcp = await needMcp();
     const since = addDays(S.calc && S.orders.length ? S.calc.asOf : "2025-12-01", -2);
@@ -1152,7 +1460,7 @@ async function pdfOf(title, head, body, extra) {
 async function doExport(kind, el) {
   try {
     const d = today();
-    if (kind === "cust-csv") return save(`cf_customers_${d}.csv`, csvOf((S.view === "customers" ? filteredCustomers() : S.cust).map(custRow)));
+    if (kind === "cust-csv") return save(`cf_customers_${d}.csv`, csvOf((S.view === "profiles" ? filteredCustomers() : S.cust).map(custRow)));
     if (kind === "cust-xlsx") return save(`cf_customers_${d}.xlsx`, await xlsxOf([["Customers", filteredCustomers().map(custRow)]]));
     if (kind === "cust-pdf") { const xs = filteredCustomers().slice(0, 300); return save(`cf_customers_${d}.pdf`, await pdfOf("Customers by LTV", ["Customer", "Email", "Size", "Orders", "First order", "2nd order", "LTV net", "LTV profit", "Group"],
       xs.map((c) => [c.name, c.e, c.size || "", c.n, c.first ? `${c.first.d} ${usd(c.first.g)}` : "", c.second ? `${c.second.d} ${usd(c.second.g)}` : "", usd(c.ltvNet), usd(c.ltvProfit), segLabel(c.seg)]), [`${xs.length} customers (filtered view, max 300)`])); }
@@ -1175,24 +1483,41 @@ async function doExport(kind, el) {
 }
 
 // ============================================================== events
+function closeDrawer() { $("drawer").hidden = true; S.drawer = null; }
+async function logGate() {
+  if (!canAct()) return;
+  const v = metaVerdict();
+  try { await S.db.collection("actions").add({ title: `${v.cls === "bad" ? "Cut Meta one budget step" : "Held the Meta budget"} (7-day CAC ${v.w7.cac != null ? usd(v.w7.cac, 2) : "n/a"})`, owner: "CF Meta Ads", due: today(), lane: "gate", needs_sy: false, sy_ok: false, status: "done", note: v.text, impact_usd: null, order: 0, updated_by: S.me, updated_at: nowIso() });
+    toast("Logged. This move comes back after 7 more days of Meta data."); } catch (err) { onWriteError(err); }
+}
 document.addEventListener("click", (e) => {
   const x = e.target.closest("[data-export]"); if (x) return doExport(x.dataset.export, x);
+  if (e.target.closest("[data-close]") || e.target.id === "drawer") return closeDrawer();
   const tab = e.target.closest("#a-tabs button"); if (tab) { S.filter = tab.dataset.f; return renderActions(); }
+  const ins = e.target.closest("[data-ins]"); if (ins) { S.ins = ins.dataset.ins; return renderInsights(); }
   const sy = e.target.closest("button[data-sy]"); if (sy && S.db) { sy.disabled = true; return S.db.doc("actions/" + sy.dataset.sy).update({ sy_ok: true, sy_ok_by: S.me, sy_ok_at: nowIso() }).then(() => toast("Approved")).catch(onWriteError); }
-  const tr = e.target.closest("tr[data-c]"); if (tr) return openCustomer(tr.dataset.c);
-  if (e.target.closest("[data-close]") || e.target.id === "drawer") { $("drawer").hidden = true; return; }
-  const pg = e.target.closest("[data-pg]"); if (pg) { S.cPage += +pg.dataset.pg; return renderCustomers(); }
-  const rp = e.target.closest("[data-rp]"); if (rp) { S.rPeriod = rp.dataset.rp; return renderRevenue(); }
-  const rs = e.target.closest("[data-rs]"); if (rs) { S.rScen = rs.dataset.rs; return renderRevenue(); }
-  const ln = e.target.closest("[data-launch]"); if (ln) { S.openCard = S.openCard === ln.dataset.launch ? null : ln.dataset.launch; return renderAct(); }
+  const dn = e.target.closest("button[data-done]"); if (dn && S.db) { dn.disabled = true; return S.db.doc("actions/" + dn.dataset.done).update({ status: "done", updated_by: S.me, updated_at: nowIso() }).then(() => toast("Marked done")).catch(onWriteError); }
+  if (e.target.closest("[data-gate]")) return logGate();
   const st = e.target.closest("[data-step]"); if (st) return runStep(st.dataset.step, st.dataset.seg);
   const gm = e.target.closest("[data-gmail]"); if (gm) return gmailDrafts(gm.dataset.gmail);
   if (e.target.closest("[data-consent]")) return syncConsent();
-  if (e.target.closest("[data-pull]")) return pullShopify();
+  if (e.target.closest("[data-pull]")) { closeDrawer(); return pullShopify(); }
+  const fs = e.target.closest("[data-filter-seg]"); if (fs) { closeDrawer(); $("c-seg").value = fs.dataset.filterSeg; S.cPage = 0; return; }
+  const tr = e.target.closest("tr[data-c]"); if (tr) return openCustomer(tr.dataset.c);
+  const au = e.target.closest("[data-aud]"); if (au) return openAudience(au.dataset.aud, au.dataset.focus);
+  const go = e.target.closest("[data-gomove]"); if (go) { const el = $("mv-" + go.dataset.gomove) || (($("later-p").open = true) && $("mv-" + go.dataset.gomove)); if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.querySelector("button, a")?.focus({ preventScroll: true }); } return; }
+  const gt = e.target.closest("[data-goto]"); if (gt) { const id = gt.dataset.goto; setTimeout(() => $(id) && $(id).scrollIntoView({ behavior: "smooth", block: "start" }), 60); return; }
+  const pg = e.target.closest("[data-pg]"); if (pg) { S.cPage += +pg.dataset.pg; return renderCustomers(); }
+  const rp = e.target.closest("[data-rp]"); if (rp) { S.rPeriod = rp.dataset.rp; return renderRevenue(); }
+  const rs = e.target.closest("[data-rs]"); if (rs) { S.rScen = rs.dataset.rs; return renderRevenue(); }
   if (e.target.id === "d-orders-save") return saveOrders();
   if (e.target.id === "d-meta-save") return saveMeta();
 });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("drawer").hidden = true; if (e.key === "Enter" && e.target.matches("tr[data-c]")) openCustomer(e.target.dataset.c); });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("drawer").hidden) return closeDrawer();
+  if (e.key === "Enter" && e.target.matches("tr[data-c]")) return openCustomer(e.target.dataset.c);
+  if (e.key === "Enter" && e.target.matches("tr[data-aud]")) return openAudience(e.target.dataset.aud);
+});
 ["c-q", "c-seg", "c-size", "c-ord", "c-sort", "c-sub"].forEach((id) => $(id).addEventListener("input", () => { S.cPage = 0; renderCustomers(); }));
 document.addEventListener("input", (e) => { if (e.target.id && e.target.id.startsWith("f-")) S.form[e.target.id] = e.target.value; });
 document.addEventListener("change", (e) => { if (e.target.id && e.target.id.startsWith("f-")) S.form[e.target.id] = e.target.value; });
@@ -1201,7 +1526,7 @@ $("d-meta").addEventListener("change", (e) => e.target.files[0] && importMeta(e.
 $("acts").addEventListener("change", async (e) => { const sel = e.target.closest("select[data-st]"); if (!sel || !S.db) return; sel.disabled = true;
   try { await S.db.doc("actions/" + sel.dataset.st).update({ status: sel.value, updated_by: S.me, updated_at: nowIso() }); toast("Saved"); } catch (err) { onWriteError(err); } finally { sel.disabled = false; } });
 $("a-form").addEventListener("submit", async (e) => { e.preventDefault(); if (!S.db) return; const title = $("a-title").value.trim(); if (!title) return;
-  try { await S.db.collection("actions").add({ title, owner: $("a-owner").value, due: $("a-due").value, lane: "custom", needs_sy: $("a-sy").checked, sy_ok: false, status: "todo", note: "", impact_usd: null, order: 100, updated_by: S.me, updated_at: nowIso() }); e.target.reset(); toast("Action added"); } catch (err) { onWriteError(err); } });
+  try { await S.db.collection("actions").add({ title, owner: $("a-owner").value, due: $("a-due").value, lane: "custom", needs_sy: $("a-sy").checked, sy_ok: false, status: "todo", note: "", impact_usd: null, order: 100, updated_by: S.me, updated_at: nowIso() }); e.target.reset(); $("a-due").value = addDays(today(), 3); toast("Task added"); } catch (err) { onWriteError(err); } });
 $("m-form").addEventListener("submit", async (e) => { e.preventDefault(); if (!S.db) return; const d = $("m-date").value;
   const nc = $("m-new").value === "" ? S.orders.filter((o) => o.d === d && (o.seq || 1) === 1).length : +$("m-new").value;
   try { await S.db.doc("meta_daily/" + d).set({ date: d, spend: +$("m-spend").value, purchases: +$("m-purch").value, value: $("m-val").value === "" ? null : +$("m-val").value, new_customers: nc, by: S.me, at: nowIso() });
@@ -1209,6 +1534,7 @@ $("m-form").addEventListener("submit", async (e) => { e.preventDefault(); if (!S
 $("s-form").addEventListener("submit", async (e) => { e.preventDefault(); if (!S.db) return; const seg = $("s-seg").value, date = $("s-date").value, ch = $("s-ch").value, c = capCheck(seg, date, ch);
   if (!c.ok) { $("s-check").innerHTML = `<span class="chip bad">Blocked</span> ${c.worst > 3 ? `This would be email #${c.worst} inside 30 days for "${esc(segLabel(seg))}".` : ""} ${c.otherCh ? `"${esc(c.otherCh.name)}" already went by ${esc(c.otherCh.channel)} the same week.` : ""}`; return; }
   try { await S.db.collection("sends").add({ segment: seg, date, channel: ch, name: $("s-name").value.trim(), sy_ok: true, by: S.me, at: nowIso() }); $("s-check").innerHTML = `<span class="chip ok">Within the cap</span> Logged.`; $("s-name").value = ""; $("s-ok").checked = false; } catch (err) { onWriteError(err); } });
+
 function onWriteError(err) {
   if (err && err.code === "invalid_argument") { S.canWrite = false; showForms(); render(); toast("You can view the CDP but not change it."); }
   else if (err && err.code === "quota_exceeded") toast("The CDP database is full. Tell Claude to prune old logs.");

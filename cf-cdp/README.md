@@ -54,8 +54,19 @@ Swap in actuals with no credentials needed: export orders from Shopify Admin, th
 `python3 cdp_cli.py build-revenue --shopify-csv orders_export.csv` and
 `python3 cdp_cli.py feed --revenue warehouse/revenue/revenue_daily.json`.
 
-## The app: Comfort Fresh CDP (one artifact, six tabs)
-`ui/templates/cdp_app.html` → published at the War Room link. Tabs: **Today** (alerts, pacing, gates, action board, Meta log, email-cap log), **Customers** (every customer's orders, first → second order, LTV net and LTV profit after $70 CAC, cohorts, consent), **Act** (per group: sync list to Omnisend as a tag → subscribed-only segment → draft from a template → test → Sy OK → send/schedule; Gmail drafts for VIP/refund notes), **Revenue & Profit**, **Plan**, **Data** (upload Shopify orders and Meta exports, consent sync, exports to CSV / Excel / PDF).
+## The app: Comfort Fresh CDP (Segment-style, action first)
+`ui/templates/cdp_app.html` → published at the app link. Laid out like a CDP console (Segment / Twilio Engage): a left sidebar runs **Act → Know → Data**.
+
+| Screen | Job |
+|---|---|
+| **Home** | "Do these next to grow": the top 4 moves, ranked by deadline then dollars (Meta CAC gate, audience sends, Gmail notes, team tasks). Each card shows due date, expected $ (ACTUAL or MODELED, with the formula), audience size, a 6-step progress track, and one button for the next step. Below: month pacing vs plan, run-rate vs $100k, the 4 growth levers (new customers, CAC, first-order AOV, repeat orders) each linked to the move that fixes it, a "Needs attention" inbox, Up next, and Team tasks. |
+| **Journeys** | Lifecycle map: first-time buyers day 0–6 → 7–27 → 28–45 → 46–119 → 120+, repeat buyers, special handling. Every stage shows people, subscribed, measured 90-day reorder, next send; tap to open it. |
+| **Audiences** | All 13 audiences with rules, size, subscribed, reorder rate, next send, expected value and activation status. The side panel shows the rule, the play, planned sends with the email cap check, and runs activation: sync list → subscribed segment → draft → test → Sy OK → send (or Gmail drafts for VIP/refund notes). |
+| **Profiles** | One profile per email: orders first → latest, LTV net and LTV profit after $70 CAC, next product. |
+| **Insights** | Revenue & profit (P&L by period and media scenario), path to $100k, LTV cohorts. |
+| **Connections** | Sources → CDP → Destinations diagram with health, Shopify pull/upload, Meta log/upload, email send log, exports (Excel / CSV / PDF), import history. |
+
+Expected value for an audience move = reach (subscribed once consent is synced) × measured 90-day reorder rate (month-1 rate when the audience is too small) × 1.5 campaign lift × average repeat order. MODELED, shown on every card.
 
 - Customer history lives in the app's database (`cust/c00..c15`, read: Contributor+, write: Editor). Load or refresh it from the Data tab by uploading the Shopify order export; uploads merge by order id.
 - All Omnisend calls run through the viewer's Omnisend connector and refuse to act unless the brand is Comfort-fresh.com. Sends need Sy (Editor) approval, a passing 3-per-30-days cap check, and typing SEND.
