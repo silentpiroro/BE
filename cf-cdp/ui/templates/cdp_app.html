@@ -280,7 +280,8 @@ a { color: var(--accent); }
     <div class="grid2">
       <section class="panel">
         <div class="panel-head"><h2>Upload Shopify orders</h2><span class="small muted">CSV or Excel · order export</span></div>
-        <p class="small muted">Accepts the one-row-per-order export or Shopify's standard Orders export. New orders merge into each customer by email; existing orders are skipped. Cancelled and unpaid orders are ignored.</p>
+        <div class="btns"><button class="btn primary" type="button" data-pull="1">Pull new orders from Shopify</button><span class="small muted">Live, through your Shopify connector (Comfort Fresh only).</span></div>
+        <p class="small muted">Or upload a file. Accepts the one-row-per-order export or Shopify's standard Orders export. New orders merge into each customer by email; existing orders are skipped. Cancelled and unpaid orders are ignored.</p>
         <input type="file" id="d-orders" accept=".csv,.xlsx,.xls">
         <div id="d-orders-out" class="small"></div>
       </section>
@@ -533,7 +534,7 @@ function renderToday() {
   if (!S.sb || !S.calc) { $("alerts").innerHTML = `<div class="empty">${S.db === false ? "Open this page signed in to claude.ai to load the CDP." : "Loading the board…"}</div>`; }
   else {
     const age = daysBetween(S.calc.asOf, t);
-    if (age > 3 && S.liveState !== "live") out.push(["warn", `Order data ends ${S.calc.asOf} (${age} days ago). Upload a fresh Shopify export on the Data tab.`]);
+    if (age >= 1) out.push(["warn", `Customer orders in the CDP end ${S.calc.asOf}. ${S.canEdit ? `<button class="btn" type="button" data-pull="1">Pull new orders from Shopify</button>` : "An Editor can pull new orders from Shopify on the Data tab."}`]);
     const overdue = S.actions.filter((a) => a.status !== "done" && a.due < t);
     if (overdue.length) out.push(["bad", `${overdue.length} action${overdue.length > 1 ? "s" : ""} overdue: ${overdue.slice(0, 3).map((a) => esc(a.title)).join(" · ")}${overdue.length > 3 ? " …" : ""}`]);
     const sy = S.actions.filter((a) => a.needs_sy && !a.sy_ok && a.status !== "done" && a.due <= addDays(t, 7));
@@ -1002,6 +1003,39 @@ async function previewOrders(file) {
       (fresh.length ? (S.canEdit ? `<div class="btns"><button class="btn primary" type="button" id="d-orders-save">Add ${int(fresh.length)} orders to the CDP</button></div>` : `<p class="muted">Only an Editor can add orders.</p>`) : "");
   } catch (e) { out.innerHTML = `<span class="neg">${esc(e.message || e)}</span>`; }
 }
+async function pullShopify() {
+  if (!S.db || !S.canEdit) return toast("Only an Editor can pull orders into the CDP.");
+  if (S.liveState !== "live") return toast("Shopify isn't confirmed as Comfort Fresh yet. Check the Shopify connector, then reload.", 5000);
+  const out = $("d-orders-out"); location.hash = "data"; out.textContent = "Pulling orders from Shopify…";
+  try {
+    const mcp = await needMcp();
+    const since = addDays(S.calc && S.orders.length ? S.calc.asOf : "2025-12-01", -2);
+    const Q = `query($first: Int!, $after: String, $q: String) { orders(first: $first, after: $after, query: $q, sortKey: PROCESSED_AT) { pageInfo { hasNextPage endCursor } nodes { id name processedAt cancelledAt displayFinancialStatus email customer { id defaultEmailAddress { emailAddress } firstName lastName numberOfOrders } subtotalPriceSet { shopMoney { amount } } totalDiscountsSet { shopMoney { amount } } totalRefundedSet { shopMoney { amount } } lineItems(first: 20) { nodes { sku quantity title } } } } }`;
+    let after = null, pages = 0; const nodes = [];
+    do {
+      const r = await mcp.callTool("Shopify", "graphql_query", { query: Q, variables: { first: 50, q: `processed_at:>=${since}`, ...(after ? { after } : {}) }, first: 50, ...(after ? { after } : {}) }, { cache: false });
+      const o = r.payload && r.payload.data && r.payload.data.orders;
+      if (!o) throw { message: "Shopify returned no orders block: " + JSON.stringify(r.payload).slice(0, 200) };
+      nodes.push(...o.nodes); after = o.pageInfo.hasNextPage ? o.pageInfo.endCursor : null; pages++;
+      out.textContent = `Pulling orders from Shopify… ${nodes.length}`;
+    } while (after && pages < 40);
+    const parsed = [];
+    for (const n of nodes) {
+      if (n.cancelledAt || !/^(PAID|PARTIALLY_REFUNDED|REFUNDED)$/.test(n.displayFinancialStatus || "")) continue;
+      const email = String((n.customer && n.customer.defaultEmailAddress && n.customer.defaultEmailAddress.emailAddress) || n.email || "").trim().toLowerCase(); if (!email) continue;
+      const lines = (n.lineItems && n.lineItems.nodes) || [], amt = (x) => fnum(x && x.shopMoney && x.shopMoney.amount);
+      let pairs = 0, units = 0; const skus = [];
+      lines.forEach((l) => { units += l.quantity || 0; skus.push(l.sku || l.title); pairs += (l.quantity || 0) * (packOf(l.sku || "") || packOf(l.title || "") || 1); });
+      const sub = amt(n.subtotalPriceSet), disc = amt(n.totalDiscountsSet);
+      parsed.push({ email, fn: (n.customer && n.customer.firstName) || "", ln: (n.customer && n.customer.lastName) || "", life: fnum(n.customer && n.customer.numberOfOrders), ts: n.processedAt,
+        o: { id: String(n.id).split("/").pop(), n: n.name, d: chicago(n.processedAt), g: +(sub + disc).toFixed(2), disc, ref: Math.min(amt(n.totalRefundedSet), sub), p: Math.round(pairs), u: units, s: skus.slice(0, 6), src: "" } });
+    }
+    const known = new Set(Object.values(S.shards).flat().flatMap((c) => c.o.map((x) => x.id)));
+    const fresh = parsed.filter((p) => !known.has(p.o.id));
+    S.pendingImport = { file: `Shopify live pull since ${since}`, fresh };
+    out.innerHTML = `<p>${int(nodes.length)} Shopify orders since ${esc(since)} · ${int(parsed.length)} paid · <b>${int(fresh.length)} new</b>.</p>` + (fresh.length ? `<div class="btns"><button class="btn primary" type="button" id="d-orders-save">Add ${int(fresh.length)} orders to the CDP</button></div>` : `<p class="muted">The CDP is up to date.</p>`);
+  } catch (e) { out.innerHTML = `<span class="neg">${esc(mcpMsg(e, "Shopify"))}</span>`; }
+}
 async function saveOrders() {
   const P = S.pendingImport; if (!P || !S.db) return;
   const btn = $("d-orders-save"); if (btn) btn.disabled = true;
@@ -1117,6 +1151,7 @@ document.addEventListener("click", (e) => {
   const st = e.target.closest("[data-step]"); if (st) return runStep(st.dataset.step, st.dataset.seg);
   const gm = e.target.closest("[data-gmail]"); if (gm) return gmailDrafts(gm.dataset.gmail);
   if (e.target.closest("[data-consent]")) return syncConsent();
+  if (e.target.closest("[data-pull]")) return pullShopify();
   if (e.target.id === "d-orders-save") return saveOrders();
   if (e.target.id === "d-meta-save") return saveMeta();
 });
