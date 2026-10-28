@@ -188,6 +188,18 @@ class PlaybookTest(unittest.TestCase):
 
 
 class AppSeedTest(unittest.TestCase):
+    def test_embed_snapshot_totals_only(self):
+        from cdp.appseed import embed_snapshot
+        tpl = (Path(__file__).resolve().parents[1] / "ui" / "templates" / "cdp_app.html").read_text()
+        out = embed_snapshot(tpl, {"snapshot": {"asOf": "2026-10-27", "segs": {"wave_a": {"n": 94}}}, "actions": [{"title": "x", "updated_by": "u1"}]})
+        self.assertNotIn("/*SNAPSHOT*/null", out)
+        self.assertIn('"wave_a":{"n":94}', out)
+        self.assertNotIn("u1", out.split("const EMBED")[1][:300])
+        with self.assertRaises(ValueError):
+            embed_snapshot(tpl, {"snapshot": {"note": "jane.doe@gmail.com"}})
+        with self.assertRaises(ValueError):
+            embed_snapshot(tpl, {"cust": {}})
+
     def test_shards_and_order_sequence(self):
         from cdp import appseed
         rows = [

@@ -13,6 +13,7 @@ private database, never in git.
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from collections import defaultdict
 from datetime import date
@@ -104,3 +105,29 @@ def magnet_doc(orders_csv: str, as_of: date) -> dict:
 def build(orders_csv: str, as_of: date) -> tuple[dict[str, list[dict]], dict]:
     rows = magnet.load(orders_csv)
     return customer_shards(rows), magnet_doc(orders_csv, as_of)
+
+
+PLACEHOLDER = "/*SNAPSHOT*/null"
+_EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
+
+
+def embed_snapshot(template_html: str, bundle: dict) -> str:
+    """Bake a totals-only snapshot into the app page for viewers outside claude.ai.
+
+    bundle: {snapshot, sb, mag, meta, actions}. Refuses anything that looks like an email
+    address, so customer PII can never end up in the public page.
+    """
+    allowed = {"snapshot", "sb", "mag", "meta", "actions"}
+    extra = set(bundle) - allowed
+    if extra:
+        raise ValueError(f"unexpected keys in bundle: {sorted(extra)}")
+    for a in bundle.get("actions") or []:
+        for k in ("updated_by", "sy_ok_by", "created_by"):
+            a.pop(k, None)
+    payload = json.dumps(bundle, separators=(",", ":"))
+    hits = [m for m in _EMAIL.findall(payload) if not m.endswith("@comfortfresh.shop")]
+    if hits:
+        raise ValueError(f"snapshot contains {len(hits)} email-like strings; refusing to embed")
+    if template_html.count(PLACEHOLDER) != 1:
+        raise ValueError("snapshot placeholder not found exactly once in the template")
+    return template_html.replace(PLACEHOLDER, payload.replace("</", "<\\/"))

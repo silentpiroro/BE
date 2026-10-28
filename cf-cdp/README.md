@@ -60,6 +60,9 @@ Swap in actuals with no credentials needed: export orders from Shopify Admin, th
 - Customer history lives in the app's database (`cust/c00..c15`, read: Contributor+, write: Editor). Load or refresh it from the Data tab by uploading the Shopify order export; uploads merge by order id.
 - All Omnisend calls run through the viewer's Omnisend connector and refuse to act unless the brand is Comfort-fresh.com. Sends need Sy (Editor) approval, a passing 3-per-30-days cap check, and typing SEND.
 - `cdp/appseed.py` builds the same customer shards and plan document offline (Python and the app use the same SHA-1 shard key).
+- **Public link / presentation view.** The app is shared as "anyone with the link". Customer names, emails, consent and campaigns stay readable only by invited team members (db rules). Everyone else sees a totals-only *presentation view*: sales, P&L, plan, gates, group sizes and cohort LTV, with no customer rows and no action buttons.
+  - When an Editor opens the app with customers loaded, it writes a fresh totals-only snapshot to `board/snapshot` automatically.
+  - For viewers where the app database isn't available (e.g. opened outside claude.ai), the published page carries a baked-in snapshot: `python3 cdp_cli.py app-embed --bundle <snapshot bundle.json>` writes `warehouse/feeds/app/cdp_app_public.html` (git-ignored), and refuses any bundle containing an email address. Publish that file to the app link.
 
 ## Operator pages (Claude artifacts)
 | Page | What it's for | Data |

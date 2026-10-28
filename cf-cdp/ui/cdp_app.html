@@ -221,7 +221,7 @@ a { color: var(--accent); }
       <div class="panel-head"><h2>LTV by first-order month</h2><span class="small muted">Net revenue after discounts and refunds; profit after product, shipping and $70 CAC on new customers</span></div>
       <div class="scroll"><table id="c-cohorts"></table></div>
     </section>
-    <section class="panel">
+    <section class="panel" id="c-list">
       <div class="panel-head"><h2>Every customer</h2><div class="btns"><button class="btn" type="button" data-export="cust-csv">CSV</button><button class="btn" type="button" data-export="cust-xlsx">Excel</button><button class="btn" type="button" data-export="cust-pdf">PDF</button></div></div>
       <div class="row">
         <label style="flex:1 1 200px">Search<input id="c-q" placeholder="Name, email or order #"></label>
@@ -328,7 +328,9 @@ const TEMPLATE_HINT = { wave_a: "Wave A", dormant: "COMEBACK15" };
 const S = { db: null, user: null, me: null, canEdit: false, canWrite: null, names: {}, view: "today",
   shards: {}, cust: [], orders: [], calc: null, sb: null, mag: null, consent: null, actions: [], meta: [], sends: [], camps: [], imports: [],
   live: null, liveState: "pending", mcp: null, omni: { primed: {}, brand: null, templates: null }, filter: "week",
-  rPeriod: "30d", rScen: "cac70", cPage: 0, pendingImport: null, form: {} };
+  rPeriod: "30d", rScen: "cac70", cPage: 0, pendingImport: null, form: {}, snap: null, dbSnap: null };
+// Totals-only snapshot baked in at publish time, for viewers outside claude.ai. No names or emails.
+const EMBED = /*SNAPSHOT*/null;
 const fv = (id, def) => (id in S.form ? S.form[id] : def);
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -438,6 +440,11 @@ function modelPnl(a, scen, liveMedia) {
   };
 }
 function compute() {
+  S.snap = null;
+  if (!S.orders.length) {
+    const cands = [S.dbSnap, EMBED && EMBED.snapshot].filter(Boolean).sort((a, b) => (b.asOf + b.at).localeCompare(a.asOf + a.at));
+    if (cands.length) { S.snap = cands[0]; S.cust = []; S.calc = { ...S.snap.calc, segs: null }; return; }
+  }
   S.consentSub = new Set(S.consent ? S.consent.subscribed || [] : []); S.consentUnsub = new Set(S.consent ? S.consent.unsubscribed || [] : []);
   const asOfData = S.orders.reduce((m, x) => (x.d > m ? x.d : m), "0000-00-00");
   const asOf = asOfData === "0000-00-00" ? today() : asOfData;
@@ -461,7 +468,41 @@ function compute() {
   const segs = {}; S.cust.forEach((c) => (segs[c.seg] = (segs[c.seg] || []).concat(c)));
   S.calc = { asOf, periods, trend, segs, last30: { revenue: l30.gross, orders: l30.orders, newc: l30.newc, rep: l30.rep,
     firstAov: firstOrders30.length ? firstOrders30.reduce((s, x) => s + x.g, 0) / firstOrders30.length : 0 } };
+  queueSnapshot();
 }
+const segN = (k) => (S.snap ? (S.snap.segs[k] || {}).n || 0 : (S.calc.segs[k] || []).length);
+const segSub = (k) => (S.snap ? (S.snap.segs[k] || {}).sub || 0 : (S.calc.segs[k] || []).filter((c) => c.consent === "subscribed").length);
+function custAgg() {
+  const cs = S.cust, n = cs.length, two = cs.filter((c) => c.n >= 2), acq = cs.filter((c) => c.acquiredHere);
+  const avg = (xs, f) => (xs.length ? xs.reduce((a, c) => a + f(c), 0) / xs.length : 0);
+  const repRev = S.orders.filter((o) => (o.seq || 1) > 1).reduce((a, o) => a + o.g, 0), allRev = S.orders.reduce((a, o) => a + o.g, 0);
+  const tiles = [
+    ["Customers", int(n), `${int(acq.length)} first bought in this data`], ["With a 2nd order", pct(two.length / (n || 1), 1), `${int(two.length)} customers`],
+    ["Avg LTV (net)", usd(avg(cs, (c) => c.ltvNet), 2), `orders since ${S.orders.length ? S.orders.reduce((m, o) => (o.d < m ? o.d : m), "9999").slice(0, 7) : ""}`],
+    ["Avg LTV profit", usd(avg(acq, (c) => c.ltvProfit), 2), `new customers, after $${CAC} CAC`], ["Median days to 2nd", (() => { const d = two.map((c) => c.days2).sort((a, b) => a - b); return d.length ? d[Math.floor(d.length / 2)] + " days" : "–"; })(), "first → second order"],
+    ["Repeat share of revenue", pct(repRev / (allRev || 1), 1), "2nd+ orders"]];
+  const coh = {}; acq.forEach((c) => { const m = c.first.d.slice(0, 7); (coh[m] = coh[m] || []).push(c); });
+  const cohorts = Object.keys(coh).sort().reverse().map((m) => { const xs = coh[m], k = (d) => xs.filter((c) => c.days2 != null && c.days2 <= d).length / xs.length;
+    return { month: m, n: xs.length, k30: k(30), k60: k(60), ever: xs.filter((c) => c.n >= 2).length / xs.length, ltv: avg(xs, (c) => c.ltvNet), profit: avg(xs, (c) => c.ltvProfit) }; });
+  return { n, tiles, cohorts };
+}
+// Totals only: no names, emails or order ids ever go into the snapshot.
+function buildSnapshot() {
+  const { asOf, periods, trend, last30 } = S.calc, segs = {};
+  Object.keys(S.calc.segs).forEach((k) => (segs[k] = { n: segN(k), sub: segSub(k) }));
+  return { v: 1, at: nowIso(), asOf, sig: snapSig(), calc: { asOf, periods, trend, last30 }, segs, cust: custAgg(), consent: S.consent ? { at: S.consent.at, sub: S.consentSub.size } : null };
+}
+const snapSig = () => [S.calc.asOf, S.orders.length, S.meta.length, S.meta.reduce((a, r) => a + (+r.spend || 0), 0).toFixed(2), S.consent ? S.consent.at : "", S.mag ? S.mag.as_of : ""].join("|");
+let snapT;
+function queueSnapshot() {
+  if (!S.db || !S.canEdit || !S.orders.length || !S.calc || !S.calc.segs) return;
+  clearTimeout(snapT);
+  snapT = setTimeout(async () => {
+    if (!S.calc || !S.calc.segs || (S.dbSnap && S.dbSnap.sig === snapSig())) return;
+    try { await S.db.doc("board/snapshot").set(buildSnapshot()); } catch (_) {}
+  }, 4000);
+}
+window.__snapshot = () => buildSnapshot();
 
 // ============================================================== Meta / caps
 function metaWindow(days) {
@@ -514,7 +555,8 @@ function renderChips() {
   const c = [`<span class="chip acc">Shop lock · Comfort Fresh</span>`];
   if (S.calc) c.push(`<span class="chip">Orders through ${esc(S.calc.asOf)}</span>`);
   c.push(S.liveState === "live" ? `<span class="chip ok">Shopify live</span>` : `<span class="chip">Shopify live: ${S.liveState === "pending" ? "connecting…" : "off"}</span>`);
-  if (S.db === false) c.push(`<span class="chip warn">Sign in to claude.ai to use the CDP</span>`);
+  if (S.snap) c.push(`<span class="chip warn">Presentation view · totals as of ${esc(S.snap.asOf)}</span>`);
+  if (S.db === false && !S.snap) c.push(`<span class="chip warn">Sign in to claude.ai to use the CDP</span>`);
   else if (S.canWrite === false) c.push(`<span class="chip warn">Read-only</span>`);
   $("chips").innerHTML = c.join("");
 }
@@ -545,6 +587,7 @@ function renderToday() {
     const v = metaVerdict(); if (v.cls === "bad") out.push(["bad", esc(v.text)]);
     const mn = monthNow(), plan = planFor(mn.m);
     if (mn.sales != null && plan) { const pace = mn.sales / Math.max(mn.day, 1) * daysInMonth(mn.m); if (pace < plan.revenue_usd * 0.9) out.push(["bad", `Month pacing ${usd(pace)} vs plan ${usd(plan.revenue_usd)}.`]); }
+    if (S.snap) out.unshift(["ok", `Presentation view: business totals as of ${esc(S.snap.asOf)} (refreshed ${esc(S.snap.at.slice(0, 16).replace("T", " "))} UTC). Customer names, emails and actions are only visible to invited team members in claude.ai.`]);
     if (!out.length) out.push(["ok", "Nothing on fire. Work the board."]);
     $("alerts").innerHTML = out.map(([c, x]) => `<div class="alert ${c}"><span class="dot"></span><span>${x}</span></div>`).join("");
   }
@@ -639,21 +682,13 @@ function filteredCustomers() {
 }
 function renderCustomers() {
   if (!S.calc) return;
-  if (!S.cust.length) { $("c-tiles").innerHTML = `<div class="empty">No customers visible. Customer data is only shown to people invited to this app as Contributor or above.</div>`; $("c-cohorts").innerHTML = $("c-table").innerHTML = ""; return; }
-  const cs = S.cust, n = cs.length, two = cs.filter((c) => c.n >= 2), acq = cs.filter((c) => c.acquiredHere);
-  const avg = (xs, f) => (xs.length ? xs.reduce((a, c) => a + f(c), 0) / xs.length : 0);
-  const repRev = S.orders.filter((o) => (o.seq || 1) > 1).reduce((a, o) => a + o.g, 0), allRev = S.orders.reduce((a, o) => a + o.g, 0);
-  $("c-tiles").innerHTML = [
-    ["Customers", int(n), `${int(acq.length)} first bought in this data`], ["With a 2nd order", pct(two.length / (n || 1), 1), `${int(two.length)} customers`],
-    ["Avg LTV (net)", usd(avg(cs, (c) => c.ltvNet), 2), `orders since ${S.orders.length ? S.orders.reduce((m, o) => (o.d < m ? o.d : m), "9999").slice(0, 7) : ""}`],
-    ["Avg LTV profit", usd(avg(acq, (c) => c.ltvProfit), 2), `new customers, after $${CAC} CAC`], ["Median days to 2nd", (() => { const d = two.map((c) => c.days2).sort((a, b) => a - b); return d.length ? d[Math.floor(d.length / 2)] + " days" : "–"; })(), "first → second order"],
-    ["Repeat share of revenue", pct(repRev / (allRev || 1), 1), "2nd+ orders"],
-  ].map(([l, v, s]) => `<div class="tile"><span class="eyebrow">${l}</span><span class="v">${v}</span><span class="s">${esc(s)}</span></div>`).join("");
-  // cohorts
-  const coh = {}; acq.forEach((c) => { const m = c.first.d.slice(0, 7); (coh[m] = coh[m] || []).push(c); });
+  const A = S.snap ? S.snap.cust : S.cust.length ? custAgg() : null;
+  $("c-list").hidden = !S.cust.length;
+  if (!A) { $("c-tiles").innerHTML = `<div class="empty">No customers visible. Customer data is only shown to people invited to this app as Contributor or above.</div>`; $("c-cohorts").innerHTML = ""; return; }
+  $("c-tiles").innerHTML = A.tiles.map(([l, v, s]) => `<div class="tile"><span class="eyebrow">${l}</span><span class="v">${v}</span><span class="s">${esc(s)}</span></div>`).join("");
   $("c-cohorts").innerHTML = `<thead><tr><th>First order</th><th class="r">Customers</th><th class="r">2nd ≤30d</th><th class="r">2nd ≤60d</th><th class="r">2nd ever</th><th class="r">Avg LTV</th><th class="r">Avg LTV profit</th></tr></thead><tbody>` +
-    Object.keys(coh).sort().reverse().map((m) => { const xs = coh[m], k = (d) => xs.filter((c) => c.days2 != null && c.days2 <= d).length / xs.length;
-      return `<tr><td>${monLabel(m)}</td><td class="r num">${xs.length}</td><td class="r num">${pct(k(30), 1)}</td><td class="r num">${pct(k(60), 1)}</td><td class="r num">${pct(xs.filter((c) => c.n >= 2).length / xs.length, 1)}</td><td class="r num">${usd(avg(xs, (c) => c.ltvNet), 2)}</td><td class="r num ${avg(xs, (c) => c.ltvProfit) < 0 ? "neg" : "pos"}">${usd(avg(xs, (c) => c.ltvProfit), 2)}</td></tr>`; }).join("") + `</tbody>`;
+    A.cohorts.map((r) => `<tr><td>${monLabel(r.month)}</td><td class="r num">${r.n}</td><td class="r num">${pct(r.k30, 1)}</td><td class="r num">${pct(r.k60, 1)}</td><td class="r num">${pct(r.ever, 1)}</td><td class="r num">${usd(r.ltv, 2)}</td><td class="r num ${r.profit < 0 ? "neg" : "pos"}">${usd(r.profit, 2)}</td></tr>`).join("") + `</tbody>`;
+  if (!S.cust.length) return;
   if ($("c-seg").options.length < 2) $("c-seg").innerHTML += SEG_ORDER.map((k) => `<option value="${k}">${esc(segLabel(k))}</option>`).join("");
   const xs = filteredCustomers(), per = 50, pages = Math.max(1, Math.ceil(xs.length / per)); S.cPage = Math.min(S.cPage, pages - 1);
   $("c-count").textContent = `${int(xs.length)} customers · LTV counts orders in the CDP; "lifetime" is Shopify's all-time order count.`;
@@ -683,18 +718,20 @@ function campFor(seg) { return S.camps.filter((c) => c.segment === seg && c.kind
 function activeCamp(seg) { const c = campFor(seg); return c && !DONE.includes(c.status) ? c : null; }
 function renderAct() {
   if (!S.calc) return;
-  $("consent-note").textContent = S.consent ? `Consent synced ${S.consent.at.slice(0, 16).replace("T", " ")}: ${int(S.consentSub.size)} of ${int(S.cust.length)} customers are subscribed to email.` : "Consent not synced yet. Sync it so lists and Gmail notes only include subscribed customers.";
-  const keys = SEG_ORDER.filter((k) => !["recent", "other"].includes(k) && (S.calc.segs[k] || []).length);
+  const sn = S.snap, consentAt = sn ? sn.consent && sn.consent.at : S.consent && S.consent.at, subN = sn ? sn.consent && sn.consent.sub : S.consentSub.size, custN = sn ? sn.cust.n : S.cust.length;
+  $("consent-note").textContent = sn ? `Presentation view: group sizes as of ${sn.asOf}. Lists and Omnisend actions are only available to invited team members in claude.ai.` : consentAt ? `Consent synced ${consentAt.slice(0, 16).replace("T", " ")}: ${int(subN)} of ${int(custN)} customers are subscribed to email.` : "Consent not synced yet. Sync it so lists and Gmail notes only include subscribed customers.";
+  $("omni-status").parentElement.hidden = !!sn;
+  const keys = SEG_ORDER.filter((k) => !["recent", "other"].includes(k) && segN(k));
   $("act-cards").innerHTML = keys.map((k) => {
-    const xs = S.calc.segs[k], meta = S.mag ? S.mag.segment_meta[k] || {} : {}, base = S.mag ? S.mag.segment_baselines[k] : null, camp = campFor(k);
+    const meta = S.mag ? S.mag.segment_meta[k] || {} : {}, base = S.mag ? S.mag.segment_baselines[k] : null, camp = campFor(k);
     const open = S.openCard === k;
-    return `<article class="card" id="card-${k}"><div class="panel-head"><h3>${esc(segLabel(k))}</h3><span class="num">${int(xs.length)} buyers${S.consent ? ` · <span class="pos">${int(xs.filter((c) => c.consent === "subscribed").length)} subscribed</span>` : ""}</span></div>
+    return `<article class="card" id="card-${k}"><div class="panel-head"><h3>${esc(segLabel(k))}</h3><span class="num">${int(segN(k))} buyers${(sn ? sn.consent : S.consent) ? ` · <span class="pos">${int(segSub(k))} subscribed</span>` : ""}</span></div>
       <p class="small">${esc(meta.offer || "")}</p><p class="small muted">${esc(meta.when || "")}${base && base.reorder_rate != null ? ` · measured 90-day reorder ${pct(base.reorder_rate, 1)}${base.small_sample ? " (small sample)" : ""}` : ""}</p>
       ${camp ? `<p class="small">Latest: <b>${esc(camp.name)}</b> · <span class="chip ${camp.status === "sent" || camp.status === "scheduled" ? "ok" : "warn"}">${esc(camp.status)}</span></p>` : ""}
-      <div class="btns"><button class="btn primary" type="button" data-launch="${k}">${open ? "Hide steps" : activeCamp(k) ? "Continue" : "Launch in Omnisend"}</button>
+      ${sn ? "" : `<div class="btns"><button class="btn primary" type="button" data-launch="${k}">${open ? "Hide steps" : activeCamp(k) ? "Continue" : "Launch in Omnisend"}</button>
         <button class="btn" type="button" data-export="seg-csv" data-seg="${k}">List CSV</button><button class="btn" type="button" data-export="seg-xlsx" data-seg="${k}">Excel</button>
-        ${["vip_lapsed", "service", "vip_active"].includes(k) ? `<button class="btn" type="button" data-gmail="${k}">Draft Gmail notes</button>` : ""}</div>
-      ${open ? flowHtml(k, activeCamp(k)) : ""}</article>`;
+        ${["vip_lapsed", "service", "vip_active"].includes(k) ? `<button class="btn" type="button" data-gmail="${k}">Draft Gmail notes</button>` : ""}</div>`}
+      ${open && !sn ? flowHtml(k, activeCamp(k)) : ""}</article>`;
   }).join("") || `<div class="empty">No customers loaded.</div>`;
   const rows = S.camps.slice().sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
   $("camp-table").innerHTML = rows.length ? `<thead><tr><th>Created</th><th>Group</th><th>Campaign</th><th class="r">Listed</th><th>Status</th><th>Sy OK</th><th>Omnisend</th></tr></thead><tbody>` +
@@ -708,7 +745,7 @@ function flowHtml(k, c) {
   const tplOpts = (S.omni.templates || []).map((x) => `<option value="${esc(x.id)}" ${tplSel === x.id ? "selected" : ""}>${esc(x.name)}</option>`).join("");
   const dis = (i) => (S.busy || at !== i - 1 ? "disabled" : "");
   return `<div class="steps">
-    <div class="step ${stepCls(1)}"><span class="n">1</span><div><b>Sync the list to Omnisend</b><span class="small muted">Tags these ${int((S.calc.segs[k] || []).length)} buyers in Omnisend with <code>${esc(c && c.tag ? c.tag : tagFor(k))}</code>. Emails Omnisend doesn't know are skipped. Nothing is sent.</span>
+    <div class="step ${stepCls(1)}"><span class="n">1</span><div><b>Sync the list to Omnisend</b><span class="small muted">Tags these ${int(segN(k))} buyers in Omnisend with <code>${esc(c && c.tag ? c.tag : tagFor(k))}</code>. Emails Omnisend doesn't know are skipped. Nothing is sent.</span>
       <div class="btns"><button class="btn primary" type="button" data-step="tag" data-seg="${k}" ${dis(1)}>Sync list</button></div></div></div>
     <div class="step ${stepCls(2)}"><span class="n">2</span><div><b>Build the subscribed segment</b><span class="small muted">Segment = contacts with that tag who are subscribed to email. Omnisend enforces consent.</span>
       <div class="btns"><button class="btn primary" type="button" data-step="segment" data-seg="${k}" ${dis(2)}>Create segment</button>${c && c.segment_id ? `<button class="btn" type="button" data-step="stats" data-seg="${k}">Check size</button>` : ""}</div>${c && c.segment_stats ? `<span class="small">${esc(c.segment_stats)}</span>` : ""}</div></div>
@@ -1191,7 +1228,7 @@ route();
 (async () => {
   const [db, user] = await Promise.all([window.claude?.use?.("db") ?? null, window.claude?.use?.("user") ?? null]);
   S.user = user;
-  if (!db) { S.db = false; render(); return; }
+  if (!db) { S.db = false; if (EMBED) { S.sb = EMBED.sb; S.mag = EMBED.mag; S.meta = EMBED.meta || []; S.actions = EMBED.actions || []; S.dirty = true; } render(); return; }
   S.db = db;
   if (user) { try { S.me = await user.id(); } catch (_) {} try { S.canEdit = await user.canEdit(); } catch (_) {} try { S.canWrite = await user.can("data.write"); } catch (_) {} }
   showForms();
@@ -1199,6 +1236,7 @@ route();
   let t; const soon = (dirty) => { if (dirty) S.dirty = true; clearTimeout(t); t = setTimeout(() => { render(); resolveNames(); }, 60); };
   db.collection("cust").onSnapshot((q) => { S.shards = {}; q.docs.forEach((d) => (S.shards[d.id] = (d.data().rows || []))); S.orders = Object.values(S.shards).flat().flatMap((c) => c.o); soon(true); }, fail());
   db.doc("board/scoreboard").onSnapshot((s) => { S.sb = s.exists ? s.data() : null; soon(); }, fail());
+  db.doc("board/snapshot").onSnapshot((s) => { S.dbSnap = s.exists ? s.data() : null; soon(!S.orders.length); }, fail());
   db.doc("board/magnet").onSnapshot((s) => { S.mag = s.exists ? s.data() : null; soon(true); }, fail());
   db.doc("pii/consent").onSnapshot((s) => { S.consent = s.exists ? s.data() : null; soon(true); }, fail());
   db.collection("actions").onSnapshot((q) => { S.actions = q.docs.map((d) => ({ id: d.id, ...d.data() })); soon(); }, fail());

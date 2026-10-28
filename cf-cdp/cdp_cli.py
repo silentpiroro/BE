@@ -285,6 +285,14 @@ def cmd_export_emails(a):
     print(f"wrote {out}: {len(actions)} customers, {len(big)} large-feet (size 13-15)")
 
 
+def cmd_app_embed(a):
+    from cdp.appseed import embed_snapshot
+    html = embed_snapshot(Path(a.template).read_text(), json.loads(Path(a.bundle).read_text()))
+    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
+    Path(a.out).write_text(html)
+    print(f"wrote {a.out} ({len(html):,} bytes, totals-only snapshot baked in)")
+
+
 def cmd_warroom_seed(a):
     from cdp import warroom
     sb = warroom.scoreboard(a.orders, date.fromisoformat(a.as_of))
@@ -368,6 +376,11 @@ def main(argv=None):
     s.add_argument("--out", default=str(WH / "exports" / f"customer_email_lists_{today}.xlsx"))
     s.set_defaults(fn=cmd_export_emails)
 
+    s = sub.add_parser("app-embed", help="bake a totals-only snapshot into the app page for public viewers")
+    s.add_argument("--bundle", required=True, help="JSON {snapshot, sb, mag, meta, actions}")
+    s.add_argument("--template", default=str(ROOT / "ui" / "templates" / "cdp_app.html"))
+    s.add_argument("--out", default=str(WH / "feeds" / "app" / "cdp_app_public.html"))
+    s.set_defaults(fn=cmd_app_embed)
     s = sub.add_parser("warroom-seed", help="scoreboard + starter actions for the War Room db")
     s.add_argument("--orders", required=True)
     s.add_argument("--as-of", default=today)
