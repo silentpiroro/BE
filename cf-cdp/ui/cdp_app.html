@@ -171,6 +171,18 @@ svg text { fill: var(--muted); font-family: var(--font-mono); font-size: 10px; }
 .track i.done { background: var(--good); } .track i.now { background: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 .track span { font-size: .74rem; color: var(--muted); margin-left: 6px; }
 @media (max-width: 640px) { .move { grid-template-columns: 40px minmax(0, 1fr); } .move .cta { grid-column: 1 / -1; justify-items: stretch; } .move .cta .btn { justify-content: center; } .move .cta .small { text-align: left; } }
+.when { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .8rem; color: var(--muted); }
+.when span::before { content: "○ "; } .when span.on { color: var(--ink); } .when span.on::before { content: "● "; color: var(--accent); } .when span.ok::before { content: "✓ "; color: var(--good); }
+.agenda { display: grid; gap: 0; }
+.aday { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 4px 14px; padding: 10px 0; border-top: 1px solid var(--line); }
+.aday:first-child { border-top: 0; }
+.aday > b { font-size: .86rem; } .aday > b small { display: block; font-weight: 500; color: var(--muted); font-size: .76rem; }
+.aday.today > b { color: var(--accent); } .aday.late > b { color: var(--bad); }
+.aitems { display: grid; gap: 6px; min-width: 0; }
+.aitem { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: .88rem; background: none; border: 0; padding: 0; text-align: left; color: var(--ink); font-family: inherit; cursor: pointer; }
+.aitem:hover span.t { text-decoration: underline; }
+.aitem .who { color: var(--muted); font-size: .78rem; }
+@media (max-width: 560px) { .aday { grid-template-columns: minmax(0, 1fr); } }
 .inbox { display: grid; gap: 6px; }
 .inbox .it { display: flex; gap: 10px; align-items: center; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-size: .88rem; flex-wrap: wrap; }
 .inbox .it > span:nth-child(2) { flex: 1 1 240px; min-width: 0; }
@@ -324,8 +336,8 @@ dl.gloss dt { font-weight: 700; } dl.gloss dd { margin: 0; color: var(--muted); 
       <section class="panel"><div class="panel-head"><h2>Your daily routine</h2><span class="small muted">About 10 minutes</span></div>
         <ol class="big">
           <li><b>Open Home.</b> The checklist at the top shows where you are today.</li>
-          <li><b>Refresh the data</b> if Home says it's stale: pull new Shopify orders (Editor) and log yesterday's Meta spend. Moves are only as good as the data.</li>
-          <li><b>Work the moves from #1 down.</b> Press the green button on each card. It does the next step and the progress bar moves. Steps that need words or dates open a side panel.</li>
+          <li><b>Data refreshes itself</b> when you or Sy open the app: new Shopify orders on open and every 30 minutes, Omnisend consent once a day. Only yesterday's Meta spend needs logging (until Meta is connected).</li>
+          <li><b>Work the moves from #1 down.</b> Press <b>Prepare for Sy's approval</b>: the app syncs the list, builds the segment, creates the draft from that audience's template and sends a test to you. Sy then approves and sends. "What's due when" on Home (and your Google Calendar) shows the date for each step.</li>
           <li><b>Sy approves</b> anything waiting (shown under Needs attention), then sends.</li>
           <li><b>Done.</b> Tomorrow the list re-ranks itself from the new data.</li>
         </ol></section>
@@ -348,6 +360,9 @@ dl.gloss dt { font-weight: 700; } dl.gloss dd { margin: 0; color: var(--muted); 
         <tr><td><b>6 · Send</b></td><td>Checks the 3-emails-per-30-days cap and the no-Gmail-same-week rule, asks you to type SEND, then sends or schedules.</td><td>Sy (Editor)</td><td><span class="chip bad">Yes · can't be undone</span></td></tr>
       </tbody></table></div>
       <p class="small muted">VIPs gone quiet and refund customers get personal Gmail notes instead: the app creates drafts in your Gmail (25 at a time, subscribed only) and you send them yourself, then log the send on Connections.</p></section>
+    <section class="panel"><div class="panel-head"><h2>Email templates: one per audience</h2><span class="small muted">Picked automatically. You never choose a template.</span></div>
+      <p class="small">Each audience has a fixed template name in Omnisend: <b>CF · &lt;audience&gt; · v1</b>. The app picks the newest template whose name starts that way, and marks it ★ in the panel. To change an email, edit that template in Omnisend, or save a copy as v2. "Prepare for Sy's approval" uses it automatically.</p>
+      <div class="scroll"><table id="g-tpls"></table></div></section>
     <section class="panel"><div class="panel-head"><h2>What each screen is for</h2></div><div class="gcards" id="g-screens"></div></section>
     <div class="grid2">
       <section class="panel"><div class="panel-head"><h2>Who can do what</h2></div>
@@ -389,6 +404,7 @@ dl.gloss dt { font-weight: 700; } dl.gloss dd { margin: 0; color: var(--muted); 
     <section class="panel routine" id="routine" aria-label="Today's routine"></section>
     <div class="panel ns" id="ns"><div><div class="empty">Loading the board…</div></div><div></div></div>
     <div class="moves" id="moves"></div>
+    <section class="panel" id="agenda-p"><div class="panel-head"><h2>What's due when</h2><span class="small muted">Next 14 days · the same dates are on your Google Calendar</span></div><div class="agenda" id="agenda"></div></section>
     <section class="panel"><div class="panel-head"><h2>Growth levers</h2><span class="eq" id="eq"></span></div><div class="levers" id="levers"></div></section>
     <section class="panel" id="inbox-p"><div class="panel-head"><h2>Needs attention</h2><span class="small muted">Approvals, overdue work and stale data</span></div><div class="inbox" id="inbox"></div></section>
     <details class="panel fold" id="later-p"><summary><h2>Up next</h2><span class="small muted" id="later-n"></span></summary><div class="moves" id="later"></div></details>
@@ -543,7 +559,37 @@ const SEG_LABEL = { recent: "Just ordered (0–6 days)", service: "Refund, never
   household: "Household buyers (2+ sizes in one order)", bundle_clock: "Bundle buyers on the sock clock (13+ pairs, 60+ days)",
   large_feet: "Large-feet customers (sock size 13–15), 1 order, 46–119 days", ladder: "One order, 46–119 days", repeat_lapsed: "2 orders, 60+ days",
   dormant: "One order, 120+ days (C90)", other: "Everyone else" };
-const TEMPLATE_HINT = { wave_a: "Wave A", dormant: "COMEBACK15" };
+// Each audience has one template name prefix. A template in Omnisend named "CF · <code> · …" is picked
+// automatically (newest wins). TPL_DEFAULT covers templates that existed before the naming rule.
+const TPL_CODE = { service: "Refund recovery", vip_lapsed: "VIP gone quiet", vip_active: "VIP active", second_order: "Second order", wave_a: "Wave A",
+  household: "Household", bundle_clock: "Bundle restock", large_feet: "Large feet 13-15", ladder: "Cross-sell", repeat_lapsed: "Bundle upgrade", dormant: "C90 win-back" };
+const TPL_DEFAULT = { wave_a: ["6ae044a48c5e23687ae5b7aa", "Wave A · Day-30 replenish 6@$49 · ankle Club Starter"], dormant: ["6ae023d149fd8e9926e27c65", "COMEBACK15 Winback Ankle CF17180 v2"],
+  second_order: ["6ae25484888da9da17b64e5c", "CF · Second order · v1"], vip_active: ["6ae25497888da9da17b64e84", "CF · VIP active · v1"], household: ["6ae254a585e6f965c359f1c5", "CF · Household · v1"],
+  bundle_clock: ["6ae254b9888da9da17b64ed7", "CF · Bundle restock · v1"], large_feet: ["6ae254c72b29279290c62805", "CF · Large feet 13-15 · v1"], ladder: ["6ae254dc85e6f965c359f1f8", "CF · Cross-sell · v1"],
+  repeat_lapsed: ["6ae254e9888da9da17b64f2a", "CF · Bundle upgrade · v1"] };
+// What each email actually offers, checked against Shopify on 2026-10-28. Bonus-pair offers from the plan
+// have no Shopify discount behind them yet, so the emails use offers Shopify applies automatically.
+const OFFER_LIVE = { wave_a: "Club Starter: 6 pairs for $49 (email and downsell only). No code stacked.", dormant: "COMEBACK15: 15% off, once per customer, expires Nov 26.",
+  second_order: "Crew + ankle cross-sell. Free insoles with 18/24-pair packs, free shipping over $50.", vip_active: "Thank-you + 18-pair pack with free insoles. No % off.",
+  household: "One order for the whole family, every size. Free insoles with 18/24 packs, free shipping over $50.", bundle_clock: "Same style and size restock. Free insoles with 18/24 packs.",
+  large_feet: "World Diabetes Day foot-care story for sock size 13–15. No discount.", ladder: "The other height (crew/ankle) or Multi-Color. Free insoles with 18/24 packs.",
+  repeat_lapsed: "Per-pair math: 18 pairs = $6.06/pair vs $6.58 on 12. Free insoles included.", vip_lapsed: "Personal Gmail note. Bonus pairs need a Shopify discount first (Sy OK).",
+  service: "Personal Gmail note: free replacement pair in the right size (handled manually by CS)." };
+const offerOf = (k) => OFFER_LIVE[k] || (S.mag && S.mag.segment_meta[k] ? S.mag.segment_meta[k].offer : "");
+const tplName = (k) => `CF · ${TPL_CODE[k]} · v1`;
+function tplFor(k) {
+  const pre = `CF · ${TPL_CODE[k]} ·`, list = S.omni.templates;
+  if (list) { const hit = list.filter((x) => (x.name || "").startsWith(pre)).sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""))[0]; if (hit) return { id: hit.id, name: hit.name }; }
+  const d = TPL_DEFAULT[k]; if (d && (!list || list.some((x) => x.id === d[0]))) return { id: d[0], name: d[1] };
+  return null;
+}
+async function loadTemplates(quiet) {
+  if (S.omni.templates || S.omni.tplLoading || !canAct()) return;
+  S.omni.tplLoading = true;
+  try { await omniBrand(); const out = []; let after = null, n = 0;
+    do { const b = await omni("get_email_templates", { limit: 100, ...(after ? { after } : {}) }); out.push(...((b && b.templates) || [])); after = b && b.paging && b.paging.hasMore ? b.paging.cursors.after : null; n++; } while (after && n < 10);
+    S.omni.templates = out; render(); } catch (e) { if (!quiet) toast(mcpMsg(e, "Omnisend"), 6000); } finally { S.omni.tplLoading = false; }
+}
 
 // ============================================================== state + utils
 const S = { db: null, user: null, me: null, canEdit: false, canWrite: null, names: {}, view: "", ins: "revenue", drawer: null,
@@ -858,8 +904,10 @@ function flowHtml(k, c) {
   const st = c ? c.status : "new", order = ["new", "tagged", "segment", "draft", "tested", "approved", "sent"], at = order.indexOf(st === "scheduled" ? "sent" : st);
   const stepCls = (i) => (at >= i ? "done" : at === i - 1 ? "next" : "");
   const t = today(), cap = capCheck(k, (c && c.send_date) || fv("f-date-" + k, t), "Omnisend");
-  const hint = TEMPLATE_HINT[k], tplSel = fv("f-tpl-" + k, c && c.template_id ? c.template_id : ((S.omni.templates || []).find((x) => hint && x.name.includes(hint)) || {}).id || "");
-  const tplOpts = (S.omni.templates || []).map((x) => `<option value="${esc(x.id)}" ${tplSel === x.id ? "selected" : ""}>${esc(x.name)}</option>`).join("");
+  const auto = tplFor(k), tplSel = fv("f-tpl-" + k, c && c.template_id ? c.template_id : auto ? auto.id : "");
+  const list = (S.omni.templates || (auto ? [auto] : [])).slice().sort((a, b) => (a.id === auto?.id ? -1 : b.id === auto?.id ? 1 : (a.name || "").localeCompare(b.name || "")));
+  const tplOpts = list.map((x) => `<option value="${esc(x.id)}" ${tplSel === x.id ? "selected" : ""}>${x.id === auto?.id ? "★ " : ""}${esc(x.name)}</option>`).join("");
+  const ns = nextSend(k), defDate = ns && ns.date > t ? ns.date : t;
   const dis = (i) => (S.busy || at !== i - 1 ? "disabled" : "");
   return `<div class="steps">
     <div class="step ${stepCls(1)}"><span class="n">1</span><div><b>Sync the list to Omnisend</b><span class="small muted">Tags these ${int(segN(k))} buyers in Omnisend with <code>${esc(c && c.tag ? c.tag : tagFor(k))}</code>. Emails Omnisend doesn't know are skipped. Nothing is sent.</span>
@@ -867,11 +915,12 @@ function flowHtml(k, c) {
     <div class="step ${stepCls(2)}"><span class="n">2</span><div><b>Build the subscribed segment</b><span class="small muted">Segment = contacts with that tag who are subscribed to email. Omnisend enforces consent.</span>
       <div class="btns"><button class="btn primary" type="button" data-step="segment" data-seg="${k}" ${dis(2)}>Create segment</button>${c && c.segment_id ? `<button class="btn" type="button" data-step="stats" data-seg="${k}">Check size</button>` : ""}</div>${c && c.segment_stats ? `<span class="small">${esc(c.segment_stats)}</span>` : ""}</div></div>
     <div class="step ${stepCls(3)}"><span class="n">3</span><div><b>Create the draft</b>
-      <div class="row"><label style="flex:1 1 220px">Template<select id="f-tpl-${k}"><option value="">${S.omni.templates ? "Choose a template" : "Load templates first"}</option>${tplOpts}</select></label><button class="btn" type="button" data-step="templates" data-seg="${k}">Load templates</button></div>
+      <div class="row"><label style="flex:1 1 220px">Template<select id="f-tpl-${k}"><option value="">${S.omni.templates ? "Choose a template" : "Loading templates…"}</option>${tplOpts}</select></label></div>
+      <span class="small ${auto ? "pos" : "neg"}">${auto ? `★ Auto-picked for this audience: ${esc(auto.name)}` : `No template for this audience yet. Any Omnisend template named "${esc(tplName(k))}" is picked automatically.`}</span>
       <div class="row"><label style="flex:1 1 220px">Subject<input id="f-sub-${k}" maxlength="250" value="${esc(fv("f-sub-" + k, c && c.subject ? c.subject : defaultSubject(k)))}"></label><label style="flex:1 1 220px">Preview text<input id="f-pre-${k}" maxlength="250" value="${esc(fv("f-pre-" + k, c && c.preheader ? c.preheader : ""))}"></label></div>
-      <div class="row"><label>Sender name<input id="f-from-${k}" maxlength="250" value="${esc(fv("f-from-" + k, c && c.sender_name ? c.sender_name : "Comfort Fresh"))}"></label><label>Send on<input id="f-date-${k}" type="date" value="${esc(fv("f-date-" + k, c && c.send_date ? c.send_date : t))}"></label><label>Time (your clock)<input id="f-time-${k}" type="time" value="${esc(fv("f-time-" + k, c && c.send_time ? c.send_time : "10:00"))}"></label></div>
+      <div class="row"><label>Sender name<input id="f-from-${k}" maxlength="250" value="${esc(fv("f-from-" + k, c && c.sender_name ? c.sender_name : "Comfort Fresh"))}"></label><label>Send on<input id="f-date-${k}" type="date" value="${esc(fv("f-date-" + k, c && c.send_date ? c.send_date : defDate))}"></label><label>Time (your clock)<input id="f-time-${k}" type="time" value="${esc(fv("f-time-" + k, c && c.send_time ? c.send_time : "10:00"))}"></label></div>
       <div class="btns"><button class="btn primary" type="button" data-step="draft" data-seg="${k}" ${dis(3)}>Create draft</button>${c && c.url ? `<a class="btn" href="${esc(c.url)}" target="_blank" rel="noopener">Edit design in Omnisend</a>` : ""}</div></div></div>
-    <div class="step ${stepCls(4)}"><span class="n">4</span><div><b>Send yourself a test</b><div class="row"><label style="flex:1 1 220px">Test to<input id="f-test-${k}" value="${esc(fv("f-test-" + k, "brand@comfortfresh.shop"))}"></label><button class="btn primary" type="button" data-step="test" data-seg="${k}" ${at >= 3 && at < 6 && !S.busy ? "" : "disabled"}>Send test</button></div></div></div>
+    <div class="step ${stepCls(4)}"><span class="n">4</span><div><b>Send yourself a test</b><div class="row"><label style="flex:1 1 220px">Test to<input id="f-test-${k}" value="${esc(fv("f-test-" + k, TEST_TO))}"></label><button class="btn primary" type="button" data-step="test" data-seg="${k}" ${at >= 3 && at < 6 && !S.busy ? "" : "disabled"}>Send test</button></div></div></div>
     <div class="step ${stepCls(5)}"><span class="n">5</span><div><b>Sy approves</b><span class="small muted">Sy checks the test email and the cap check below.</span>
       <div class="btns">${S.canEdit ? `<button class="btn sy" type="button" data-step="approve" data-seg="${k}" ${dis(5)}>Sy OK</button>` : `<span class="small muted">Only Sy (an Editor of this app) can approve.</span>`}</div></div></div>
     <div class="step ${stepCls(6)}"><span class="n">6</span><div><b>Send or schedule</b>
@@ -880,10 +929,32 @@ function flowHtml(k, c) {
       <span class="small muted">Sends on the date and time above (now if that time has passed). Cannot be recalled once sending starts.</span></div></div>
     ${c && c.log ? `<div class="log">${esc(c.log.slice(-1200))}</div>` : ""}</div>`;
 }
+const TEST_TO = "brand@comfortfresh.shop";
+function draftVals(k) {
+  const v = (id, d) => ($(id + k) ? $(id + k).value : fv(id + k, d)), auto = tplFor(k), ns = nextSend(k), t = today();
+  return { tpl: v("f-tpl-", auto ? auto.id : ""), subject: String(v("f-sub-", defaultSubject(k))).trim(), pre: String(v("f-pre-", "")).trim(),
+    from: String(v("f-from-", "Comfort Fresh")).trim() || "Comfort Fresh", date: v("f-date-", ns && ns.date > t ? ns.date : t), time: v("f-time-", "10:00") || "10:00" };
+}
+async function waitStage(k, want) { for (let i = 0; i < 40; i++) { if (stageIdx(activeCamp(k)) >= want) return true; await new Promise((r) => setTimeout(r, 150)); } return false; }
+// One click: sync list → segment → draft from the auto-picked template → test to you. Stops before Sy's OK.
+async function prepare(k) {
+  if (!canAct() || S.preparing) return;
+  await loadTemplates(true);
+  if (!draftVals(k).tpl) { openAudience(k, "draft"); return toast(`Pick a template for this audience first (or name one "${tplName(k)}" in Omnisend).`, 6000); }
+  S.preparing = k; render();
+  try {
+    for (const [i, s] of [[0, "tag"], [1, "segment"], [2, "draft"], [3, "test"]]) {
+      if (stageIdx(activeCamp(k)) > i) continue;
+      await runStep(s, k);
+      if (!(await waitStage(k, i + 1))) return;
+    }
+    toast("Ready for Sy: draft created and a test email sent to you. Sy approves on Home.", 6000);
+  } finally { S.preparing = null; render(); }
+}
 const tagFor = (k) => `cf-${k.replace(/_/g, "-")}-${today().replace(/-/g, "")}`;
 function defaultSubject(k) {
-  return { vip_lapsed: "A thank-you, with 4 extra pairs on us", vip_active: "Your socks, on autopilot", second_order: "Your second pair of colors is waiting", wave_a: "Your Club Starter: 6 pairs for $49",
-    household: "Socks for everyone at home", bundle_clock: "Time for fresh socks?", large_feet: "Made for big feet (sizes 13–15)", ladder: "Try the other half of the drawer",
+  return { vip_lapsed: "A thank-you, with 4 extra pairs on us", vip_active: "A thank-you for our regulars", second_order: "Your second pair of colors is waiting", wave_a: "Your Club Starter: 6 pairs for $49",
+    household: "Socks for everyone at home", bundle_clock: "Time for fresh socks?", large_feet: "Made for big feet: sock size 13–15", ladder: "Try the other half of the drawer",
     repeat_lapsed: "Upgrade to the 18-pair bundle", dormant: "We saved you 15%: COMEBACK15", service: "Let us make it right" }[k] || "From Comfort Fresh";
 }
 
@@ -957,9 +1028,8 @@ async function runStep(step, k) {
       await sv({ segment_stats: flat }, `Segment stats ${flat}`);
     } else if (step === "draft") {
       await omniBrand();
-      const tpl = $("f-tpl-" + k).value, subject = $("f-sub-" + k).value.trim(), pre = $("f-pre-" + k).value.trim(), from = $("f-from-" + k).value.trim() || "Comfort Fresh";
-      const date = $("f-date-" + k).value, time = $("f-time-" + k).value || "10:00";
-      if (!tpl) throw { message: "Choose a template (Load templates first)." };
+      const { tpl, subject, pre, from, date, time } = draftVals(k);
+      if (!tpl) throw { message: `No template for this audience. Create one in Omnisend named "${tplName(k)}" or pick one in the panel.` };
       if (!subject) throw { message: "Write a subject line." };
       const when = new Date(`${date}T${time}:00`), future = when.getTime() > Date.now() + 5 * 60000;
       const payload = { name: `CF · ${segLabel(k)} · ${date}`.slice(0, 250), type: "regular", channel: "email",
@@ -972,7 +1042,7 @@ async function runStep(step, k) {
       toast("Draft created in Omnisend");
     } else if (step === "test") {
       await omniBrand();
-      const to = $("f-test-" + k).value.split(/[,\s]+/).filter(Boolean).slice(0, 5);
+      const to = ($("f-test-" + k) ? $("f-test-" + k).value : fv("f-test-" + k, TEST_TO)).split(/[,\s]+/).filter(Boolean).slice(0, 5);
       await omni("post_campaigns_id_test_email", { id: c.campaign_id, recipients: to });
       await sv({ status: c.status === "draft" ? "tested" : c.status }, `Test sent to ${to.join(", ")}`);
       toast("Test email sent");
@@ -1042,8 +1112,8 @@ async function consentSegment(status) {
   if (!id) throw { message: "Omnisend didn't return a segment id: " + JSON.stringify(body).slice(0, 200) };
   return { id, fresh: true };
 }
-async function syncConsent() {
-  if (!S.db || !S.canEdit) return toast("Only an Editor can sync consent.");
+async function syncConsent(auto) {
+  if (!S.db || !S.canEdit) return auto ? null : toast("Only an Editor can sync consent.");
   const btns = document.querySelectorAll("[data-consent]"); btns.forEach((x) => (x.disabled = true));
   try {
     await omniBrand();
@@ -1149,6 +1219,8 @@ function renderChips() {
   const c = [];
   if (S.calc) c.push(`<span class="chip">Orders through ${esc(fmtD(S.calc.asOf))}</span>`);
   c.push(S.liveState === "live" ? `<span class="chip ok"><span class="dot ok"></span>Shopify live</span>` : `<span class="chip"><span class="dot"></span>Shopify live: ${S.liveState === "pending" ? "connecting…" : "off"}</span>`);
+  if (S.syncing) c.push(`<span class="chip acc">Syncing Shopify + Omnisend…</span>`);
+  else if (S.lastSyncOk) c.push(`<span class="chip ok">Auto-synced ${new Date(S.lastSyncOk).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</span>`);
   if (S.snap) c.push(`<span class="chip warn">Presentation view · totals as of ${esc(fmtD(S.snap.asOf))}</span>`);
   else if (S.db === false) c.push(`<span class="chip warn">Sign in to claude.ai to use the CDP</span>`);
   else if (S.canWrite === false) c.push(`<span class="chip warn">Read-only</span>`);
@@ -1156,6 +1228,7 @@ function renderChips() {
   $("chips").innerHTML = c.join("");
 }
 function renderBadges() {
+  setTimeout(autoSync, 0);
   const set = (id, n) => { const el = $(id); el.hidden = !n; el.textContent = n; };
   const mv = S.calc ? moves().slice(0, 4).filter((m) => m.due <= today()).length : 0;
   set("nb-home", mv);
@@ -1219,12 +1292,35 @@ function moves() {
     const ns = nextSend(k); if (!ns) continue;
     const meta = (S.mag && S.mag.segment_meta[k]) || {}, val = audValue(k);
     const linked = open.filter((a) => taskSeg(a) === k).sort((a, b) => (a.due || "").localeCompare(b.due || "")), prep = linked[0] && linked[0].due && linked[0].due < ns.date ? linked[0] : null;
-    out.push({ id: "aud-" + k, kind: GMAIL_SEG.includes(k) ? "gmail" : "aud", k, due: prep ? prep.due : ns.date, dueLabel: prep ? `Prep due ${fmtD(prep.due)}: ${prep.title} · send ${fmtD(ns.date)}` : ns.label, title: MOVE_TITLE[k] || segLabel(k), why: meta.offer || "",
+    const prepBy = ns.date <= t ? t : addDays(ns.date, -2) < t ? t : addDays(ns.date, -2), approveBy = ns.date <= t ? t : addDays(ns.date, -1);
+    out.push({ id: "aud-" + k, kind: GMAIL_SEG.includes(k) ? "gmail" : "aud", k, send: ns.date, prepBy: prep && prep.due < prepBy ? prep.due : prepBy, approveBy, due: prep && prep.due < prepBy ? prep.due : prepBy, dueLabel: ns.label, title: MOVE_TITLE[k] || segLabel(k), why: offerOf(k),
       value: val.usd, basis: "MODELED", vlabel: "expected", val, linked, lever: LEVER_OF[k] });
   }
   for (const a of open) if (!taskSeg(a) && (a.due || "") <= wk) out.push({ id: "task-" + a.id, kind: "task", a, due: a.due, title: a.title, why: a.note || "", value: a.impact_usd || null, basis: "MODELED", vlabel: "impact", lever: leverOfTask(a) });
   const bucket = (m) => (m.due < t ? 0 : m.due <= wk ? 1 : 2);
   return (S._moves = out.sort((x, y) => bucket(x) - bucket(y) || (y.value || 0) - (x.value || 0) || (x.due || "").localeCompare(y.due || "")));
+}
+// Every dated action: prepare, approve, send, Gmail notes, team tasks.
+function agenda(days) {
+  const t = today(), end = addDays(t, days), out = [];
+  for (const m of moves()) {
+    if (m.kind === "aud") { const ix = stageIdx(activeCamp(m.k)); if (m.send === t && m.k === "second_order") { if (ix < 6) out.push({ d: t, type: "Weekly batch", cls: "acc", t: `${segLabel(m.k)}: prepare, Sy approves, send`, who: "CF Retention → Sy", aud: m.k }); continue; }
+      if (ix < 4) out.push({ d: m.prepBy, type: "Prepare", cls: "acc", t: `${segLabel(m.k)}: press "Prepare for Sy's approval"`, who: "CF Retention", aud: m.k });
+      if (ix < 5) out.push({ d: m.approveBy, type: "Sy approves", cls: "warn", t: `${segLabel(m.k)}: check the test email, approve`, who: "Sy", aud: m.k });
+      if (ix < 6) out.push({ d: m.send, type: "Send", cls: "bad", t: `${segLabel(m.k)}: send or confirm the schedule (10:00)`, who: "Sy", aud: m.k }); }
+    else if (m.kind === "gmail") out.push({ d: m.prepBy, type: "Gmail notes", cls: "acc", t: `${segLabel(m.k)}: draft notes, Sy reads, send from Gmail`, who: "Sy", aud: m.k });
+    else if (m.kind === "gate") out.push({ d: t, type: "Budget", cls: "bad", t: m.title, who: "CF Meta Ads", move: m.id });
+  }
+  S.actions.filter((a) => a.status !== "done" && a.due).forEach((a) => out.push({ d: a.due, type: a.needs_sy && !a.sy_ok ? "Task · Sy OK" : "Task", cls: "", t: a.title, who: a.owner, task: a.id }));
+  return out.filter((x) => x.d <= end).sort((a, b) => a.d.localeCompare(b.d));
+}
+window.__agenda = (days) => agenda(days || 45);
+function renderAgenda() {
+  const t = today(), items = agenda(14), by = {};
+  items.forEach((x) => { const d = x.d < t ? "late" : x.d; (by[d] = by[d] || []).push(x); });
+  const keys = Object.keys(by).sort((a, b) => (a === "late" ? -1 : b === "late" ? 1 : a.localeCompare(b)));
+  $("agenda").innerHTML = keys.length ? keys.map((d) => `<div class="aday ${d === "late" ? "late" : d === t ? "today" : ""}"><b>${d === "late" ? "Overdue" : d === t ? "Today" : new Date(d + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })}<small>${d === "late" ? "do first" : fmtD(d)}</small></b>
+    <div class="aitems">${by[d].map((x) => `<button type="button" class="aitem" ${x.aud ? `data-aud="${x.aud}"` : x.move ? `data-gomove="${esc(x.move)}"` : `data-taskfocus="1"`}><span class="chip ${x.cls}">${esc(x.type)}</span><span class="t">${esc(x.t)}</span><span class="who">${esc(x.who || "")}</span></button>`).join("")}</div></div>`).join("") : `<div class="empty">Nothing due in the next 14 days.</div>`;
 }
 function trackHtml(idx) {
   return `<div class="track" aria-label="Step ${Math.min(idx + 1, 6)} of 6">${STEP_KEY.map((_, i) => `<i class="${i < idx ? "done" : i === idx ? "now" : ""}"></i>`).join("")}<span>${idx >= 6 ? "Sent" : `Step ${idx + 1} of 6 · ${STEP_LABEL[idx]}`}</span></div>`;
@@ -1244,9 +1340,10 @@ function moveCta(m) {
   }
   const i = stageIdx(activeCamp(m.k)); const s = STEP_KEY[i];
   if (i >= 6) return `<span class="chip ok">Sent</span>${det(m.k)}`;
-  if (s === "tag" || s === "segment" || (s === "approve" && S.canEdit)) return `<button class="btn primary" type="button" data-step="${s}" data-seg="${m.k}" ${S.busy ? "disabled" : ""}>${STEP_LABEL[i]}</button>${det(m.k)}`;
-  if (s === "approve") return `<span class="chip warn">Waiting on Sy</span>${det(m.k)}`;
-  return `<button class="btn primary" type="button" data-aud="${m.k}" data-focus="${s}">${STEP_LABEL[i]}</button>`;
+  if (S.preparing === m.k) return `<button class="btn primary" type="button" disabled>Preparing…</button>${det(m.k)}`;
+  if (i < 4) return tplFor(m.k) || !S.omni.templates ? `<button class="btn primary" type="button" data-prepare="${m.k}" ${S.busy || S.preparing ? "disabled" : ""}>Prepare for Sy's approval</button>${det(m.k)}` : `<button class="btn primary" type="button" data-aud="${m.k}" data-focus="draft">Choose a template</button>`;
+  if (s === "approve") return S.canEdit ? `<button class="btn sy" type="button" data-step="approve" data-seg="${m.k}" ${S.busy ? "disabled" : ""}>Approve (Sy)</button>${det(m.k)}` : `<span class="chip warn">Waiting on Sy</span>${det(m.k)}`;
+  return `<button class="btn primary" type="button" data-aud="${m.k}" data-focus="send">Send or schedule</button>`;
 }
 function moveHtml(m, i, later) {
   const t = today(), facts = [];
@@ -1256,12 +1353,14 @@ function moveHtml(m, i, later) {
   if (m.kind === "aud" || m.kind === "gmail") {
     facts.push(`<span>${int(segN(m.k))} people${m.val.consent ? ` · <b class="pos">${int(segSub(m.k))} subscribed</b>` : ""}</span>`);
     const a = m.linked[0]; if (a) facts.push(`<span class="chip ${a.needs_sy && !a.sy_ok ? "warn" : ""}">${a.needs_sy && !a.sy_ok ? "Needs Sy OK · " : ""}${esc(a.owner)}</span>`);
-    if (m.kind === "aud") track = trackHtml(stageIdx(activeCamp(m.k)));
-    else { const done = S.camps.filter((c) => c.kind === "gmail" && c.segment === m.k).reduce((s, c) => s + (c.listed || 0), 0); track = `<div class="track"><span style="margin:0">${int(done)} Gmail drafts made${S.consent ? ` of ${int(segSub(m.k))} subscribed` : ""} · drafts only, you send from Gmail</span></div>`; }
+    if (m.kind === "aud") { const ix = stageIdx(activeCamp(m.k)), tp = tplFor(m.k);
+      track = trackHtml(ix) + `<div class="when"><span class="${ix < 4 ? "on" : "ok"}">Prepare by <b>${fmtD(m.prepBy)}</b></span><span class="${ix === 4 || ix === 5 ? "on" : ix > 5 ? "ok" : ""}">Sy approves by <b>${fmtD(m.approveBy)}</b></span><span class="${ix >= 6 ? "ok" : ""}">Sends <b>${fmtD(m.send)}, 10:00</b></span></div>` +
+        `<span class="small ${tp ? "muted" : "neg"}">${tp ? "Template: " + esc(tp.name) : S.omni.templates ? "No template yet for this audience" : ""}</span>`; }
+    else { const done = S.camps.filter((c) => c.kind === "gmail" && c.segment === m.k).reduce((s, c) => s + (c.listed || 0), 0); track = `<div class="track"><span style="margin:0">${int(done)} Gmail drafts made${S.consent ? ` of ${int(segSub(m.k))} subscribed` : ""} · drafts only, you send from Gmail</span></div><div class="when"><span class="on">Draft notes by <b>${fmtD(m.prepBy)}</b></span><span>Sy reads them</span><span>Send from Gmail by <b>${fmtD(m.send)}</b></span></div>`; }
   } else if (m.kind === "task") facts.push(`<span class="chip">${esc(m.a.owner)}</span>`);
   return `<article class="move ${later ? "later" : ""}" id="mv-${esc(m.id)}"><span class="rank">${i + 1}</span>
     <div class="body"><span class="title">${esc(m.title)}</span>${m.why ? `<span class="why">${esc(m.why)}</span>` : ""}<div class="facts">${facts.join("")}</div>${track}</div>
-    <div class="cta"><div class="btns">${moveCta(m)}</div>${m.dueLabel ? `<span class="small muted">${esc(m.dueLabel)}</span>` : ""}</div></article>`;
+    <div class="cta"><div class="btns">${moveCta(m)}</div>${m.dueLabel && m.kind !== "aud" ? `<span class="small muted">${esc(m.dueLabel)}</span>` : m.dueLabel ? `<span class="small muted">${esc(m.dueLabel)}</span>` : ""}</div></article>`;
 }
 
 
@@ -1307,6 +1406,8 @@ function renderHelp(v) {
   if (el.dataset.body !== body) { el.innerHTML = body; el.dataset.body = body; }
 }
 function renderGuide() {
+  loadTemplates(true);
+  $("g-tpls").innerHTML = `<thead><tr><th>Audience</th><th>Template name in Omnisend</th><th>Now wired to</th></tr></thead><tbody>` + SEG_ORDER.filter((k) => TPL_CODE[k]).map((k) => `<tr><td>${esc(segLabel(k))}</td><td class="num small">${GMAIL_SEG.includes(k) ? "(personal Gmail note, no template)" : esc(tplName(k))}</td><td class="small">${tplCell(k)}</td></tr>`).join("") + `</tbody>`;
   $("g-screens").innerHTML = ["home", "journeys", "audiences", "profiles", "insights", "connections"].map((v) => { const H = HELP[v];
     return `<div class="card"><h3>${H.name}<a class="btn ghost" href="#${v}">Open →</a></h3><span class="small">${esc(H.what)}</span><span class="small muted">Connected to ${H.conn.map((k) => connInfo(k)[1]).join(", ")}</span></div>`; }).join("");
 }
@@ -1327,6 +1428,22 @@ function renderRoutine() {
   $("routine").innerHTML = steps.map((x, i) => `<div class="${x.done ? "done" : i === cur ? "now" : ""}"><span class="h"><span class="n">${x.done ? "✓" : i + 1}</span>${x.h}</span><span class="s">${esc(x.s)}</span>${x.b}</div>`).join("");
 }
 
+// ============================================================== auto-sync
+// While an Editor has the app open: new Shopify orders on open and every 30 minutes; Omnisend consent once a day.
+const SYNC_EVERY = 30 * 60 * 1000;
+async function autoSync() {
+  if (S.syncing || !S.db || !S.canEdit || S.snap || !S.calc || S.liveState !== "live") return;
+  const now = Date.now(); if (S.lastAuto && now - S.lastAuto < SYNC_EVERY) return;
+  S.syncing = true; S.lastAuto = now;
+  try {
+    await pullShopify(true);
+    const age = S.consent ? now - new Date(S.consent.at).getTime() : Infinity;
+    if (S.cust.length && (age > 20 * 3600 * 1000 || S.consent.method !== "segments")) await syncConsent(true);
+    S.lastSyncOk = new Date().toISOString();
+  } catch (_) {} finally { S.syncing = false; renderChips(); }
+}
+setInterval(() => autoSync(), 60 * 1000);
+
 // ============================================================== HOME
 function renderHome() {
   $("h-date").textContent = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) + (S.calc ? ` · orders through ${fmtD(S.calc.asOf)}` : "");
@@ -1334,7 +1451,7 @@ function renderHome() {
     $("ns").innerHTML = `<div><div class="empty">${S.db === false ? "Open this page signed in to claude.ai to load the CDP." : "Loading the board…"}</div></div><div></div>`;
     ["moves", "levers", "inbox", "later", "eq", "routine"].forEach((id) => ($(id).innerHTML = "")); return;
   }
-  renderRoutine();
+  renderRoutine(); loadTemplates(true);
   // north star
   const mn = monthNow(), dim = daysInMonth(mn.m), plan = planFor(mn.m), target = plan ? plan.revenue_usd : NS, l = S.calc.last30, run = l.revenue / 30 * 30.44;
   const pace = mn.sales != null ? mn.sales / Math.max(mn.day, 1) * dim : null, behind = pace != null && pace < target * 0.9;
@@ -1354,6 +1471,7 @@ function renderHome() {
   $("moves").innerHTML = top.length ? top.map((m, i) => moveHtml(m, i)).join("") : `<div class="empty">Nothing due. Check Journeys for the next audience to work.</div>`;
   $("later").innerHTML = rest.map((m, i) => moveHtml(m, i + 4, true)).join("") || `<div class="empty">Nothing else queued.</div>`;
   $("later-n").textContent = `${rest.length} more, by date and value`;
+  renderAgenda();
   // levers
   const w = metaVerdict().w7, g = S.sb.gates || {}, nextPlan = plan || S.sb.plan_months[0];
   const st = (r) => (r >= 1 ? "ok" : r >= 0.8 ? "warn" : "bad");
@@ -1427,23 +1545,28 @@ function pipeHtml(k) {
   const i = stageIdx(activeCamp(k)), last = campFor(k);
   return `<span class="pipe" aria-hidden="true">${STEP_KEY.map((_, j) => `<i class="${j < i ? "done" : j === i ? "now" : ""}"></i>`).join("")}</span> <span class="small">${i === 0 ? (last && ["sent", "scheduled"].includes(last.status) ? "Last: " + esc(last.status) : "Not started") : i >= 6 ? "Sent" : esc(STEP_LABEL[i])}</span>`;
 }
+function tplCell(k) {
+  if (k === "recent" || k === "other") return `<span class="muted">–</span>`;
+  if (GMAIL_SEG.includes(k)) return `<span class="chip">Personal Gmail note</span>`;
+  const t = tplFor(k); return t ? `<span class="chip ok">★ auto</span> ${esc(t.name)}` : S.omni.templates ? `<span class="chip bad">Missing</span> name one "${esc(tplName(k))}"` : `<span class="muted">checking…</span>`;
+}
 function renderAudiences() {
-  if (!S.calc) return;
+  if (!S.calc) return; loadTemplates(true);
   const sn = S.snap, consentAt = sn ? sn.consent && sn.consent.at : S.consent && S.consent.at, subN = sn ? sn.consent && sn.consent.sub : S.consentSub.size, custN = sn ? sn.cust.n : S.cust.length;
   $("omni-status").parentElement.hidden = !canAct();
   $("consent-note").textContent = sn ? `Presentation view: audience sizes as of ${fmtD(sn.asOf)}. Activation is available to invited team members in claude.ai.` : consentAt ? `Consent synced ${consentAt.slice(0, 16).replace("T", " ")}: ${int(subN)} of ${int(custN)} customers can be emailed.${S.consent && S.consent.totals ? ` Omnisend has ${int(S.consent.totals.subscribed)} email subscribers in total; the rest never ordered (popups, imports), so they aren't customers here.` : ""}${S.consent && S.consent.method !== "segments" ? " This sync used the old method and undercounts. Sync again." : ""}` : "Consent isn't synced yet, so sizes include people who can't be emailed. Omnisend still only sends to subscribed contacts.";
   const consent = sn ? !!sn.consent : !!S.consent, hot = new Set(moves().slice(0, 4).filter((m) => m.k).map((m) => m.k));
-  $("aud-table").innerHTML = `<thead><tr><th>Audience</th><th class="r">People</th><th class="r">Subscribed</th><th class="r">90-day reorder</th><th>Next send</th><th class="r">Expected</th><th>Activation</th></tr></thead><tbody>` +
+  $("aud-table").innerHTML = `<thead><tr><th>Audience</th><th class="r">People</th><th class="r">Subscribed</th><th class="r">90-day reorder</th><th>Next send</th><th class="r">Expected</th><th>Email template</th><th>Activation</th></tr></thead><tbody>` +
     SEG_ORDER.filter((k) => segN(k)).map((k) => { const base = S.mag && S.mag.segment_baselines[k], ns = k === "recent" || k === "other" ? null : nextSend(k), v = k === "recent" || k === "other" ? null : audValue(k);
       return `<tr class="click" data-aud="${k}" tabindex="0"><td><b>${esc(segLabel(k))}</b>${hot.has(k) ? ` <span class="chip acc">Do now</span>` : ""}<br><span class="small muted">${esc((SEG_RULE[k] || []).join(" · "))}</span></td>
         <td class="r num">${int(segN(k))}</td><td class="r num">${consent ? int(segSub(k)) : "–"}</td><td class="r num">${base && base.reorder_rate != null ? pct(base.reorder_rate, 1) + (base.small_sample ? "*" : "") : "–"}</td>
-        <td class="small">${ns ? `${fmtD(ns.date)}<br><span class="muted">${esc(ns.label)}</span>` : "–"}</td><td class="r num">${v ? usd(v.usd) : "–"}</td><td class="nowrap">${pipeHtml(k)}</td></tr>`; }).join("") + `</tbody>`;
+        <td class="small">${ns ? `${fmtD(ns.date)}<br><span class="muted">${esc(ns.label)}</span>` : "–"}</td><td class="r num">${v ? usd(v.usd) : "–"}</td><td class="small">${tplCell(k)}</td><td class="nowrap">${pipeHtml(k)}</td></tr>`; }).join("") + `</tbody>`;
   const rows = S.camps.slice().sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
   $("camp-table").innerHTML = rows.length ? `<thead><tr><th>Created</th><th>Audience</th><th>Campaign</th><th class="r">Listed</th><th>Status</th><th>Sy OK</th><th>Omnisend</th></tr></thead><tbody>` +
     rows.map((c) => `<tr><td class="num">${esc((c.created_at || "").slice(0, 10))}</td><td>${esc(segLabel(c.segment))}</td><td>${esc(c.name)}</td><td class="r num">${int(c.listed || 0)}</td><td>${esc(c.status)}</td><td>${c.sy_ok ? esc(who(c.sy_ok_by) || "yes") : "–"}</td><td>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">Open</a>` : "–"}</td></tr>`).join("") + `</tbody>` : `<tbody><tr><td class="muted">No campaigns yet. Start one from Home or any audience.</td></tr></tbody>`;
 }
 function openAudience(k, focus) {
-  S.drawer = { type: "aud", k }; drawAudience(k); $("drawer").hidden = false;
+  S.drawer = { type: "aud", k }; loadTemplates(true); drawAudience(k); $("drawer").hidden = false;
   const el = focus && $("drawer-in").querySelector(`[data-step="${focus}"]`); (el || $("drawer-in").querySelector("[data-close]")).focus();
   if (el) el.scrollIntoView({ block: "center" });
 }
@@ -1462,7 +1585,7 @@ function drawAudience(k) {
     <div class="facts2"><div><span class="eyebrow">People</span><span class="v">${int(segN(k))}</span></div><div><span class="eyebrow">Subscribed</span><span class="v">${consent ? int(segSub(k)) : "–"}</span></div>
       <div><span class="eyebrow">90-day reorder</span><span class="v">${base && base.reorder_rate != null ? pct(base.reorder_rate, 1) : "–"}</span></div><div><span class="eyebrow">Expected <span class="basis MODELED">MODELED</span></span><span class="v">${v ? usd(v.usd) : "–"}</span></div></div>
     <div class="rule">${(SEG_RULE[k] || []).map((r) => `<span>${esc(r)}</span>`).join("")}</div>
-    ${meta.offer ? `<div class="card"><span class="eyebrow">The play</span><b>${esc(meta.offer)}</b><span class="small">${esc(meta.when || "")}</span>${meta.why ? `<span class="small muted">${esc(meta.why)}</span>` : ""}${v ? `<span class="small muted">Expected = ${esc(v.how)}.</span>` : ""}</div>` : ""}
+    ${offerOf(k) ? `<div class="card"><span class="eyebrow">What the email offers</span><b>${esc(offerOf(k))}</b><span class="small">${esc(meta.when || "")}</span>${meta.why ? `<span class="small muted">${esc(meta.why)}</span>` : ""}${v ? `<span class="small muted">Expected = ${esc(v.how)}.</span>` : ""}</div>` : ""}
     ${sends.length ? `<div class="card"><span class="eyebrow">Planned sends · email cap check</span>${sends.map((s) => { const cc = capCheck(k, s.date, "Omnisend"); return `<div class="kv"><span><span class="num">${fmtD(s.date)}</span> · ${esc(s.name)}</span><span class="chip ${cc.ok ? "ok" : "bad"}">${cc.ok ? `#${cc.worst} in 30 days` : "over the cap"}</span></div>`; }).join("")}</div>` : ""}
     <h3>Activate</h3>${activate}
     ${people.length ? `<h3>Top people by lifetime value</h3><div class="scroll"><table><tbody>${people.slice(0, 8).map((c) => `<tr class="click" data-c="${esc(c.e)}" tabindex="0"><td><b>${esc(c.name)}</b><br><span class="small muted">${esc(c.e)}</span></td><td class="r num">${usd(c.ltvNet)}</td><td class="small">${c.consent === "subscribed" ? `<span class="chip ok">SUB</span>` : esc(c.consent)}</td></tr>`).join("")}</tbody></table></div>
@@ -1554,10 +1677,10 @@ async function previewOrders(file) {
       (fresh.length ? (S.canEdit ? `<div class="btns"><button class="btn primary" type="button" id="d-orders-save">Add ${int(fresh.length)} orders to the CDP</button></div>` : `<p class="muted">Only an Editor can add orders.</p>`) : "");
   } catch (e) { out.innerHTML = `<span class="neg">${esc(e.message || e)}</span>`; }
 }
-async function pullShopify() {
-  if (!S.db || !S.canEdit) return toast("Only an Editor can pull orders into the CDP.");
-  if (S.liveState !== "live") return toast("Shopify isn't confirmed as Comfort Fresh yet. Check the Shopify connector, then reload.", 5000);
-  const out = $("d-orders-out"); location.hash = "connections"; out.textContent = "Pulling orders from Shopify…";
+async function pullShopify(auto) {
+  if (!S.db || !S.canEdit) return auto ? null : toast("Only an Editor can pull orders into the CDP.");
+  if (S.liveState !== "live") return auto ? null : toast("Shopify isn't confirmed as Comfort Fresh yet. Check the Shopify connector, then reload.", 5000);
+  const out = $("d-orders-out"); if (!auto) location.hash = "connections"; out.textContent = "Pulling orders from Shopify…";
   try {
     const mcp = await needMcp();
     const since = addDays(S.calc && S.orders.length ? S.calc.asOf : "2025-12-01", -2);
@@ -1583,7 +1706,8 @@ async function pullShopify() {
     }
     const known = new Set(Object.values(S.shards).flat().flatMap((c) => c.o.map((x) => x.id)));
     const fresh = parsed.filter((p) => !known.has(p.o.id));
-    S.pendingImport = { file: `Shopify live pull since ${since}`, fresh };
+    S.pendingImport = { file: `${auto ? "Auto-sync" : "Shopify live pull"} since ${since}`, fresh };
+    if (auto) { if (fresh.length) { await saveOrders(); toast(`Auto-sync: ${fresh.length} new Shopify order${fresh.length > 1 ? "s" : ""} added`, 4000); } else out.textContent = "Up to date with Shopify."; return; }
     out.innerHTML = `<p>${int(nodes.length)} Shopify orders since ${esc(since)} · ${int(parsed.length)} paid · <b>${int(fresh.length)} new</b>.</p>` + (fresh.length ? `<div class="btns"><button class="btn primary" type="button" id="d-orders-save">Add ${int(fresh.length)} orders to the CDP</button></div>` : `<p class="muted">The CDP is up to date.</p>`);
   } catch (e) { out.innerHTML = `<span class="neg">${esc(mcpMsg(e, "Shopify"))}</span>`; }
 }
@@ -1704,6 +1828,8 @@ document.addEventListener("click", (e) => {
   const sy = e.target.closest("button[data-sy]"); if (sy && S.db) { sy.disabled = true; return S.db.doc("actions/" + sy.dataset.sy).update({ sy_ok: true, sy_ok_by: S.me, sy_ok_at: nowIso() }).then(() => toast("Approved")).catch(onWriteError); }
   const dn = e.target.closest("button[data-done]"); if (dn && S.db) { dn.disabled = true; return S.db.doc("actions/" + dn.dataset.done).update({ status: "done", updated_by: S.me, updated_at: nowIso() }).then(() => toast("Marked done")).catch(onWriteError); }
   if (e.target.closest("[data-gate]")) return logGate();
+  const pr = e.target.closest("[data-prepare]"); if (pr) return prepare(pr.dataset.prepare);
+  if (e.target.closest("[data-taskfocus]")) { $("tasks-p").open = true; S.filter = "open"; renderActions(); return $("tasks-p").scrollIntoView({ behavior: "smooth", block: "start" }); }
   const st = e.target.closest("[data-step]"); if (st) return runStep(st.dataset.step, st.dataset.seg);
   const gm = e.target.closest("[data-gmail]"); if (gm) return gmailDrafts(gm.dataset.gmail);
   if (e.target.closest("[data-consent]")) return syncConsent();
