@@ -263,6 +263,18 @@ details.fold[open] > summary h2::before { content: "▾ "; }
 .core .num { color: var(--nav-hi); }
 @media (max-width: 860px) { .pipeline { grid-template-columns: minmax(0, 1fr); } .pipeline .arrow { transform: rotate(90deg); justify-self: center; } }
 
+/* TEAM & BOTS */
+.feed { display: grid; gap: 8px; }
+.post { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.post .by { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: .78rem; color: var(--muted); }
+.post .by b { color: var(--ink); font-size: .86rem; }
+.post .tx { white-space: pre-wrap; word-break: break-word; font-size: .9rem; }
+.alog { display: grid; gap: 0; }
+.alog > div { display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; gap: 8px; padding: 7px 0; border-top: 1px solid var(--line); font-size: .84rem; align-items: center; }
+.alog > div:first-child { border-top: 0; }
+.alog .t { font-family: var(--font-mono); font-size: .74rem; color: var(--muted); }
+.setup { display: grid; gap: 10px; padding: 14px; border: 1px dashed var(--accent); border-radius: 12px; background: var(--accent-soft); }
+.setup ol { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: .88rem; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 999px; font-size: .86rem; font-weight: 600; z-index: 40; max-width: calc(100% - 32px); }
 footer { font-size: .78rem; color: var(--muted); }
 /* help bars + guide */
@@ -314,6 +326,7 @@ dl.gloss dt { font-weight: 700; } dl.gloss dd { margin: 0; color: var(--muted); 
     <div class="grp"><span>Act</span><a href="#home" data-v="home">Home <em class="badge hot" id="nb-home" hidden></em></a><a href="#journeys" data-v="journeys">Journeys</a><a href="#audiences" data-v="audiences">Audiences <em class="badge" id="nb-aud" hidden></em></a></div>
     <div class="grp"><span>Know</span><a href="#profiles" data-v="profiles">Profiles <em class="badge" id="nb-prof" hidden></em></a><a href="#insights" data-v="insights">Insights</a></div>
     <div class="grp"><span>Data</span><a href="#connections" data-v="connections">Connections <em class="badge hot" id="nb-conn" hidden></em></a></div>
+    <div class="grp"><span>Team</span><a href="#team" data-v="team">Team &amp; bots <em class="badge hot" id="nb-team" hidden></em></a></div>
   </nav>
   <div class="side-foot"><span>Rules the app enforces</span><span><b>Sy OK</b> before any send · <b>≤3</b> emails / 30 days · subscribed only · no Omnisend + Gmail same week · CAC target <b>$70</b> · Wool Wave C on <b>HOLD</b></span></div>
 </aside>
@@ -540,6 +553,39 @@ dl.gloss dt { font-weight: 700; } dl.gloss dd { margin: 0; color: var(--muted); 
       </div>
     </section>
     <section class="panel"><div class="panel-head"><h2>Import history</h2></div><div class="scroll"><table id="d-imports"></table></div></section>
+  </section>
+
+  <!-- TEAM & BOTS -->
+  <section class="view" id="v-team" data-help="team" aria-label="Team and bots" hidden>
+    <div class="phead"><div><span class="eyebrow">Collaborate</span><h1>Team &amp; bots</h1><p>Work alongside the Grok bots. They read the same plan and numbers, prepare emails, add tasks and leave notes here. Every action is logged with who did it. Only Sy's key can approve and send.</p></div>
+      <div class="btns"><span class="small muted" id="t-fresh"></span><button class="btn" type="button" data-team="refresh">Refresh</button></div></div>
+    <div id="t-gate"></div>
+    <div id="t-body" class="view" style="display:grid;gap:18px" hidden>
+      <section class="panel" id="t-status"></section>
+      <section class="panel"><div class="panel-head"><h2>Emails prepared on the server</h2><span class="small muted">Prepared by people or bots · test goes to brand@ first</span></div><div class="scroll" id="t-camps"></div></section>
+      <div class="grid2">
+        <section class="panel"><div class="panel-head"><h2>Discussion</h2><span class="small muted">Notes from you and the bots</span></div>
+          <form class="row" id="t-cform">
+            <label>About<select id="t-cref"></select></label>
+            <label style="flex:1 1 100%">Note<textarea id="t-cbody" maxlength="2000" required placeholder="e.g. @Grok draft a second-order email for size 13-15 buyers"></textarea></label>
+            <button class="btn primary" type="submit">Post note</button>
+          </form>
+          <div class="feed" id="t-comments"></div></section>
+        <section class="panel"><div class="panel-head"><h2>Shared tasks</h2><span class="small muted">Tasks the bots can see and update</span></div>
+          <div class="acts" id="t-tasks"></div>
+          <form class="row" id="t-tform">
+            <label style="flex:1 1 220px">New task<input id="t-ttitle" required maxlength="160" placeholder="What has to happen"></label>
+            <label>Owner<input id="t-towner" maxlength="60" placeholder="e.g. Team bot (Grok)"></label>
+            <label>Due<input id="t-tdue" type="date"></label>
+            <label class="check"><input id="t-tsy" type="checkbox"> Needs Sy OK</label>
+            <button class="btn primary" type="submit">Add task</button>
+          </form></section>
+      </div>
+      <div class="grid2">
+        <section class="panel"><div class="panel-head"><h2>Email drafts by bots</h2><span class="small muted">Saved on the server; turned into Omnisend templates on request</span></div><div class="scroll" id="t-drafts"></div></section>
+        <section class="panel"><div class="panel-head"><h2>Activity</h2><span class="small muted">Who did what, newest first</span></div><div class="alog" id="t-activity"></div></section>
+      </div>
+    </div>
   </section>
 
   <footer id="foot">Numbers marked ACTUAL come from Shopify orders and logged Meta spend. MODELED numbers use the $70 CAC plan, $0.85 per pair, $7.50 shipping per order.</footer>
@@ -1189,7 +1235,7 @@ function renderPlan() {
 }
 
 // ============================================================== routing
-const VIEWS = ["guide", "home", "journeys", "audiences", "profiles", "insights", "connections"];
+const VIEWS = ["guide", "home", "journeys", "audiences", "profiles", "insights", "connections", "team"];
 const OLD_VIEWS = { today: "home", customers: "profiles", act: "audiences", revenue: "insights", plan: "insights", data: "connections" };
 function route() {
   let h = (location.hash || "").replace("#", "");
@@ -1211,7 +1257,7 @@ function render() {
   S._moves = null;
   renderChips(); renderBadges();
   renderHelp(S.view);
-  ({ guide: renderGuide, home: renderHome, journeys: renderJourneys, audiences: renderAudiences, profiles: renderCustomers, insights: renderInsights, connections: renderConnections })[S.view]();
+  ({ guide: renderGuide, home: renderHome, journeys: renderJourneys, audiences: renderAudiences, profiles: renderCustomers, insights: renderInsights, connections: renderConnections, team: renderTeam })[S.view]();
   if (!$("drawer").hidden && S.drawer && S.drawer.type === "aud") drawAudience(S.drawer.k);
 }
 const renderAct = () => render();
@@ -1385,6 +1431,9 @@ const HELP = {
     how: ["Green dot = fresh; amber = needs attention.", "Pull new Shopify orders daily (Editors).", "Log yesterday's Meta spend, or upload an Ads Manager export, so CAC stays right.", "Log any Gmail or manual email sends so the email cap stays right.", "Download Excel, CSV or PDF files from Exports."],
     conn: ["shopify", "meta", "omnisend", "gmail"] },
 };
+HELP.team = { name: "Team & bots", what: "Where you and the Grok bots work together on the same live CDP server: notes, shared tasks, emails the bots prepared, and a log of every action.",
+  how: ["Post a note to ask a bot for something, or to discuss a move.", "Check \"Emails prepared on the server\": a bot's test email lands in brand@ first.", "Sy approves and sends with Sy's key (in Grok, or here when this app's connector uses Sy's key).", "Activity shows who did what, so nothing happens unseen."],
+  conn: ["cdp", "omnisend"] };
 function connInfo(k) {
   const t = today(), lastMeta = S.meta.map((r) => r.date).sort().at(-1);
   return {
@@ -1392,6 +1441,7 @@ function connInfo(k) {
     meta: [lastMeta && lastMeta >= addDays(t, -2) ? "ok" : "warn", "Meta Ads", lastMeta ? `spend logged to ${fmtD(lastMeta)}` : "no spend logged"],
     omnisend: [S.consent || (S.snap && S.snap.consent) ? "ok" : "warn", "Omnisend", S.consent ? `consent synced ${fmtD(S.consent.at.slice(0, 10))}` : "consent not synced; sends still work"],
     gmail: ["", "Gmail", "personal note drafts, used on first click"],
+    cdp: [TEAM.st ? (TEAM.st.secrets && TEAM.st.secrets.shopify && TEAM.st.secrets.omnisend ? "ok" : "warn") : "", "CDP server", TEAM.st ? (TEAM.st.last_sync ? `synced ${ago(TEAM.st.last_sync.at)}` : "waiting for first sync") : "Comfort Fresh CDP connector"],
   }[k];
 }
 function helpOpen(v) { try { return localStorage.getItem("cf-help-" + v) !== "0"; } catch (_) { return true; } }
@@ -1882,7 +1932,138 @@ async function resolveNames() {
 
 // ============================================================== boot
 $("m-date").value = addDays(today(), -1); $("s-date").value = today(); $("a-due").value = addDays(today(), 3);
+// ============================================================== team & bots
+// Talks to the CDP server (Supabase) through the viewer's "Comfort Fresh CDP" claude.ai connector.
+const CDP = "Comfort Fresh CDP";
+const TEAM = { at: 0, busy: false, gate: null, me: null, st: null, camps: null, comments: null, tasks: null, drafts: null, acts: null, errs: {}, sendFor: null };
+const ROLE_LABEL = { sy: "Sy (can approve and send)", member: "Team member", viewer: "Viewer" };
+const TOOL_LABEL = { create_task: "added a task", update_task: "updated a task", add_comment: "posted a note", draft_email: "drafted an email", publish_draft_as_template: "made an Omnisend template",
+  prepare_campaign: "prepared an email (test sent)", approve_campaign: "approved an email", send_campaign: "sent an email", log_meta_day: "logged Meta spend", sync_now: "ran a sync",
+  search_customers: "looked up customers", get_customer: "opened a customer profile" };
+const STATUS_CHIP = { new: "", tagged: "", segment: "", draft: "", tested: "warn", approved: "acc", scheduled: "ok", sent: "ok", canceled: "bad" };
+function ago(ts) { if (!ts) return ""; const m = Math.round((Date.now() - Date.parse(ts)) / 60000); return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`; }
+const isBot = (n) => /\(Grok\)|bot/i.test(n || "");
+async function cdpCall(tool, input = {}) { const mcp = await needMcp(); const r = await mcp.callTool(CDP, tool, input, { cache: false }); return r.payload; }
+function teamGate(err) {
+  const code = (err && err.code) || "upstream_error";
+  const retry = `<button class="btn primary" type="button" data-team="retry">Try again</button>`;
+  if (code === "no_mcp" || code === "not_granted" || code === "capability_disabled" || code === "capability_removed")
+    return `<div class="empty">Team &amp; bots works inside claude.ai for invited team members. Open the app there to see the bots' work.</div>`;
+  if (code === "server_not_connected" || code === "server_not_found")
+    return `<div class="setup"><h2>Connect the CDP server (one time)</h2><ol><li>In claude.ai open <b>Settings → Connectors → Add custom connector</b>.</li><li>Name it exactly <b>Comfort Fresh CDP</b>.</li><li>Paste the URL from the "CDP app connector" line in the keys file Claude sent you, then save.</li><li>Come back here and press Try again.</li></ol><div class="btns">${retry}</div></div>`;
+  if (code === "selection_required") return `<div class="setup"><p>You have more than one connector named <b>Comfort Fresh CDP</b>. Choose one when claude.ai asks, or remove the extra one in Settings → Connectors.</p><div class="btns">${retry}</div></div>`;
+  if (code === "needs_reauth") return `<div class="setup"><p>Reconnect <b>Comfort Fresh CDP</b> in claude.ai Settings → Connectors, then try again.</p><div class="btns">${retry}</div></div>`;
+  if (code === "not_in_manifest" || code === "approval_required" || code === "consent_required")
+    return `<div class="setup"><p>This app needs your OK to use the <b>Comfort Fresh CDP</b> connector.</p><div class="btns"><button class="btn primary" type="button" data-team="retry">Allow and load</button></div></div>`;
+  if (code === "blocked_by_policy") return `<div class="empty">Your organization blocks the Comfort Fresh CDP connector for your account.</div>`;
+  if (code === "server_unavailable") return `<div class="setup"><p>The CDP server didn't answer. It may be starting up; try again in a minute.</p><div class="btns">${retry}</div></div>`;
+  if (code === "tool_error") {
+    const m = String(err.message || "");
+    if (/invalid CDP key|Missing or invalid/i.test(m)) return `<div class="setup"><p>The connector's key was refused. Check the URL saved in Settings → Connectors matches the "CDP app connector" line in your keys file.</p><div class="btns">${retry}</div></div>`;
+    return `<div class="setup"><p>The CDP server said: ${esc(m)}</p><div class="btns">${retry}</div></div>`;
+  }
+  return `<div class="setup"><p>Couldn't reach the CDP server (${esc(code)}).</p><div class="btns">${retry}</div></div>`;
+}
+async function loadTeam(force) {
+  if (TEAM.busy || (!force && Date.now() - TEAM.at < 20000)) return;
+  if (S.snap || S.db === false) { TEAM.gate = { code: "no_mcp" }; return renderTeam(); }
+  TEAM.busy = true; $("t-fresh").textContent = "Loading…";
+  try {
+    TEAM.me = await cdpCall("whoami"); TEAM.gate = null;
+    const jobs = { st: ["server_status", {}], camps: ["list_campaigns", {}], comments: ["list_comments", { limit: 40 }], tasks: ["list_tasks", {}], drafts: ["list_email_drafts", {}], acts: ["list_activity", { limit: 30 }] };
+    const keys = Object.keys(jobs), res = await Promise.allSettled(keys.map((k) => cdpCall(...jobs[k])));
+    TEAM.errs = {};
+    res.forEach((r, i) => { if (r.status === "fulfilled") TEAM[keys[i]] = r.value; else TEAM.errs[keys[i]] = r.reason; });
+    TEAM.at = Date.now();
+  } catch (err) { TEAM.gate = err; }
+  finally { TEAM.busy = false; }
+  const waiting = (TEAM.camps || []).filter((c) => c.status === "tested" || c.status === "approved").length;
+  const b = $("nb-team"); if (b) { b.textContent = waiting; b.hidden = !waiting; }
+  if (S.view === "team") renderTeam();
+}
+function secErr(k) { const e = TEAM.errs[k]; return e ? `<div class="empty">Couldn't load this part (${esc(e.code || "error")}${e.message ? ": " + esc(String(e.message).slice(0, 140)) : ""}).</div>` : ""; }
+function renderTeam() {
+  const gate = $("t-gate"), body = $("t-body");
+  if (!TEAM.at && !TEAM.gate) { gate.innerHTML = `<div class="empty">Loading team and bot activity…</div>`; body.hidden = true; loadTeam(false); return; }
+  if (TEAM.gate) { gate.innerHTML = teamGate(TEAM.gate); body.hidden = true; $("t-fresh").textContent = ""; return; }
+  gate.innerHTML = ""; body.hidden = false;
+  if (Date.now() - TEAM.at > 60000) loadTeam(false);
+  $("t-fresh").textContent = TEAM.at ? `Updated ${ago(new Date(TEAM.at).toISOString())}` : "";
+  const role = TEAM.me ? TEAM.me.role : "viewer", member = role !== "viewer", sy = role === "sy";
+  // status
+  const st = TEAM.st;
+  $("t-status").innerHTML = `<div class="panel-head"><h2>CDP server</h2><div class="btns">${member ? `<button class="btn" type="button" data-team="sync">Sync Shopify + Omnisend now</button>` : ""}</div></div>` + (st ? `
+    <div class="chips"><span class="chip acc">You: ${esc(TEAM.me.name)} · ${esc(ROLE_LABEL[role] || role)}</span>
+      <span class="chip ${st.secrets.shopify ? "ok" : "warn"}">Shopify ${st.secrets.shopify ? "connected" : "token not added yet"}</span>
+      <span class="chip ${st.secrets.omnisend ? "ok" : "warn"}">Omnisend ${st.secrets.omnisend ? "connected" : "key not added yet"}</span>
+      <span class="chip">${st.last_sync ? "Last sync " + esc(ago(st.last_sync.at)) : "Not synced yet"}</span></div>
+    <div class="tiles"><div class="tile"><span class="eyebrow">Customers</span><span class="v">${int(st.counts.customers)}</span></div><div class="tile"><span class="eyebrow">Orders</span><span class="v">${int(st.counts.orders)}</span></div>
+      <div class="tile"><span class="eyebrow">Open tasks</span><span class="v">${int((TEAM.tasks || []).filter((t) => t.status !== "done").length)}</span></div><div class="tile"><span class="eyebrow">Notes</span><span class="v">${int(st.counts.comments)}</span></div></div>
+    ${!st.secrets.shopify || !st.secrets.omnisend ? `<p class="small muted">Until the Shopify token and Omnisend key are added in Supabase (Edge Functions → Secrets), bots can talk and plan but see no customers or orders.</p>` : ""}` : secErr("st"));
+  // campaigns
+  const camps = TEAM.camps || [];
+  $("t-camps").innerHTML = TEAM.errs.camps ? secErr("camps") : !camps.length ? `<div class="empty">Nothing prepared yet. When a bot prepares an email, it shows here with its test status.</div>` :
+    `<table><thead><tr><th>Audience</th><th>Subject</th><th>Sends</th><th class="r">Listed</th><th>Prepared by</th><th>Status</th><th></th></tr></thead><tbody>` + camps.map((c) => {
+      let act = "";
+      if (c.status === "tested") act = sy ? `<button class="btn sy" type="button" data-team="approve" data-id="${esc(c.id)}">Approve</button>` : `<span class="small muted">Waiting on Sy</span>`;
+      if (c.status === "approved") act = sy ? (TEAM.sendFor === c.id ? `<span class="row"><input id="t-sendok" placeholder="Type SEND" style="width:8em" autocomplete="off"><button class="btn danger" type="button" data-team="send" data-id="${esc(c.id)}">Send</button></span>` : `<button class="btn danger" type="button" data-team="sendask" data-id="${esc(c.id)}">Send…</button>`) : `<span class="small muted">Approved; Sy sends</span>`;
+      return `<tr><td>${esc(segLabel(c.audience))}</td><td>${esc(c.subject || "")}</td><td class="nowrap">${c.send_date ? esc(fmtD(String(c.send_date))) + " " + esc(c.send_time || "") : ""}</td><td class="r num">${int(c.listed || 0)}</td>
+        <td>${esc(c.created_by || "")}${isBot(c.created_by) ? ` <span class="chip acc">bot</span>` : ""}</td><td><span class="chip ${STATUS_CHIP[c.status] || ""}">${esc(c.status)}</span>${c.sy_ok_by ? `<div class="small muted">OK by ${esc(c.sy_ok_by)}</div>` : ""}</td><td>${act}</td></tr>`;
+    }).join("") + `</tbody></table>`;
+  // comments
+  const sel = $("t-cref"); if (sel.options.length < 2) sel.innerHTML = `<option value="general">General</option>` + SEG_ORDER.filter((k) => !["recent", "other"].includes(k)).map((k) => `<option value="audience:${k}">${esc(segLabel(k))}</option>`).join("");
+  $("t-cform").hidden = !TEAM.me;
+  const refLabel = (r) => r === "general" ? "General" : r.startsWith("audience:") ? segLabel(r.slice(9)) : r.startsWith("campaign:") ? "An email" : r.startsWith("task:") ? "A task" : r;
+  $("t-comments").innerHTML = TEAM.errs.comments ? secErr("comments") : !(TEAM.comments || []).length ? `<div class="empty">No notes yet. Ask a bot something here, or discuss a move.</div>` :
+    TEAM.comments.map((c) => `<div class="post"><div class="by"><b>${esc(c.author)}</b>${isBot(c.author) ? `<span class="chip acc">bot</span>` : ""}<span>${esc(ago(c.created_at))}</span><span>· ${esc(refLabel(c.ref))}</span></div><div class="tx">${esc(c.body)}</div></div>`).join("");
+  // tasks
+  const tasks = (TEAM.tasks || []).filter((t) => t.status !== "done").concat((TEAM.tasks || []).filter((t) => t.status === "done").slice(-5));
+  $("t-tform").hidden = !member; if (!$("t-tdue").value) $("t-tdue").value = addDays(today(), 3);
+  $("t-tasks").innerHTML = TEAM.errs.tasks ? secErr("tasks") : !tasks.length ? `<div class="empty">No shared tasks yet.</div>` : tasks.map((t) => {
+    const over = t.status !== "done" && t.due && String(t.due) < today();
+    return `<div class="act ${t.status === "done" ? "done" : ""} ${over ? "overdue" : ""}"><span class="due">${t.due ? esc(fmtD(String(t.due))) : ""}</span>
+      <div><div class="t">${esc(t.title)}</div><div class="meta"><span>${esc(t.owner || "")}</span>${isBot(t.created_by) ? `<span class="chip acc">from a bot</span>` : ""}${t.needs_sy && !t.sy_ok ? `<span class="chip warn">needs Sy OK</span>` : ""}${t.note ? `<span>${esc(t.note)}</span>` : ""}</div></div>
+      <div class="ctl">${member ? `<select data-tstatus="${esc(t.id)}" aria-label="Status">${["todo", "doing", "blocked", "done"].map((x) => `<option ${x === t.status ? "selected" : ""}>${x}</option>`).join("")}</select>` : `<span class="chip">${esc(t.status)}</span>`}</div></div>`;
+  }).join("");
+  // drafts
+  const drafts = TEAM.drafts || [];
+  $("t-drafts").innerHTML = TEAM.errs.drafts ? secErr("drafts") : !drafts.length ? `<div class="empty">No drafts yet. Ask a bot to draft an email for an audience.</div>` :
+    `<table><thead><tr><th>Audience</th><th>Subject</th><th>By</th><th>Status</th></tr></thead><tbody>` + drafts.map((d) => `<tr><td>${esc(segLabel(d.audience))}</td><td>${esc(d.subject)}</td><td>${esc(d.author)}</td><td><span class="chip ${d.status === "template" ? "ok" : ""}">${d.status === "template" ? "Omnisend template" : esc(d.status)}</span></td></tr>`).join("") + `</tbody></table>`;
+  // activity
+  const acts = TEAM.acts || [];
+  $("t-activity").innerHTML = TEAM.errs.acts ? secErr("acts") : !acts.length ? `<div class="empty">No actions yet.</div>` :
+    acts.map((a) => `<div><span class="t">${esc(ago(a.at))}</span><span><b>${esc(a.actor)}</b> ${esc(TOOL_LABEL[a.tool] || a.tool.replace(/_/g, " "))}</span><span class="chip ${a.ok ? "ok" : "bad"}">${a.ok ? "done" : "refused"}</span></div>`).join("");
+}
+async function teamAction(fn, okMsg) {
+  try { await fn(); if (okMsg) toast(okMsg); }
+  catch (err) { toast(err && err.code === "tool_error" ? String(err.message || "Refused").slice(0, 160) : err && (err.code === "server_unavailable" || err.code === "upstream_error") ? "No answer from the CDP server. Check Activity before trying again." : `Couldn't do that (${(err && err.code) || "error"}).`, 4200); }
+  await loadTeam(true);
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-team]"); if (!b) return;
+  const k = b.dataset.team, id = b.dataset.id;
+  if (k === "refresh" || k === "retry") { TEAM.gate = null; TEAM.at = 0; return loadTeam(true).then(renderTeam); }
+  if (k === "sync") { b.disabled = true; return teamAction(() => cdpCall("sync_now"), "Sync finished"); }
+  if (k === "approve") { b.disabled = true; return teamAction(() => cdpCall("approve_campaign", { campaign_id: id }), "Approved"); }
+  if (k === "sendask") { TEAM.sendFor = id; renderTeam(); $("t-sendok") && $("t-sendok").focus(); return; }
+  if (k === "send") {
+    if (($("t-sendok").value || "").trim() !== "SEND") return toast("Type SEND to confirm.");
+    b.disabled = true; TEAM.sendFor = null; return teamAction(() => cdpCall("send_campaign", { campaign_id: id, confirm: "SEND" }), "Sent to Omnisend");
+  }
+});
+document.addEventListener("change", (e) => {
+  const sel = e.target.closest("select[data-tstatus]"); if (!sel) return; sel.disabled = true;
+  teamAction(() => cdpCall("update_task", { id: sel.dataset.tstatus, status: sel.value }), "Saved");
+});
+$("t-cform").addEventListener("submit", (e) => { e.preventDefault(); const body = $("t-cbody").value.trim(); if (!body) return; const btn = e.target.querySelector("button"); btn.disabled = true;
+  teamAction(async () => { await cdpCall("add_comment", { ref: $("t-cref").value, body }); $("t-cbody").value = ""; }, "Posted").finally(() => (btn.disabled = false)); });
+$("t-tform").addEventListener("submit", (e) => { e.preventDefault(); const title = $("t-ttitle").value.trim(); if (!title) return; const btn = e.target.querySelector("button"); btn.disabled = true;
+  const input = { title, due: $("t-tdue").value || undefined, needs_sy: $("t-tsy").checked }; if ($("t-towner").value.trim()) input.owner = $("t-towner").value.trim();
+  teamAction(async () => { await cdpCall("create_task", input); $("t-ttitle").value = ""; $("t-tsy").checked = false; }, "Task added").finally(() => (btn.disabled = false)); });
+setInterval(() => { if (S.view === "team" && !document.hidden && TEAM.at && !TEAM.gate) loadTeam(true); }, 60000);
+
 route();
+
 (async () => {
   const [db, user] = await Promise.all([window.claude?.use?.("db") ?? null, window.claude?.use?.("user") ?? null]);
   S.user = user;

@@ -55,3 +55,20 @@ print(r.output_text)
 - `OMNISEND_API_KEY`: Omnisend → Store settings → API keys.
 
 Until both are set, the sync and the Omnisend tools return a clear "not set yet" message.
+
+## Connect the CDP web app (claude.ai) to the same server
+
+The app's **Team & bots** screen reads and writes the same server the bots use: notes, shared tasks,
+emails prepared by bots (with Approve / Send when the connector's key is Sy's), bot drafts and the activity log.
+
+1. claude.ai → Settings → Connectors → **Add custom connector**.
+2. Name: **Comfort Fresh CDP** (exactly; the app looks for this name).
+3. URL: the "CDP app connector" line from the keys file (the key rides in the URL as `?key=…`,
+   because claude.ai custom connectors can't send a custom header). It is a team-member key: it can
+   prepare but not approve or send. If Sy adds the connector, Sy can use a URL with Sy's key instead
+   to approve and send from the app.
+4. Open the app → Team & bots, and allow the connector when asked.
+
+Each teammate adds the connector in their own claude.ai account; give each person their own key so the
+activity log shows who did what. Revoke a key with `update api_keys set active=false where name='…'`.
+Plain reads are not logged; every action and every customer lookup is.

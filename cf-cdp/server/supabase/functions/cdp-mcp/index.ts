@@ -215,14 +215,27 @@ const T: Record<string, { description: string; role: keyof typeof RANK; schema: 
       return { status: st, omnisend_status: after?.status || null };
     } } as any,
 
+  list_activity: { description: "Recent actions by people and bots (who did what, when, and whether it worked).", role: "viewer", schema: { limit: { type: "integer", maximum: 200 }, actor: { type: "string" } },
+    run: async (a) => { let q = db.from("audit").select("at,actor,tool,ok,result").order("at", { ascending: false }).limit(a.limit || 40); if (a.actor) q = q.eq("actor", a.actor); return (await q).data; } },
+  server_status: { description: "Is the CDP server in sync? Last Shopify and Omnisend sync, row counts, which secrets are set.", role: "viewer", schema: {},
+    run: async () => {
+      const st = Object.fromEntries((((await db.from("settings").select("k,v").in("k", ["last_sync", "consent_sync", "shopify_cursor"])).data) || []).map((r: any) => [r.k, r.v]));
+      const n = async (t: string) => (await db.from(t).select("*", { count: "exact", head: true })).count || 0;
+      return { last_sync: st.last_sync || null, consent_sync: st.consent_sync || null, orders_since: st.shopify_cursor?.since || null,
+        counts: { customers: await n("customers"), orders: await n("orders"), tasks: await n("tasks"), comments: await n("comments"), campaigns: await n("campaigns"), email_drafts: await n("email_drafts") },
+        secrets: { shopify: !!Deno.env.get("SHOPIFY_ADMIN_TOKEN"), omnisend: !!Deno.env.get("OMNISEND_API_KEY") } };
+    } },
   sync_now: { description: "Pull new Shopify orders and refresh Omnisend email consent now (also runs hourly).", role: "member", schema: {},
     run: async () => { const out: any = {}; try { out.shopify = await syncShopify(); } catch (e) { out.shopify_error = String((e as Error).message); } try { out.consent = await syncConsent(); } catch (e) { out.consent_error = String((e as Error).message); } return out; } },
 };
 
-const toolList = () => Object.entries(T).map(([name, t]) => ({ name, description: t.description + ` [role: ${t.role}]`, inputSchema: { type: "object", properties: t.schema, ...((t as any).required ? { required: (t as any).required } : {}) } }));
+const READS = new Set(["whoami", "get_overview", "list_audiences", "search_customers", "get_customer", "list_moves", "get_meta", "list_tasks", "list_comments", "list_email_drafts", "list_campaigns", "list_activity", "server_status"]);
+const toolList = () => Object.entries(T).map(([name, t]) => ({ name, description: t.description + ` [role: ${t.role}]`, annotations: { readOnlyHint: READS.has(name), destructiveHint: name === "send_campaign" },
+  inputSchema: { type: "object", properties: t.schema, ...((t as any).required ? { required: (t as any).required } : {}) } }));
 
 async function actorFor(req: Request): Promise<Actor | null> {
-  const h = req.headers.get("authorization") || ""; const key = h.replace(/^Bearer\s+/i, "").trim(); if (!key) return null;
+  const h = req.headers.get("authorization") || "";
+  const key = (h.replace(/^Bearer\s+/i, "").trim() || new URL(req.url).searchParams.get("key") || "").trim(); if (!key) return null;
   const { data } = await db.from("api_keys").select("name,role,active").eq("key_hash", await sha256(key)).maybeSingle();
   return data && data.active ? { name: data.name, role: data.role } : null;
 }
@@ -230,7 +243,7 @@ const J = (body: unknown, status = 200) => new Response(JSON.stringify(body), { 
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, content-type, mcp-session-id, mcp-protocol-version", "Access-Control-Allow-Methods": "POST, GET, OPTIONS" } });
-  if (req.method === "GET") return J({ name: "Comfort Fresh CDP", mcp: "POST JSON-RPC here with Authorization: Bearer <key>" });
+  if (req.method !== "POST") return new Response("Comfort Fresh CDP MCP server: POST JSON-RPC with Authorization: Bearer <key>", { status: 405, headers: { Allow: "POST, OPTIONS" } });
   const actor = await actorFor(req);
   if (!actor) return J({ jsonrpc: "2.0", id: null, error: { code: -32001, message: "Missing or invalid CDP key (Authorization: Bearer <key>)." } }, 401);
   let msg: any; try { msg = await req.json(); } catch { return J({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error" } }, 400); }
@@ -243,7 +256,9 @@ Deno.serve(async (req) => {
     if (m.method === "tools/call") {
       const name = m.params?.name, args = m.params?.arguments || {}, t = T[name];
       if (!t) return { jsonrpc: "2.0", id: m.id, error: { code: -32602, message: `Unknown tool ${name}` } };
-      try { need(actor, t.role); const out = await t.run(args, actor); await db.from("audit").insert({ actor: actor.name, tool: name, args, ok: true, result: JSON.stringify(out).slice(0, 500) });
+      try { need(actor, t.role); const out = await t.run(args, actor);
+        // Log every action and every customer-data lookup; plain dashboard reads are not logged.
+        if (!READS.has(name) || name === "search_customers" || name === "get_customer") await db.from("audit").insert({ actor: actor.name, tool: name, args, ok: true, result: JSON.stringify(out).slice(0, 500) });
         return { jsonrpc: "2.0", id: m.id, result: { content: [{ type: "text", text: JSON.stringify(out) }] } };
       } catch (e) { const msg = (e as Error).message; await db.from("audit").insert({ actor: actor.name, tool: name, args, ok: false, result: msg });
         return { jsonrpc: "2.0", id: m.id, result: { isError: true, content: [{ type: "text", text: msg }] } }; }
